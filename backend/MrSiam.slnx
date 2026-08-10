@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MrSiam.Api/MrSiam.Api.csproj" />
+    <Project Path="src/MrSiam.Application/MrSiam.Application.csproj" />
+    <Project Path="src/MrSiam.Domain/MrSiam.Domain.csproj" />
+    <Project Path="src/MrSiam.Infrastructure/MrSiam.Infrastructure.csproj" />
+  </Folder>
+</Solution>

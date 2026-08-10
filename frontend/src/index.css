@@ -1,0 +1,304 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   MR. MOHAMED SIAM — "THE DIGITAL ATLAS" DESIGN SYSTEM
+   Light  : Historical Parchment
+   Dark   : Midnight Atlas
+   ============================================================ */
+
+/* ---------- Raw palette (never used directly in components) ---------- */
+:root {
+  --navy-950: #0a1120;
+  --navy-900: #101b33;
+  --navy-800: #15233f;
+  --navy-700: #1e3a5f;
+  --ocean-600: #2a5c8a;
+  --ocean-500: #3a74a6;
+  --gold-bright: #c9a227;
+  --gold: #b9922e;
+  --gold-deep: #8f7430;
+  --parchment: #f6f0e1;
+  --sand: #e4d8bc;
+  --charcoal: #232a38;
+  --success: #2e7d5b;
+  --warning: #c07f1d;
+  --error: #b4483a;
+}
+
+/* ---------- Semantic tokens — Light: Historical Parchment ---------- */
+:root,
+.light {
+  --background: var(--parchment);
+  --surface: #fffdf6;
+  --surface-elevated: #ffffff;
+  --surface-sunken: #efe7d2;
+
+  --primary: var(--navy-900);
+  --primary-dark: var(--navy-950);
+  --primary-light: var(--navy-800);
+  --accent: var(--ocean-600);
+
+  --gold-accent: var(--gold);
+  --gold-bright-accent: var(--gold-bright);
+  --gold-muted: var(--gold-deep);
+
+  --text-primary: #1c2740;
+  --text-secondary: #4c5468;
+  --text-muted: #7a7f8f;
+
+  --border-subtle: rgba(16, 27, 51, 0.12);
+  --border-soft: rgba(16, 27, 51, 0.2);
+  --border-gold: rgba(185, 146, 46, 0.45);
+
+  --success-soft: rgba(46, 125, 91, 0.1);
+  --warning-soft: rgba(192, 127, 29, 0.1);
+  --error-soft: rgba(180, 72, 58, 0.1);
+
+  --gold-glow: rgba(185, 146, 46, 0.25);
+  --navy-glow: rgba(16, 27, 51, 0.18);
+
+  --map-line: rgba(16, 27, 51, 0.14);
+  --grid-line: rgba(16, 27, 51, 0.07);
+
+  --base-shadow-sm: 0 1px 2px rgba(16, 27, 51, 0.06), 0 1px 3px rgba(16, 27, 51, 0.05);
+  --base-shadow-md: 0 2px 6px rgba(16, 27, 51, 0.07), 0 6px 18px rgba(16, 27, 51, 0.07);
+  --base-shadow-lg: 0 8px 24px rgba(16, 27, 51, 0.1), 0 16px 40px rgba(16, 27, 51, 0.08);
+  --base-shadow-floating: 0 12px 32px rgba(16, 27, 51, 0.16), 0 24px 60px rgba(16, 27, 51, 0.12);
+
+  color-scheme: light;
+}
+
+/* ---------- Semantic tokens — Dark: Midnight Atlas ---------- */
+.dark {
+  --background: var(--navy-950);
+  --surface: #101a30;
+  --surface-elevated: #16233c;
+  --surface-sunken: #0c1526;
+
+  --primary: var(--ocean-500);
+  --primary-dark: var(--navy-950);
+  --primary-light: var(--ocean-600);
+  --accent: var(--gold);
+
+  --gold-accent: #c9a227;
+  --gold-bright-accent: #dfb63c;
+  --gold-muted: #a5822f;
+
+  --text-primary: #e9edf4;
+  --text-secondary: #aab4c6;
+  --text-muted: #67718a;
+
+  --border-subtle: rgba(201, 162, 39, 0.14);
+  --border-soft: rgba(201, 162, 39, 0.24);
+  --border-gold: rgba(201, 162, 39, 0.4);
+
+  --success-soft: rgba(63, 156, 118, 0.14);
+  --warning-soft: rgba(217, 152, 52, 0.14);
+  --error-soft: rgba(214, 100, 84, 0.14);
+
+  --gold-glow: rgba(201, 162, 39, 0.18);
+  --navy-glow: rgba(58, 116, 166, 0.14);
+
+  --map-line: rgba(201, 162, 39, 0.16);
+  --grid-line: rgba(169, 186, 216, 0.05);
+
+  --base-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --base-shadow-md: 0 2px 6px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.3);
+  --base-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(0, 0, 0, 0.3);
+  --base-shadow-floating: 0 12px 32px rgba(0, 0, 0, 0.5), 0 24px 60px rgba(0, 0, 0, 0.4);
+
+  color-scheme: dark;
+}
+
+/* ---------- Token bridge into Tailwind ---------- */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-sunken: var(--surface-sunken);
+
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-accent: var(--accent);
+
+  --color-gold: var(--gold-accent);
+  --color-gold-bright: var(--gold-bright-accent);
+  --color-gold-muted: var(--gold-muted);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-soft: var(--border-soft);
+  --color-border-gold: var(--border-gold);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-success-soft: var(--success-soft);
+  --color-warning-soft: var(--warning-soft);
+  --color-error-soft: var(--error-soft);
+
+  --color-parchment: var(--parchment);
+  --color-sand: var(--sand);
+  --color-navy: var(--navy-900);
+  --color-navy-deep: var(--navy-950);
+  --color-ocean: var(--ocean-600);
+  --color-charcoal: var(--charcoal);
+  --color-map-line: var(--map-line);
+  --color-grid-line: var(--grid-line);
+
+  --font-cairo: "Cairo", "IBM Plex Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-amiri: "Amiri", "Cairo", serif;
+  --font-plex: "IBM Plex Sans Arabic", "Cairo", ui-sans-serif, sans-serif;
+
+  --shadow-sm: var(--base-shadow-sm);
+  --shadow-md: var(--base-shadow-md);
+  --shadow-lg: var(--base-shadow-lg);
+  --shadow-floating: var(--base-shadow-floating);
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+
+  --animate-compass-spin: compass-spin 12s linear infinite;
+  --animate-compass-slow: compass-spin 24s linear infinite;
+  --animate-route-dash: route-dash 1.6s linear infinite;
+  --animate-pulse-ring: pulse-ring 2.4s var(--ease-standard) infinite;
+  --animate-coordinate-fade: coordinate-fade 6s var(--ease-standard) infinite;
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-text-primary font-cairo antialiased;
+    transition: background-color 350ms var(--ease-standard), color 350ms var(--ease-standard);
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--gold-accent);
+    color: var(--navy-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gold-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-soft);
+    border-radius: 8px;
+    border: 2px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--gold-muted);
+  }
+}
+
+/* ---------- Brand utilities ---------- */
+
+/* Historical dates & numerals — Amiri serif with gold treatment */
+.font-historical {
+  font-family: var(--font-amiri);
+  font-feature-settings: "tnum";
+  color: var(--gold-accent);
+}
+
+.display-serif {
+  font-family: var(--font-amiri);
+}
+
+/* Map grid background pattern */
+.map-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Contour line pattern */
+.contours {
+  background-image: repeating-radial-gradient(
+    circle at 30% 40%,
+    transparent 0px,
+    transparent 26px,
+    var(--grid-line) 27px,
+    var(--grid-line) 28px,
+    transparent 29px
+  );
+}
+
+/* Coordinate ticks along edges */
+.coordinates-frame {
+  background-image: radial-gradient(circle, var(--map-line) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 18%);
+}
+
+/* Parchment texture — ultra subtle paper grain via turbulence */
+.parchment-texture {
+  position: relative;
+}
+.parchment-texture::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.55 0 0 0 0 0.45 0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Timeline / route dashed line */
+.route-dash {
+  stroke-dasharray: 6 8;
+  animation: route-dash 1.2s linear infinite;
+}
+
+/* Keyframes */
+@keyframes compass-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes route-dash {
+  to { stroke-dashoffset: -28; }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes coordinate-fade {
+  0%, 100% { opacity: 0.18; }
+  50% { opacity: 0.6; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .route-dash,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+}
