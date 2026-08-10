@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { PageTransition } from './design-system/motion/PageTransition';
+import { ParchmentTransition } from './design-system/motion/ParchmentTransition';
 import { useAuth } from './lib/auth';
 import SiteLayout from './layouts/SiteLayout';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -58,9 +59,9 @@ export default function App() {
         path="/timeline"
         element={
           <SiteLayout>
-            <PageTransition>
+            <ParchmentTransition motif="history">
               <HistoryTimelinePage />
-            </PageTransition>
+            </ParchmentTransition>
           </SiteLayout>
         }
       />
@@ -70,9 +71,9 @@ export default function App() {
         element={
           <RequireAuth>
             <DashboardLayout>
-              <PageTransition>
+              <ParchmentTransition motif="map">
                 <RoleRedirect />
-              </PageTransition>
+              </ParchmentTransition>
             </DashboardLayout>
           </RequireAuth>
         }
@@ -82,9 +83,9 @@ export default function App() {
         element={
           <RequireAuth>
             <DashboardLayout>
-              <PageTransition>
+              <ParchmentTransition motif="map">
                 <CoursesPage />
-              </PageTransition>
+              </ParchmentTransition>
             </DashboardLayout>
           </RequireAuth>
         }
@@ -106,9 +107,9 @@ export default function App() {
         element={
           <RequireAuth>
             <DashboardLayout>
-              <PageTransition>
+              <ParchmentTransition motif="exams">
                 <ExamPage />
-              </PageTransition>
+              </ParchmentTransition>
             </DashboardLayout>
           </RequireAuth>
         }
@@ -117,9 +118,9 @@ export default function App() {
         path="/results/:attemptId"
         element={
           <RequireAuth>
-            <PageTransition>
+            <ParchmentTransition motif="exams">
               <ResultsPage />
-            </PageTransition>
+            </ParchmentTransition>
           </RequireAuth>
         }
       />
@@ -128,9 +129,9 @@ export default function App() {
         element={
           <RequireAuth>
             <DashboardLayout>
-              <PageTransition>
+              <ParchmentTransition motif="achievements">
                 <AchievementsPage />
-              </PageTransition>
+              </ParchmentTransition>
             </DashboardLayout>
           </RequireAuth>
         }

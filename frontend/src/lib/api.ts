@@ -2,6 +2,8 @@ import type { ApiResponse } from './types';
 
 const TOKEN_KEY = 'mrsiam_token';
 
+const API_BASE: string = import.meta.env.VITE_API_URL ?? '';
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
@@ -32,7 +34,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`/api${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
 
   const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
 

@@ -3,9 +3,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================
-   MR. MOHAMED SIAM — "THE DIGITAL ATLAS" DESIGN SYSTEM
+   MR. MOHAMED SIAM — "AL-QAESAR" DESIGN SYSTEM
    Light  : Historical Parchment
-   Dark   : Midnight Atlas
+   Dark   : Midnight Caesar
    ============================================================ */
 
 /* ---------- Raw palette (never used directly in components) ---------- */
@@ -31,6 +31,7 @@
 :root,
 .light {
   --background: var(--parchment);
+  --parchment-soft: #f1ead7;
   --surface: #fffdf6;
   --surface-elevated: #ffffff;
   --surface-sunken: #efe7d2;
@@ -70,9 +71,10 @@
   color-scheme: light;
 }
 
-/* ---------- Semantic tokens — Dark: Midnight Atlas ---------- */
+  /* ---------- Semantic tokens — Dark: Midnight Caesar ---------- */
 .dark {
   --background: var(--navy-950);
+  --parchment-soft: #151f36;
   --surface: #101a30;
   --surface-elevated: #16233c;
   --surface-sunken: #0c1526;

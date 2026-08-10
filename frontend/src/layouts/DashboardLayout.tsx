@@ -1,6 +1,5 @@
 import {
   Award,
-  Compass,
   FileText,
   GraduationCap,
   Home,
@@ -18,6 +17,7 @@ import { useTheme } from '../lib/theme';
 import { Avatar } from '../design-system/ui/Avatar';
 import { Button } from '../design-system/ui/Button';
 import { Drawer } from '../design-system/ui/Drawer';
+import { BrandLogo } from '../design-system/components/BrandLogo';
 import { Menu } from 'lucide-react';
 
 interface NavItem {
@@ -45,14 +45,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col lg:flex-row">
       {/* Sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-e border-border-subtle bg-surface-sunken/50 lg:flex">
-        <Link to="/" className="flex items-center gap-2.5 border-b border-border-subtle px-5 py-5">
-          <Compass size={28} className="text-gold" strokeWidth={1.6} />
-          <div className="leading-tight">
-            <p className="text-sm font-bold text-text-primary">مستر محمد صيام</p>
-            <p className="font-plex text-[9px] uppercase tracking-[0.2em] text-text-muted" dir="ltr">
-              Digital Atlas
-            </p>
-          </div>
+        <Link to="/" className="border-b border-border-subtle px-5 py-4">
+          <BrandLogo size="md" imageSrc="/mr-siam-logo.jpeg" />
         </Link>
 
         <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -102,8 +96,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             <Menu size={20} />
           </button>
           <Link to="/" className="flex items-center gap-2">
-            <Compass size={24} className="text-gold" strokeWidth={1.6} />
-            <span className="text-sm font-bold">{user?.fullName ?? 'رحلتي'}</span>
+            <BrandLogo size="sm" />
+            <span className="text-xs font-bold text-text-secondary">{user?.fullName ?? 'رحلتي'}</span>
           </Link>
         </div>
         <button onClick={toggle} className="p-1.5 text-text-secondary" aria-label="تبديل الوضع">
@@ -139,7 +133,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         <div className="sticky top-0 z-30 hidden items-center justify-between border-b border-border-subtle bg-background/80 px-6 py-3 backdrop-blur-md lg:flex">
           <div className="flex items-center gap-2.5 text-sm text-text-muted">
             <FileText size={15} className="text-gold" />
-            <span>الأطلس الرقمي</span>
+            <span>القيصر الرقمي</span>
             <span className="opacity-40">|</span>
             <GraduationCap size={15} className="text-gold" />
             <span>رحلتك التعليمية</span>

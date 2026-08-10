@@ -1,10 +1,11 @@
-import { Compass, Menu, Moon, Sun } from 'lucide-react';
+import { Menu, Moon, Sun } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme';
 import { Drawer } from '../design-system/ui/Drawer';
 import { Button } from '../design-system/ui/Button';
+import { BrandLogo } from '../design-system/components/BrandLogo';
 
 const NAV = [
   { to: '/', label: 'الرئيسية' },
@@ -22,14 +23,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2.5">
-          <Compass size={30} className="text-gold" strokeWidth={1.6} />
-          <div className="leading-tight">
-            <p className="font-bold text-text-primary">مستر محمد صيام</p>
-            <p className="font-plex text-[10px] uppercase tracking-[0.22em] text-text-muted" dir="ltr">
-              The Digital Atlas
-            </p>
-          </div>
+        <Link to="/" className="group flex items-center gap-2.5">
+          <BrandLogo size="sm" imageSrc="/mr-siam-logo.jpeg" />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -133,12 +128,12 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <Compass size={26} className="text-gold" strokeWidth={1.6} />
-            <div className="leading-tight">
-              <p className="font-bold text-text-primary">مستر محمد صيام</p>
-              <p className="text-xs text-text-muted">التاريخ حكاية لازم تعيشها</p>
-            </div>
+            <BrandLogo size="sm" imageSrc="/mr-siam-logo.jpeg" />
           </div>
+
+          <p className="display-serif text-sm font-bold text-gold">
+            مع أبو كيان .. الدراسات في أمان
+          </p>
 
           <div className="flex gap-6 text-sm text-text-muted">
             <Link to="/teacher-profile" className="transition-colors hover:text-gold">
@@ -157,7 +152,7 @@ export function SiteFooter() {
           <span dir="ltr" className="font-plex tracking-[0.18em]">
             31°15′N / 32°18′E
           </span>
-          <span>© {new Date().getFullYear()} مستر محمد صيام — الأطلس الرقمي للتعليم</span>
+          <span>© {new Date().getFullYear()} مستر محمد صيام — القيصر الرقمي للتعليم</span>
         </div>
       </div>
     </footer>

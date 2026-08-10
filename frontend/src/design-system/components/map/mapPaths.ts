@@ -1,4 +1,4 @@
-/** Stylized atlas paths — "the world as an explorer's map", not cartographic accuracy */
+/** Stylized map paths — "the world as an explorer's map", not cartographic accuracy */
 
 export const WORLD_PATH = [
   // Greenland

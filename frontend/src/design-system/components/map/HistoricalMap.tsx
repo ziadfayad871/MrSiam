@@ -29,7 +29,7 @@ export interface HistoricalMapProps {
   highlightRegion?: 'none' | 'delta' | 'valley' | 'world';
 }
 
-/** The atlas map — consistent world/Egypt language, optional markers & routes */
+/** The map — consistent world/Egypt language, optional markers & routes */
 export function HistoricalMap({
   style = 'world',
   markers = [],

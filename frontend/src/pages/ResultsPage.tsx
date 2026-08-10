@@ -1,14 +1,16 @@
 import { motion } from 'motion/react';
 import { ArrowLeft, Compass, Flag, MapPin, Trophy } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { AchievementBadge } from '../design-system/components/AchievementBadge';
 import { Compass as CompassBrand } from '../design-system/components/Compass';
 import CoordinateLabel from '../design-system/components/CoordinateLabel';
+import { HistoryMadeOverlay } from '../design-system/motion/HistoryMadeOverlay';
 import { Button } from '../design-system/ui/Button';
 import { Card } from '../design-system/ui/Card';
 import { EmptyState } from '../design-system/ui/EmptyState';
 import type { AttemptResultDto } from '../lib/types';
+import { useAuth } from '../lib/auth';
 
 function ScoreRing({ percentage, totalMarks }: { percentage: number; totalMarks: number }) {
   const r = 56;
@@ -46,6 +48,8 @@ function ScoreRing({ percentage, totalMarks }: { percentage: number; totalMarks:
 export default function ResultsPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const location = useLocation();
+  const [celebrated, setCelebrated] = useState(false);
+  const { user } = useAuth();
   const result = useMemo<AttemptResultDto | null>(() => {
     const fromState = (location.state as { result?: AttemptResultDto } | null)?.result;
     if (fromState) return fromState;
@@ -86,6 +90,16 @@ export default function ResultsPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+      {/* Big unlock moment — full-screen history inscription */}
+      <HistoryMadeOverlay
+        open={passed && result.unlockedAchievements.length > 0 && !celebrated}
+        studentName={user?.fullName ?? 'بطل'}
+        examTitle={result.examTitle}
+        percentage={result.percentage}
+        achievement={result.unlockedAchievements[0]?.title}
+        onComplete={() => setCelebrated(true)}
+      />
+
       <Card variant="map" className="relative overflow-hidden text-center">
         <CoordinateLabel
           latitude={{ degrees: 31, minutes: 15, hemisphere: 'N' }}

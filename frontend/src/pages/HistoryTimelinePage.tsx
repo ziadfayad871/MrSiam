@@ -5,7 +5,63 @@ import CoordinateLabel from '../design-system/components/CoordinateLabel';
 import { HistoricalDivider } from '../design-system/components/HistoricalDivider';
 import { HistoricalTimeline } from '../design-system/components/HistoricalTimeline';
 import { HistoricalSectionHeader } from '../design-system/components/HistoricalSectionHeader';
+import { InteractiveTimeline } from '../design-system/components/InteractiveTimeline';
 import { Reveal } from '../design-system/motion/Reveal';
+
+const ERAS = [
+  {
+    id: 'ancient-egypt',
+    title: 'مصر القديمة',
+    range: '3100 ق.م — 332 ق.م',
+    description: 'أقدم حضارة عرفها العالم — النيل، الأهرامات، المعابد، ونظام الكتابة الأول في التاريخ.',
+    glyph: '🏛️',
+    coordinates: '29.9°N / 31.2°E',
+    events: [
+      { year: '3100 ق.م', title: 'توحيد القطرين', description: 'نارمر يوحد الشمال والجنوب ويؤسس أول أسرة حاكمة.' },
+      { year: '2560 ق.م', title: 'هرم خوفو', description: 'أعجوبة الدنيا الوحيدة الباقية — بنت ملوك الدولة القديمة.' },
+      { year: '1279 ق.م', title: 'رمسيس الثاني', description: 'معركة قادش وأول معاهدة سلام في التاريخ.' },
+    ],
+  },
+  {
+    id: 'middle-ages',
+    title: 'العصور الوسطى',
+    range: '332 ق.م — 1517 م',
+    description: 'من الإسكندر إلى الفتح الإسلامي إلى المماليك — مصر بوابة العالم القديم.',
+    glyph: '🕌',
+    coordinates: '30.0°N / 31.2°E',
+    events: [
+      { year: '641 م', title: 'دخول الإسلام مصر', description: 'عمرو بن العاص يفتح مصر ويؤسس الفسطاط أول عاصمة إسلامية.' },
+      { year: '1171 م', title: 'صلاح الدين الأيوبي', description: 'يحرر القدس ويحصن مصر من الحملات الصليبية.' },
+      { year: '1250 م', title: 'المماليك', description: 'مصر تتصدر العالم — صناعة وتجارة وعلوم.' },
+    ],
+  },
+  {
+    id: 'modern-history',
+    title: 'التاريخ الحديث',
+    range: '1517 م — 1952 م',
+    description: 'من الحملة الفرنسية لثورة يوليو — مصر تولد من جديد وتبني وطناً حديثاً.',
+    glyph: '⚓',
+    coordinates: '30.05°N / 31.23°E',
+    events: [
+      { year: '1798 م', title: 'الحملة الفرنسية', description: 'الطباعة والعلم الحديث يدخلان مصر.' },
+      { year: '1805 م', title: 'محمد علي باشا', description: 'جيش قوي، مدارس حديثة، وبعثات علمية لأوروبا.' },
+      { year: '1882 م', title: 'الاحتلال البريطاني', description: 'تبدأ رحلة المقاومة الوطنية.' },
+      { year: '1919 م', title: 'ثورة 1919', description: 'سعد زغلول والوفد — الشعب كله جبهة واحدة.' },
+    ],
+  },
+  {
+    id: 'contemporary',
+    title: 'العصر المعاصر',
+    range: '1952 م — اليوم',
+    description: 'الجمهورية المصرية — استقلال، بناء، وتحرير الأرض في أكتوبر المجيد.',
+    glyph: '🦅',
+    coordinates: '30.04°N / 31.24°E',
+    events: [
+      { year: '1952 م', title: 'ثورة 23 يوليو', description: 'إنهاء الملكية وإعلان الجمهورية.' },
+      { year: '1973 م', title: 'نصر أكتوبر', description: 'استعادة سيناء وكرامة الوطن.' },
+    ],
+  },
+];
 
 const STOPS = [
   {
@@ -108,6 +164,18 @@ export default function HistoryTimelinePage() {
           />
         </div>
       </section>
+
+      <HistoricalDivider />
+
+      {/* Interactive eras timeline */}
+      <section className="mx-auto max-w-4xl px-4 py-20">
+        <HistoricalSectionHeader number="02" title="عصور التاريخ" subtitle="THE ERAS" align="center">
+          اتحرك بالخط تحت — كل عصر بيفتح حكايته، وكل حدث بيظهر في موعده.
+        </HistoricalSectionHeader>
+        <InteractiveTimeline eras={ERAS} className="mt-14" />
+      </section>
+
+      <HistoricalDivider />
 
       {/* Epilogue */}
       <Reveal className="mx-auto mt-20 max-w-2xl px-4 text-center">

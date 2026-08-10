@@ -5,6 +5,7 @@ import { AchievementBadge } from '../../design-system/components/AchievementBadg
 import { Compass as CompassBrand } from '../../design-system/components/Compass';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
+import { JourneyMap, type JourneyStation } from '../../design-system/components/journey/JourneyMap';
 import { RouteProgress } from '../../design-system/components/RouteProgress';
 import { Card } from '../../design-system/ui/Card';
 import { ErrorState } from '../../design-system/ui/ErrorState';
@@ -13,6 +14,14 @@ import { Stat } from '../../design-system/ui/Stat';
 import { api } from '../../lib/api';
 import { useAuth } from '../../lib/auth';
 import type { StudentDashboardDto } from '../../lib/types';
+
+const JOURNEY_STATIONS: { id: string; title: string; icon: string }[] = [
+  { id: 'start', title: 'البداية', icon: '🧭' },
+  { id: 'lessons', title: 'الدروس', icon: '📚' },
+  { id: 'exams', title: 'الاختبارات', icon: '📝' },
+  { id: 'achievements', title: 'الإنجازات', icon: '⭐' },
+  { id: 'tops', title: 'الأوائل', icon: '🏆' },
+];
 
 export default function StudentDashboard() {
   const { user } = useAuth();
@@ -33,6 +42,23 @@ export default function StudentDashboard() {
 
   const current = data.currentDestination;
   const currentStage = data.journey.find((j) => j.status === 'current' || j.status === 'in-progress') ?? data.journey[0];
+
+  const overallProgress = Math.round(
+    (data.stats.passedExams / Math.max(data.stats.examsTaken, 1)) * 100,
+  );
+
+  const journeyStations: JourneyStation[] = JOURNEY_STATIONS.map((s, i) => {
+    const position = (i / (JOURNEY_STATIONS.length - 1)) * 100;
+    const unlocked = i <= Math.floor((overallProgress / 100) * (JOURNEY_STATIONS.length - 1));
+    const isCurrent = i === Math.min(Math.floor((overallProgress / 100) * (JOURNEY_STATIONS.length - 1)) + 1, JOURNEY_STATIONS.length - 1);
+    return {
+      id: s.id,
+      title: s.title,
+      icon: s.icon,
+      position,
+      state: (unlocked ? 'reached' : isCurrent ? 'current' : 'locked') as JourneyStation['state'],
+    };
+  });
 
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
@@ -63,6 +89,34 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Interactive journey map — the route itself is the progress */}
+      <Card variant="map" className="p-4 sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-text-primary">خريطة رحلتك التفاعلية</h2>
+            <p className="mt-0.5 text-xs text-text-muted">كل درس خطوة.. وكل إنجاز محطة.</p>
+          </div>
+          <span className="hidden rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold text-gold sm:block">
+            مع أبو كيان.. الدراسات في أمان
+          </span>
+        </div>
+        <JourneyMap
+          stations={journeyStations}
+          progress={overallProgress}
+          seals={Array.from({ length: Math.min(data.stats.passedExams, 6) }).map((_, i) => ({
+            id: `seal-${i}`,
+            position: 14 + i * 14,
+            label: 'امتحان ناجح',
+          }))}
+          achievements={data.recentAchievements.map((a, i) => ({
+            id: `ach-${a.id}`,
+            position: 20 + i * 15,
+            title: a.title,
+          }))}
+          travelerName={data.student.studentCode}
+        />
+      </Card>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">

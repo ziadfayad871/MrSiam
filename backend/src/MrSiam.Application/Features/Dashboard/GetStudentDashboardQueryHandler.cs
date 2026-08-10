@@ -22,6 +22,7 @@ public class GetStudentDashboardQueryHandler(IApplicationDbContext db)
 
         var attempts = await db.ExamAttempts
             .AsNoTracking()
+            .Include(a => a.Exam)
             .Where(a => a.StudentId == request.StudentId)
             .ToListAsync(ct);
 

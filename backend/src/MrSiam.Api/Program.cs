@@ -31,13 +31,15 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<MrSiam.Application.Abstractions.ICurrentUserService, MrSiam.Api.Services.CurrentUserService>();
 
+    var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins")
+        .Get<string>()?
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        ?? ["http://localhost:5173", "http://localhost:4173", "https://localhost:5173"];
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("Frontend", policy =>
-            policy.WithOrigins(
-                    "http://localhost:5173",
-                    "http://localhost:4173",
-                    "https://localhost:5173")
+            policy.WithOrigins(corsOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials());

@@ -41,7 +41,7 @@ public static class SeedData
         // ---------- Achievements ----------
         var achievements = new[]
         {
-            new Achievement { Code = "journey-started", Title = "بداية الرحلة", Description = "خطوتك الأولى في الأطلس التعليمي", Icon = "compass", Order = 1 },
+            new Achievement { Code = "journey-started", Title = "بداية الرحلة", Description = "خطوتك الأولى في مملكة القيصر التعليمية", Icon = "compass", Order = 1 },
             new Achievement { Code = "first-pass", Title = "مؤرخ المستقبل", Description = "اجتزت أول امتحان في رحلتك", Icon = "scroll", RequiredExamsPassed = 1, Order = 2 },
             new Achievement { Code = "map-king", Title = "ملك الخرائط", Description = "اجتزت امتحانات الجغرافيا لثلاثة مقررات", Icon = "map", Order = 3 },
             new Achievement { Code = "history-hero", Title = "بطل التاريخ", Description = "اجتزت امتحانات التاريخ لثلاثة مقررات", Icon = "landmark", Order = 4 },

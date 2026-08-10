@@ -1,5 +1,7 @@
 import { ArrowLeft, Compass, Landmark, Map } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Globe } from '../design-system/components/Globe';
+import { HallOfFame } from '../design-system/components/HallOfFame';
 import { HistoricalDivider } from '../design-system/components/HistoricalDivider';
 import { HistoricalSectionHeader } from '../design-system/components/HistoricalSectionHeader';
 import { HistoricalTimeline } from '../design-system/components/HistoricalTimeline';
@@ -50,6 +52,63 @@ const PODIUM_DEMO = [
   { rank: 1, name: 'ملك محمود', score: 98.4, stage: 'الثالث الثانوي' },
   { rank: 2, name: 'أحمد سمير', score: 96.2, stage: 'الثالث الإعدادي' },
   { rank: 3, name: 'عمر خالد', score: 94.8, stage: 'الثاني الثانوي' },
+];
+
+const GLOBE_MARKERS = [
+  {
+    id: 'cairo',
+    name: 'القاهرة',
+    latitude: 30.0,
+    longitude: 31.2,
+    x: 0.5,
+    y: 0.45,
+    note: 'من الفسطاط لمدينة الألف مئذنة — العاصمة اللي فضلت قلب العالم الإسلامي لقرون.',
+  },
+  {
+    id: 'athens',
+    name: 'أثينا',
+    latitude: 38.0,
+    longitude: 23.7,
+    x: 0.62,
+    y: 0.47,
+    note: 'مهد الديمقراطية والفلسفة — أولادها كتبوا اسمهم بحروف نور في التاريخ.',
+  },
+  {
+    id: 'rome',
+    name: 'روما',
+    latitude: 41.9,
+    longitude: 12.5,
+    x: 0.69,
+    y: 0.41,
+    note: 'عاصمة إمبراطورية امتدت من المحيط الأطلسي للفرات — وقوانينها وصلت لليوم.',
+  },
+  {
+    id: 'london',
+    name: 'لندن',
+    latitude: 51.5,
+    longitude: -0.1,
+    x: 0.77,
+    y: 0.33,
+    note: 'عاصمة الثورة الصناعية — ومركز الاحتلال البريطاني اللي استقبلت مصر ثوراته.',
+  },
+  {
+    id: 'mecca',
+    name: 'مكة المكرمة',
+    latitude: 21.4,
+    longitude: 39.8,
+    x: 0.42,
+    y: 0.6,
+    note: 'أطهر بقاع الأرض — وقبلة المسلمين من مشارق الأرض ومغاربها.',
+  },
+  {
+    id: 'paris',
+    name: 'باريس',
+    latitude: 48.9,
+    longitude: 2.4,
+    x: 0.7,
+    y: 0.36,
+    note: 'عاصمة النور — ومنها دخلت مصر الحملة الفرنسية والطباعة والعلم الحديث.',
+  },
 ];
 
 export default function LandingPage() {
@@ -113,10 +172,28 @@ export default function LandingPage() {
 
       <HistoricalDivider />
 
+      {/* Discover the world */}
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+        <HistoricalSectionHeader
+          number="03"
+          title="اكتشف العالم مع أبو كيان"
+          subtitle="THE GLOBE"
+          align="center"
+        >
+          التاريخ مش بس أزمنة — ده أماكن كمان. لفّ الكرة ودوّر على محطات الحضارة.
+        </HistoricalSectionHeader>
+
+        <Reveal className="mt-14">
+          <Globe markers={GLOBE_MARKERS} title="الكرة الأرضية — محطات الحضارة" />
+        </Reveal>
+      </section>
+
+      <HistoricalDivider />
+
       {/* History route */}
       <section className="map-grid mx-auto max-w-7xl px-4 py-24 sm:px-6">
         <HistoricalSectionHeader
-          number="03"
+          number="04"
           title="رحلة التاريخ"
           subtitle="THE HISTORY ROUTE"
         >
@@ -135,7 +212,7 @@ export default function LandingPage() {
       {/* Podium */}
       <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
         <HistoricalSectionHeader
-          number="04"
+          number="05"
           title="أوائل مستر محمد صيام"
           subtitle="THE TOP STUDENTS"
           align="center"
@@ -155,6 +232,19 @@ export default function LandingPage() {
             اعمل حسابك وابقى من الأوائل <ArrowLeft size={16} />
           </Link>
         </Reveal>
+      </section>
+
+      <HistoricalDivider />
+
+      {/* Hall of Top Students */}
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+        <HallOfFame
+          entries={[
+            { rank: 1, name: 'ملك محمود', grade: 'الثالث الثانوي', score: 98.4, percentage: 98.4, achievement: 'مؤرخ المستقبل', year: '2026' },
+            { rank: 2, name: 'أحمد سمير', grade: 'الثالث الإعدادي', score: 96.2, percentage: 96.2, achievement: 'ملك الخرائط', year: '2026' },
+            { rank: 3, name: 'عمر خالد', grade: 'الثاني الثانوي', score: 94.8, percentage: 94.8, achievement: 'بطل الشهر', year: '2026' },
+          ]}
+        />
       </section>
     </div>
   );

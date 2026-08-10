@@ -2,6 +2,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import { ArrowLeft, Compass, MapPin } from 'lucide-react';
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '../../design-system/components/BrandLogo';
 import { Compass as CompassBrand } from '../../design-system/components/Compass';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
 import { HistoricalMap } from '../../design-system/components/map/HistoricalMap';
@@ -81,20 +82,10 @@ export function Hero() {
           initial={reduced ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.2 }}
-          className="mb-8 flex items-center gap-3"
+          className="mb-10"
         >
-          <CompassBrand size="hero" animated route />
+          <BrandLogo variant="hero" imageSrc="/mr-siam-logo.jpeg" />
         </motion.div>
-
-        <motion.p
-          initial={reduced ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5, duration: 0.8 }}
-          className="font-plex mb-5 text-[11px] font-semibold uppercase tracking-[0.42em] text-gold-bright"
-          dir="ltr"
-        >
-          The Digital Atlas of Education
-        </motion.p>
 
         <motion.h1
           initial={reduced ? false : { opacity: 0, y: 26 }}
@@ -106,6 +97,16 @@ export function Hero() {
           <br />
           <span className="text-gold-bright">التاريخ حكاية لازم تعيشها.</span>
         </motion.h1>
+
+        {/* Brand tagline */}
+        <motion.p
+          initial={reduced ? false : { opacity: 0, scale: 0.95, letterSpacing: '0.1em' }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.78, duration: 0.7 }}
+          className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-5 py-1.5 text-sm font-bold text-gold-bright"
+        >
+          مع أبو كيان .. الدراسات في أمان
+        </motion.p>
 
         <motion.p
           initial={reduced ? false : { opacity: 0, y: 20 }}

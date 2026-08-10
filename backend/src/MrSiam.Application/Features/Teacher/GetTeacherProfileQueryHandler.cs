@@ -30,7 +30,7 @@ public class GetTeacherProfileQueryHandler(IApplicationDbContext db)
             new() { Year = teacher.ExperienceYears >= 20 ? DateTime.UtcNow.Year - 20 : DateTime.UtcNow.Year - teacher.ExperienceYears, Title = "البداية", Description = $"بدأ رحلة التدريس بعد تخرجه من {teacher.GraduatedFrom}" },
             new() { Year = DateTime.UtcNow.Year - teacher.ExperienceYears + 8, Title = "منتصف الرحلة", Description = "أسس أسلوباً تعليمياً يجمع بين القصة والخريطة في تدريس التاريخ والجغرافيا" },
             new() { Year = DateTime.UtcNow.Year - teacher.ExperienceYears + 15, Title = "آلاف الطلاب", Description = "مرّ على حصصه آلاف الطلاب من الإعدادية والثانوية" },
-            new() { Year = DateTime.UtcNow.Year, Title = "المستقبل", Description = "يطلق منصته التعليمية الرقمية لتكون الأطلس الرقمي لكل طالب" }
+            new() { Year = DateTime.UtcNow.Year, Title = "المستقبل", Description = "يطلق منصته التعليمية الرقمية لتكون القيصر الرقمي لكل طالب" }
         };
 
         return ApiResponse<TeacherProfileDto>.Ok(new TeacherProfileDto

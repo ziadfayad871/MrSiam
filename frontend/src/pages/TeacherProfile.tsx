@@ -84,6 +84,9 @@ export default function TeacherProfile() {
               مدرّس شغوف، بيرسم للطلاب خريطة المعرفة وبيحكي لهم التاريخ حكاية.
               هنا هتلاقي اللي خلّى جيل كامل يقول: "أول مرة أفهم التاريخ!"
             </p>
+            <p className="display-serif mt-5 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-5 py-1.5 text-sm font-bold text-gold-bright">
+              مع أبو كيان .. الدراسات في أمان
+            </p>
           </Reveal>
 
           <Reveal delay={0.3} className="mt-10 grid w-full max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">

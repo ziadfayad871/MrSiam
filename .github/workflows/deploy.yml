@@ -1,0 +1,59 @@
+name: Deploy to MonsterASP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  deploy-api:
+    name: Build & deploy API → site84490
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish API
+        run: dotnet publish backend/src/MrSiam.Api/MrSiam.Api.csproj -c Release -o publish
+
+      - name: Deploy API to MonsterASP
+        uses: rasmusbuchholdt/simply-web-deploy@2.2.0
+        with:
+          website-name: ${{ secrets.API_WEBSITE }}
+          server-computer-name: ${{ secrets.API_SERVER }}
+          server-username: ${{ secrets.API_USER }}
+          server-password: ${{ secrets.API_PASS }}
+
+  deploy-frontend:
+    name: Build & deploy Frontend → site84491
+    runs-on: windows-latest
+    needs: deploy-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build frontend
+        shell: pwsh
+        working-directory: frontend
+        run: |
+          $env:VITE_API_URL = "${{ secrets.API_URL }}"
+          npm ci
+          npm run build
+
+      - name: Deploy Frontend to MonsterASP
+        uses: rasmusbuchholdt/simply-web-deploy@2.2.0
+        with:
+          website-name: ${{ secrets.FE_WEBSITE }}
+          server-computer-name: ${{ secrets.FE_SERVER }}
+          server-username: ${{ secrets.FE_USER }}
+          server-password: ${{ secrets.FE_PASS }}
+          source-path: '\frontend\dist\'
+          target-delete: true
