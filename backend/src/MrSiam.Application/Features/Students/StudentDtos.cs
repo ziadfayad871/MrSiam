@@ -55,7 +55,8 @@ public record UpdateStudentCommand(
     string? GuardianPhone,
     Stage? Stage,
     string? AcademicYear,
-    bool? IsActive) : IRequest<ApiResponse<bool>>;
+    bool? IsActive,
+    string? NewPassword = null) : IRequest<ApiResponse<bool>>;
 
 public record SearchStudentsQuery(string? Search = null, Stage? Stage = null, int Page = 1, int PageSize = 20)
     : IRequest<MrSiam.Application.Common.ApiResponse<MrSiam.Application.Common.PagedResult<StudentListItemDto>>>;

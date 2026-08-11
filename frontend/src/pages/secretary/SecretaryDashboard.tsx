@@ -1,4 +1,5 @@
-import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Plus, Trash2, Users, XCircle } from 'lucide-react';
+import QRCode from 'qrcode';
+import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
@@ -6,6 +7,7 @@ import { Card } from '../../design-system/ui/Card';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Button } from '../../design-system/ui/Button';
 import Input from '../../design-system/ui/Field';
+import { Modal } from '../../design-system/ui/Modal';
 import { Tabs } from '../../design-system/ui/Tabs';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
@@ -27,6 +29,9 @@ const STAGES = [
   { key: 'SecTwo', ar: 'تانية ثانوي' },
   { key: 'SecThree', ar: 'تالتة ثانوي' },
 ] as const;
+
+const TH = 'py-2 text-center font-medium';
+const TD = 'py-2.5 text-center';
 
 function SummaryRow({ label, value, tone }: { label: string; value: number; tone: 'gold' | 'ok' | 'warn' }) {
   const color =
@@ -102,7 +107,7 @@ function OverviewTab({ data }: { data: SecretaryDashboardDto }) {
           <div className="grid gap-4 sm:grid-cols-3">
             {data.paymentsSummary.map((m) => (
               <div key={m.month} className="rounded-md border border-border-soft p-4">
-                <p className="font-plex text-[10px] uppercase tracking-[0.2em] text-gold" dir="ltr">
+                <p className="font-plex text-center text-[10px] uppercase tracking-[0.2em] text-gold" dir="ltr">
                   {m.month}
                 </p>
                 <div className="mt-3 flex flex-col gap-1.5">
@@ -142,22 +147,22 @@ function OverviewTab({ data }: { data: SecretaryDashboardDto }) {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[560px] text-sm">
             <thead>
-              <tr className="border-b border-border-soft text-start text-[11px] text-text-muted">
-                <th className="py-2 text-start font-medium">الطالب</th>
-                <th className="py-2 text-start font-medium">الكود</th>
-                <th className="py-2 text-start font-medium">المرحلة</th>
-                <th className="py-2 text-start font-medium">العام الدراسي</th>
-                <th className="py-2 text-start font-medium">الحالة</th>
+              <tr className="border-b border-border-soft text-[11px] text-text-muted">
+                <th className={TH}>الطالب</th>
+                <th className={TH}>الكود</th>
+                <th className={TH}>المرحلة</th>
+                <th className={TH}>العام الدراسي</th>
+                <th className={TH}>الحالة</th>
               </tr>
             </thead>
             <tbody>
               {data.recentStudents.map((s) => (
                 <tr key={s.id} className="border-b border-border-soft/60 last:border-0">
-                  <td className="py-2.5 font-semibold text-text-primary">{s.fullName}</td>
-                  <td className="py-2.5 font-plex text-xs text-text-muted" dir="ltr">{s.studentCode}</td>
-                  <td className="py-2.5 text-text-secondary">{s.stageAr}</td>
-                  <td className="py-2.5 text-text-secondary">{s.academicYear}</td>
-                  <td className="py-2.5">
+                  <td className={`${TD} font-semibold text-text-primary`}>{s.fullName}</td>
+                  <td className={`${TD} font-plex text-xs text-text-muted`} dir="ltr">{s.studentCode}</td>
+                  <td className={`${TD} text-text-secondary`}>{s.stageAr}</td>
+                  <td className={`${TD} text-text-secondary`}>{s.academicYear}</td>
+                  <td className={TD}>
                     {s.hasPaymentIssue ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-error/10 px-2 py-0.5 text-[10px] font-bold text-error">
                         <AlertTriangle size={10} /> مستحقات متأخرة
@@ -185,7 +190,16 @@ function StudentsTab() {
   const [form, setForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '2025/2026', password: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [lastCreated, setLastCreated] = useState<CreateStudentResult | null>(null);
+  const [lastCreated, setLastCreated] = useState<(CreateStudentResult & { password: string }) | null>(null);
+
+  const [editing, setEditing] = useState<StudentListItemDto | null>(null);
+  const [editForm, setEditForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '', newPassword: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const [printing, setPrinting] = useState<StudentListItemDto | null>(null);
+  const [printPassword, setPrintPassword] = useState('');
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [qrBusy, setQrBusy] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -217,9 +231,10 @@ function StudentsTab() {
         password: form.password,
       });
       if (res) {
-        setLastCreated(res);
+        const created = { ...res, password: form.password };
+        setLastCreated(created);
         toast('تم تسجيل الطالب', `يوزر نيم: ${res.username}`, 'success');
-        setForm({ fullName: '', guardianPhone: '', stage: form.stage, academicYear: form.academicYear, password: '' });
+        setForm((f) => ({ ...f, fullName: '', guardianPhone: '', password: '' }));
         load();
       }
     } catch (err) {
@@ -228,6 +243,76 @@ function StudentsTab() {
       setSaving(false);
     }
   }
+
+  function openEdit(student: StudentListItemDto) {
+    setEditing(student);
+    setEditForm({
+      fullName: student.fullName,
+      guardianPhone: student.guardianPhone,
+      stage: student.stage,
+      academicYear: student.academicYear,
+      newPassword: '',
+    });
+  }
+
+  async function saveEdit(e: FormEvent) {
+    e.preventDefault();
+    if (!editing) return;
+    setSavingEdit(true);
+    try {
+      await api.put(`/students/${editing.id}`, {
+        id: editing.id,
+        fullName: editForm.fullName.trim(),
+        guardianPhone: editForm.guardianPhone.trim(),
+        stage: editForm.stage,
+        academicYear: editForm.academicYear.trim(),
+        newPassword: editForm.newPassword.trim() || null,
+      });
+      toast('تم التعديل', 'اتحدثت بيانات الطالب', 'success');
+      setEditing(null);
+      load();
+    } catch (err) {
+      toast('فشل التعديل', err instanceof Error ? err.message : 'خطأ', 'error');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
+
+  function openPrint(student: StudentListItemDto, prefillPassword = '') {
+    setPrinting(student);
+    setPrintPassword(prefillPassword);
+    setQrUrl(null);
+  }
+
+  async function buildQr() {
+    if (!printing || printPassword.trim().length < 4) return;
+    setQrBusy(true);
+    try {
+      const url = new URL('/login', window.location.origin);
+      url.searchParams.set('u', printing.username);
+      url.searchParams.set('p', printPassword.trim());
+      const dataUrl = await QRCode.toDataURL(url.toString(), {
+        width: 280,
+        margin: 1,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#16121f', light: '#ffffff' },
+      });
+      setQrUrl(dataUrl);
+    } catch {
+      toast('فشل توليد الكود', 'جرب تاني', 'error');
+    } finally {
+      setQrBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!printing) return;
+    const t = setTimeout(() => {
+      buildQr();
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [printPassword, printing]);
 
   async function remove(student: StudentListItemDto) {
     if (!window.confirm(`حذف الطالب ${student.fullName} (${student.username})؟ كل بياناته هتتمسح.`)) return;
@@ -267,11 +352,11 @@ function StudentsTab() {
             placeholder="مثال: أحمد محمد علي"
           />
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-text-secondary">المرحلة</label>
+            <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المرحلة</label>
             <select
               value={form.stage}
               onChange={(e) => setForm({ ...form, stage: e.target.value })}
-              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
             >
               {STAGES.map((s) => (
                 <option key={s.key} value={s.key}>
@@ -311,11 +396,37 @@ function StudentsTab() {
         </form>
 
         {lastCreated && (
-          <div className="mt-5 rounded-md border border-success/30 bg-success/10 p-4">
-            <p className="text-sm font-bold text-success">تم التسجيل — سلّم للطالب بياناته:</p>
-            <p className="mt-2 font-plex text-sm text-text-primary" dir="ltr">
-              يوزر نيم: <span className="font-bold text-gold">{lastCreated.username}</span> · باسورد: {form.password || '••••'}
-            </p>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-success/30 bg-success/10 p-4">
+            <div>
+              <p className="text-sm font-bold text-success">تم التسجيل — سلّم للطالب بياناته:</p>
+              <p className="mt-2 font-plex text-sm text-text-primary" dir="ltr">
+                يوزر نيم: <span className="font-bold text-gold">{lastCreated.username}</span> · باسورد: {lastCreated.password}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Printer size={15} />}
+              onClick={() => {
+                const stub: StudentListItemDto = {
+                  id: lastCreated.studentId,
+                  fullName: form.fullName.trim() || 'الطالب الجديد',
+                  studentCode: lastCreated.studentCode,
+                  username: lastCreated.username,
+                  stage: 'PrepOne' as const,
+                  stageAr: STAGES.find((s) => s.key === form.stage)?.ar ?? '',
+                  guardianPhone: '',
+                  academicYear: form.academicYear,
+                  joinedAt: new Date().toISOString(),
+                  isActive: true,
+                  average: 0,
+                  examsTaken: 0,
+                };
+                openPrint(stub, lastCreated.password);
+              }}
+            >
+              اطبع كارت الدخول
+            </Button>
           </div>
         )}
       </Card>
@@ -333,34 +444,50 @@ function StudentsTab() {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
+            <table className="w-full min-w-[720px] text-sm">
               <thead>
-                <tr className="border-b border-border-soft text-start text-[11px] text-text-muted">
-                  <th className="py-2 text-start font-medium">الطالب</th>
-                  <th className="py-2 text-start font-medium">اليوزر نيم</th>
-                  <th className="py-2 text-start font-medium">المرحلة</th>
-                  <th className="py-2 text-start font-medium">العام</th>
-                  <th className="py-2 text-start font-medium">ولي الأمر</th>
-                  <th className="py-2 text-end font-medium">حذف</th>
+                <tr className="border-b border-border-soft text-[11px] text-text-muted">
+                  <th className={TH}>الطالب</th>
+                  <th className={TH}>اليوزر نيم</th>
+                  <th className={TH}>المرحلة</th>
+                  <th className={TH}>العام</th>
+                  <th className={TH}>ولي الأمر</th>
+                  <th className={TH}>التحكم</th>
                 </tr>
               </thead>
               <tbody>
                 {students.map((s) => (
                   <tr key={s.id} className="border-b border-border-soft/60 last:border-0">
-                    <td className="py-2.5 font-semibold text-text-primary">{s.fullName}</td>
-                    <td className="py-2.5 font-plex text-xs text-gold" dir="ltr">{s.username}</td>
-                    <td className="py-2.5 text-text-secondary">{s.stageAr}</td>
-                    <td className="py-2.5 text-text-secondary">{s.academicYear}</td>
-                    <td className="py-2.5 font-plex text-xs text-text-muted" dir="ltr">{s.guardianPhone || '—'}</td>
-                    <td className="py-2.5 text-end">
-                      <button
-                        onClick={() => remove(s)}
-                        disabled={deletingId === s.id}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-error transition-colors hover:bg-error/10 disabled:opacity-40"
-                      >
-                        {deletingId === s.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                        حذف
-                      </button>
+                    <td className={`${TD} font-semibold text-text-primary`}>{s.fullName}</td>
+                    <td className={`${TD} font-plex text-xs text-gold`} dir="ltr">{s.username}</td>
+                    <td className={`${TD} text-text-secondary`}>{s.stageAr}</td>
+                    <td className={`${TD} text-text-secondary`}>{s.academicYear}</td>
+                    <td className={`${TD} font-plex text-xs text-text-muted`} dir="ltr">{s.guardianPhone || '—'}</td>
+                    <td className={TD}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEdit(s)}
+                          title="تعديل"
+                          className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold"
+                        >
+                          <Pencil size={15} />
+                        </button>
+                        <button
+                          onClick={() => openPrint(s)}
+                          title="طباعة كارت QR"
+                          className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold"
+                        >
+                          <QrCode size={15} />
+                        </button>
+                        <button
+                          onClick={() => remove(s)}
+                          disabled={deletingId === s.id}
+                          title="حذف"
+                          className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-error/10 hover:text-error disabled:opacity-40"
+                        >
+                          {deletingId === s.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -369,6 +496,129 @@ function StudentsTab() {
           </div>
         )}
       </Card>
+
+      {/* Edit modal */}
+      <Modal open={editing !== null} onClose={() => setEditing(null)} title={`تعديل بيانات — ${editing?.username ?? ''}`}>
+        <form onSubmit={saveEdit} className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="الاسم الكامل"
+            required
+            value={editForm.fullName}
+            onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+          />
+          <div>
+            <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المرحلة</label>
+            <select
+              value={editForm.stage}
+              onChange={(e) => setEditForm({ ...editForm, stage: e.target.value })}
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
+            >
+              {STAGES.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.ar}
+                </option>
+              ))}
+            </select>
+          </div>
+          <Input
+            label="العام الدراسي"
+            required
+            value={editForm.academicYear}
+            onChange={(e) => setEditForm({ ...editForm, academicYear: e.target.value })}
+          />
+          <Input
+            label="رقم ولي الأمر"
+            dir="ltr"
+            value={editForm.guardianPhone}
+            onChange={(e) => setEditForm({ ...editForm, guardianPhone: e.target.value })}
+          />
+          <div className="sm:col-span-2">
+            <Input
+              label="كلمة مرور جديدة (اتركها فاضية لو مش هتغيّرها)"
+              type="text"
+              icon={<KeyRound size={15} />}
+              value={editForm.newPassword}
+              onChange={(e) => setEditForm({ ...editForm, newPassword: e.target.value })}
+              placeholder="لو هتغيّر الباسورد اكتب الجديد هنا"
+            />
+          </div>
+          <div className="flex justify-end gap-3 sm:col-span-2">
+            <Button type="button" variant="ghost" onClick={() => setEditing(null)}>
+              إلغاء
+            </Button>
+            <Button type="submit" variant="gold" loading={savingEdit}>
+              حفظ التعديلات
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* QR print modal */}
+      <Modal
+        open={printing !== null}
+        onClose={() => setPrinting(null)}
+        title={`كارت دخول — ${printing?.fullName ?? ''}`}
+      >
+        <div className="flex flex-col gap-4">
+          <Input
+            label="باسورد الطالب (بيظهر في الكارت والكود)"
+            required
+            type="text"
+            icon={<KeyRound size={15} />}
+            value={printPassword}
+            onChange={(e) => setPrintPassword(e.target.value)}
+            placeholder="اكتب باسورد الطالب"
+          />
+
+          <div className="flex justify-center">
+            <div
+              id="student-qr-card"
+              className="w-[300px] rounded-xl border border-border-soft bg-white p-6 text-center shadow-soft"
+            >
+              <p className="display-serif text-lg font-bold text-[#16121f]">مستر محمد صيام</p>
+              <p className="mt-0.5 text-[11px] text-[#6b6b76]">مع أبو كيان .. الدراسات في أمان</p>
+              <p className="mt-3 text-sm font-bold text-[#16121f]">{printing?.fullName}</p>
+              <p className="text-xs text-[#6b6b76]">{printing?.stageAr}</p>
+              <div className="mt-4 flex justify-center">
+                {qrBusy ? (
+                  <div className="flex h-[280px] w-[280px] items-center justify-center">
+                    <Loader2 size={28} className="animate-spin text-gold" />
+                  </div>
+                ) : qrUrl ? (
+                  <img src={qrUrl} alt="QR code" className="h-[280px] w-[280px]" />
+                ) : (
+                  <div className="flex h-[280px] w-[280px] items-center justify-center rounded border border-dashed border-[#d8d4cc] text-xs text-[#6b6b76]">
+                    اكتب الباسورد عشان الكود يظهر
+                  </div>
+                )}
+              </div>
+              <div className="mt-4 rounded-lg border border-[#e4e0d8] p-3" dir="ltr">
+                <p className="font-plex text-sm font-bold tracking-wide text-[#16121f]">SIMO… · {printing?.username}</p>
+                <p className="mt-1 font-plex text-sm font-bold tracking-wide text-[#16121f]">
+                  باسورد: {printPassword || '••••••'}
+                </p>
+              </div>
+              <p className="mt-3 text-[10px] text-[#6b6b76]">
+                امسح الكود أو ادخل البيانات على الموقع وابدأ رحلتك
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setPrinting(null)}>
+              إلغاء
+            </Button>
+            <Button
+              variant="gold"
+              icon={<Printer size={16} />}
+              disabled={!qrUrl}
+              onClick={() => window.print()}
+            >
+              طباعة الكارت
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

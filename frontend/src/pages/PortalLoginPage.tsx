@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, Lock, User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Compass as CompassBrand } from '../design-system/components/Compass';
 import CoordinateLabel from '../design-system/components/CoordinateLabel';
 import { HistoricalMap } from '../design-system/components/map/HistoricalMap';
@@ -47,8 +47,9 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
   const navigate = useNavigate();
   const reduced = useReducedMotion();
   const meta = PORTALS[portal];
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [params] = useSearchParams();
+  const [username, setUsername] = useState(params.get('u') ?? '');
+  const [password, setPassword] = useState(params.get('p') ?? '');
   const [error, setError] = useState<string | null>(null);
   const [shakeKey, setShakeKey] = useState(0);
   const [arrived, setArrived] = useState(false);

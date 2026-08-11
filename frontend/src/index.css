@@ -310,6 +310,30 @@
   background: transparent;
   border: none;
 }
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #student-qr-card,
+  #student-qr-card * {
+    visibility: visible;
+  }
+  #student-qr-card {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    border: none;
+  }
+  #student-qr-card img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
 .realmap-marker {
   position: relative;
   display: flex;
