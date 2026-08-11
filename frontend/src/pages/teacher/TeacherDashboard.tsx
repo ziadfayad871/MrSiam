@@ -52,11 +52,11 @@ function StatCard({ label, value, unit, icon, trend }: { label: string; value: s
   );
 }
 
-export default function TeacherDashboard() {
+export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }) {
   const [data, setData] = useState<TeacherDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(defaultTab || 'overview');
 
   const [album, setAlbum] = useState<TopStudentDto[]>([]);
   const [form, setForm] = useState({ fullName: '', stageAr: STAGE_OPTIONS[5], achievement: '', score: '', year: '' });

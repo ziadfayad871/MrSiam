@@ -20,6 +20,7 @@ import ResultsPage from './pages/ResultsPage';
 import AchievementsPage from './pages/AchievementsPage';
 import HistoryTimelinePage from './pages/HistoryTimelinePage';
 import ParentDashboardPage from './pages/parent/ParentDashboardPage';
+import SearchPage from './pages/SearchPage';
 
 function RequireAuth({ children, role }: { children: React.ReactNode; role?: string }) {
   const { user } = useAuth();
@@ -30,6 +31,14 @@ function RequireAuth({ children, role }: { children: React.ReactNode; role?: str
 
 function RequireStudent({ children }: { children: React.ReactNode }) {
   return <RequireAuth role="Student">{children}</RequireAuth>;
+}
+
+function RequireTeacher({ children }: { children: React.ReactNode }) {
+  return <RequireAuth role="Teacher">{children}</RequireAuth>;
+}
+
+function RequireSecretary({ children }: { children: React.ReactNode }) {
+  return <RequireAuth role="Secretary">{children}</RequireAuth>;
 }
 
 function RequireParent({ children }: { children: React.ReactNode }) {
@@ -92,10 +101,106 @@ export default function App() {
           <RequireAuth>
             <DashboardLayout>
               <ParchmentTransition motif="map">
-                <RoleRedirect />
+                <StudentDashboard />
               </ParchmentTransition>
             </DashboardLayout>
           </RequireAuth>
+        }
+      />
+      <Route
+        path="/teacher"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <ParchmentTransition motif="map">
+                <TeacherDashboard />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherDashboard defaultTab="content" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/analytics"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherDashboard defaultTab="analytics" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/live"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherDashboard defaultTab="live" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/secretary"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <ParchmentTransition motif="map">
+                <SecretaryDashboard />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/students"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryDashboard defaultTab="students" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/billing"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryDashboard defaultTab="billing" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/analytics"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryDashboard defaultTab="analytics" />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
         }
       />
       <Route
@@ -194,6 +299,19 @@ export default function App() {
       />
 
       <Route
+        path="/search"
+        element={
+          <RequireAuth>
+            <DashboardLayout>
+              <PageTransition>
+                <SearchPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAuth>
+        }
+      />
+
+      <Route
         path="/parent"
         element={
           <RequireParent>
@@ -209,13 +327,4 @@ export default function App() {
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
-}
-
-function RoleRedirect() {
-  const { user } = useAuth();
-  if (!user) return null;
-  if (user.role === 'Student') return <StudentDashboard />;
-  if (user.role === 'Teacher') return <TeacherDashboard />;
-  if (user.role === 'Parent') return <ParentDashboardPage />;
-  return <SecretaryDashboard />;
 }

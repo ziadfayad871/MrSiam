@@ -629,11 +629,11 @@ function StudentsTab() {
   );
 }
 
-export default function SecretaryDashboard() {
+export default function SecretaryDashboard({ defaultTab }: { defaultTab?: string }) {
   const [data, setData] = useState<SecretaryDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(defaultTab || 'overview');
 
   useEffect(() => {
     api

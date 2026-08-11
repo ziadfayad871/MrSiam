@@ -215,6 +215,28 @@
   }
 }
 
+/* ---------- Sidebar Collapse Animation ---------- */
+.sidebar-collapse-enter {
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-collapse-enter-active {
+  width: 16rem; /* w-64 */
+}
+.sidebar-collapse-exit {
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-collapse-exit-active {
+  width: 4rem; /* w-16 */
+}
+
+/* ---------- Search Page ---------- */
+.search-highlight {
+  background: var(--gold-accent);
+  color: var(--navy-950);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
 /* ---------- Brand utilities ---------- */
 
 /* Historical dates & numerals — Amiri serif with gold treatment */
