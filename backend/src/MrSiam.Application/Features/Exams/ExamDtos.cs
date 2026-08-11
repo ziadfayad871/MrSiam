@@ -10,7 +10,7 @@ public record ExamListItemDto
     public required string CourseTitle { get; init; }
     public required string Title { get; init; }
     public ExamType Type { get; init; }
-    public required string TypeAr { get; init; }
+    public required string TypeAr { get; set; }
     public int DurationMinutes { get; init; }
     public decimal TotalMarks { get; init; }
     public int QuestionCount { get; init; }

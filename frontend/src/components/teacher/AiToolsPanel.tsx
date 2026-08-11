@@ -452,6 +452,7 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
               <option value="Unit">وحدة</option>
               <option value="Practice">تدريب</option>
               <option value="Final">نهائي</option>
+              <option value="Boss">بوس ⚔️</option>
             </select>
           </div>
           <div>

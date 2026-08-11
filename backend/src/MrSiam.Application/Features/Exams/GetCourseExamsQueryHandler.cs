@@ -33,6 +33,17 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
             })
             .ToListAsync(ct);
 
+        foreach (var exam in exams)
+            exam.TypeAr = exam.Type switch
+            {
+                ExamType.Practice => "تدريبي",
+                ExamType.Lesson => "درس",
+                ExamType.Unit => "وحدة",
+                ExamType.Final => "نهائي",
+                ExamType.Boss => "بوس",
+                _ => exam.Type.ToString()
+            };
+
         if (request.StudentId is not null)
         {
             var lessonExamIds = await db.Exams.AsNoTracking()
