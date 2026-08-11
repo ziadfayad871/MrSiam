@@ -11,7 +11,7 @@ import { Modal } from '../../design-system/ui/Modal';
 import { Tabs } from '../../design-system/ui/Tabs';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
-import type { CreateStudentResult, SecretaryDashboardDto, StudentListItemDto } from '../../lib/types';
+import type { CreateStudentResult, SecretaryDashboardDto, StudentCredentialsDto, StudentListItemDto } from '../../lib/types';
 
 const ICONS: Record<string, React.ReactNode> = {
   students: <Users size={16} />,
@@ -190,7 +190,7 @@ function StudentsTab() {
   const [form, setForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '2025/2026', password: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [lastCreated, setLastCreated] = useState<(CreateStudentResult & { password: string }) | null>(null);
+  const [lastCreated, setLastCreated] = useState<(CreateStudentResult & { password: string; fullName: string }) | null>(null);
 
   const [editing, setEditing] = useState<StudentListItemDto | null>(null);
   const [editForm, setEditForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '', newPassword: '' });
@@ -198,6 +198,7 @@ function StudentsTab() {
 
   const [printing, setPrinting] = useState<StudentListItemDto | null>(null);
   const [printPassword, setPrintPassword] = useState('');
+  const [printError, setPrintError] = useState<string | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrBusy, setQrBusy] = useState(false);
 
@@ -231,7 +232,7 @@ function StudentsTab() {
         password: form.password,
       });
       if (res) {
-        const created = { ...res, password: form.password };
+        const created = { ...res, password: form.password, fullName: form.fullName.trim() };
         setLastCreated(created);
         toast('تم تسجيل الطالب', `يوزر نيم: ${res.username}`, 'success');
         setForm((f) => ({ ...f, fullName: '', guardianPhone: '', password: '' }));
@@ -278,10 +279,17 @@ function StudentsTab() {
     }
   }
 
-  function openPrint(student: StudentListItemDto, prefillPassword = '') {
+  async function openPrint(student: StudentListItemDto) {
     setPrinting(student);
-    setPrintPassword(prefillPassword);
+    setPrintPassword('');
     setQrUrl(null);
+    setPrintError(null);
+    try {
+      const creds = await api.get<StudentCredentialsDto>(`/students/${student.id}/credentials`);
+      setPrintPassword(creds.password);
+    } catch (err) {
+      setPrintError(err instanceof Error ? err.message : 'مفيش باسورد محفوظ');
+    }
   }
 
   async function buildQr() {
@@ -410,10 +418,10 @@ function StudentsTab() {
               onClick={() => {
                 const stub: StudentListItemDto = {
                   id: lastCreated.studentId,
-                  fullName: form.fullName.trim() || 'الطالب الجديد',
+                  fullName: lastCreated.fullName,
                   studentCode: lastCreated.studentCode,
                   username: lastCreated.username,
-                  stage: 'PrepOne' as const,
+                  stage: form.stage as StudentListItemDto['stage'],
                   stageAr: STAGES.find((s) => s.key === form.stage)?.ar ?? '',
                   guardianPhone: '',
                   academicYear: form.academicYear,
@@ -422,7 +430,7 @@ function StudentsTab() {
                   average: 0,
                   examsTaken: 0,
                 };
-                openPrint(stub, lastCreated.password);
+                openPrint(stub);
               }}
             >
               اطبع كارت الدخول
@@ -560,15 +568,11 @@ function StudentsTab() {
         title={`كارت دخول — ${printing?.fullName ?? ''}`}
       >
         <div className="flex flex-col gap-4">
-          <Input
-            label="باسورد الطالب (بيظهر في الكارت والكود)"
-            required
-            type="text"
-            icon={<KeyRound size={15} />}
-            value={printPassword}
-            onChange={(e) => setPrintPassword(e.target.value)}
-            placeholder="اكتب باسورد الطالب"
-          />
+          {printError && (
+            <p className="rounded-md border border-error/40 bg-error/10 px-3 py-2 text-xs text-error">
+              {printError}
+            </p>
+          )}
 
           <div className="flex justify-center">
             <div
@@ -588,12 +592,12 @@ function StudentsTab() {
                   <img src={qrUrl} alt="QR code" className="h-[280px] w-[280px]" />
                 ) : (
                   <div className="flex h-[280px] w-[280px] items-center justify-center rounded border border-dashed border-[#d8d4cc] text-xs text-[#6b6b76]">
-                    اكتب الباسورد عشان الكود يظهر
+                    {printError ? 'مفيش كود — عدّل الباسورد الأول' : 'بنجهّز الكود...'}
                   </div>
                 )}
               </div>
               <div className="mt-4 rounded-lg border border-[#e4e0d8] p-3" dir="ltr">
-                <p className="font-plex text-sm font-bold tracking-wide text-[#16121f]">SIMO… · {printing?.username}</p>
+                <p className="font-plex text-sm font-bold tracking-wide text-[#16121f]">{printing?.username}</p>
                 <p className="mt-1 font-plex text-sm font-bold tracking-wide text-[#16121f]">
                   باسورد: {printPassword || '••••••'}
                 </p>

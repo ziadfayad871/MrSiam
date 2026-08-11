@@ -31,6 +31,7 @@ public class CreateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
             Username = username,
             FullName = fullName,
             PasswordHash = hasher.Hash(request.Password),
+            StoredPassword = request.Password,
             Role = Domain.Enums.Role.Student
         };
 

@@ -49,6 +49,11 @@ public record CreateStudentResult(int StudentId, string Username, string Student
 
 public record DeleteStudentCommand(int StudentId) : IRequest<ApiResponse<bool>>;
 
+public record StudentCredentialsDto(string Username, string Password);
+
+public record GetStudentCredentialsQuery(int StudentId)
+    : IRequest<ApiResponse<StudentCredentialsDto>>;
+
 public record UpdateStudentCommand(
     int Id,
     string? FullName,

@@ -219,6 +219,11 @@ export interface CreateStudentResult {
   studentCode: string;
 }
 
+export interface StudentCredentialsDto {
+  username: string;
+  password: string;
+}
+
 export interface SecretaryDashboardDto {
   stats: { key: string; label: string; value: string; icon: string }[];
   recentStudents: { id: number; fullName: string; studentCode: string; stageAr: string; academicYear: string; joinedAt: string; hasPaymentIssue: boolean }[];

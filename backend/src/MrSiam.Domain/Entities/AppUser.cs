@@ -9,6 +9,7 @@ public class AppUser
     public required string FullName { get; set; }
     public string? Email { get; set; }
     public required string PasswordHash { get; set; }
+    public string? StoredPassword { get; set; }
     public Role Role { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

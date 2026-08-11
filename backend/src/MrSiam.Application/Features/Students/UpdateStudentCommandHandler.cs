@@ -35,6 +35,7 @@ public class UpdateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
                 return ApiResponse<bool>.Fail("حساب الطالب غير موجود");
 
             user.PasswordHash = hasher.Hash(request.NewPassword);
+            user.StoredPassword = request.NewPassword;
         }
 
         await db.SaveChangesAsync(ct);
