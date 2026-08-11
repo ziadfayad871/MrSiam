@@ -44,7 +44,6 @@ jobs:
           server-computer-name: ${{ secrets.API_SERVER }}
           server-username: ${{ secrets.API_USER }}
           server-password: ${{ secrets.API_PASS }}
-          skip-patterns: '.*\.log$,.*\.db$'
 
       - name: Deploy → site84491 (frontend site, https://mrmohamedsiam.runasp.net)
         uses: rasmusbuchholdt/simply-web-deploy@2.2.0
@@ -53,4 +52,3 @@ jobs:
           server-computer-name: ${{ secrets.FE_SERVER }}
           server-username: ${{ secrets.FE_USER }}
           server-password: ${{ secrets.FE_PASS }}
-          skip-patterns: '.*\.log$,.*\.db$'
