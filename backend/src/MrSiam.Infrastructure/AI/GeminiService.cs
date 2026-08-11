@@ -21,6 +21,16 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
 
     public async Task<string?> GenerateAsync(string systemInstruction, string userPrompt, CancellationToken ct)
     {
+        return await CallAsync(systemInstruction, userPrompt, null, 900, ct);
+    }
+
+    public async Task<string?> GenerateJsonAsync(string systemInstruction, string userPrompt, CancellationToken ct)
+    {
+        return await CallAsync(systemInstruction, userPrompt, "application/json", 4096, ct);
+    }
+
+    private async Task<string?> CallAsync(string systemInstruction, string userPrompt, string? responseMimeType, int maxOutputTokens, CancellationToken ct)
+    {
         var apiKey = configuration["AI:ApiKey"];
         var model = configuration["AI:Model"] ?? "gemini-2.5-flash";
         var endpoint = configuration["AI:Endpoint"] ?? "https://generativelanguage.googleapis.com/v1beta";
@@ -35,13 +45,13 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
         try
         {
             var client = httpClientFactory.CreateClient("gemini");
-            client.Timeout = TimeSpan.FromSeconds(90);
+            client.Timeout = TimeSpan.FromSeconds(120);
 
             var payload = new
             {
                 systemInstruction = new { parts = new object[] { new { text = systemInstruction } } },
                 contents = new object[] { new { role = "user", parts = new object[] { new { text = userPrompt } } } },
-                generationConfig = new { temperature = 0.3, maxOutputTokens = 900 }
+                generationConfig = new { temperature = 0.3, maxOutputTokens, responseMimeType }
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/models/{model}:generateContent?key={Uri.EscapeDataString(apiKey)}")

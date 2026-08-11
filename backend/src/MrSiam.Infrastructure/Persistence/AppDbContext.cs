@@ -76,6 +76,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         builder.Entity<Question>(e =>
         {
             e.HasOne(q => q.Exam).WithMany(x => x.Questions).HasForeignKey(q => q.ExamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(q => q.Lesson).WithMany().HasForeignKey(q => q.LessonId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<AnswerOption>(e =>

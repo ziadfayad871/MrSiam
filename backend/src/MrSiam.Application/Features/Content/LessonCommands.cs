@@ -93,6 +93,11 @@ public class DeleteLessonCommandHandler(IApplicationDbContext db)
         if (lesson is null)
             return ApiResponse<bool>.Fail("الدرس غير موجود");
 
+        var bankQuestions = await db.Questions.Where(x => x.LessonId == request.Id).ToListAsync(ct);
+        foreach (var q in bankQuestions)
+            q.LessonId = null;
+        await db.SaveChangesAsync(ct);
+
         db.Lessons.Remove(lesson);
         await db.SaveChangesAsync(ct);
         return ApiResponse<bool>.Ok(true, "تم الحذف");

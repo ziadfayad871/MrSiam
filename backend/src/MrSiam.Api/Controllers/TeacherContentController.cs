@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MrSiam.Application.Common;
+using MrSiam.Application.Features.Ai;
 using MrSiam.Application.Features.Content;
 using MrSiam.Domain.Enums;
 
@@ -59,4 +60,12 @@ public class TeacherContentController(IMediator mediator) : ControllerBase
     [HttpDelete("assignments/{id:int}")]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteAssignment(int id, CancellationToken ct)
         => Ok(await mediator.Send(new DeleteAssignmentCommand(id), ct));
+
+    [HttpPost("ai/exams/generate")]
+    public async Task<ActionResult<ApiResponse<AiExamDraftDto>>> GenerateAiExam(GenerateAiExamCommand command, CancellationToken ct)
+        => Ok(await mediator.Send(command, ct));
+
+    [HttpPost("ai/exams/save")]
+    public async Task<ActionResult<ApiResponse<int>>> SaveAiExam(SaveAiExamCommand command, CancellationToken ct)
+        => Ok(await mediator.Send(command, ct));
 }

@@ -407,6 +407,56 @@ export interface ExamReviewDto {
   items: ExamReviewItemDto[];
 }
 
+export interface AiQuestionDraftDto {
+  text: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+  source: string;
+  lessonId?: number;
+  supported: boolean;
+}
+
+export interface AiExamDraftDto {
+  title: string;
+  questions: AiQuestionDraftDto[];
+}
+
+export interface QuestionBankOptionDto {
+  id: number;
+  text: string;
+  isCorrect: boolean;
+}
+
+export interface QuestionBankItemDto {
+  id: number;
+  text: string;
+  type: string;
+  marks: number;
+  lessonId?: number;
+  lessonTitle?: string;
+  sourceExamTitle?: string;
+  options: QuestionBankOptionDto[];
+}
+
+export interface SearchHitDto {
+  id: number;
+  title: string;
+  subtitle: string;
+  kind: string;
+  courseId: number;
+  courseTitle: string;
+  examTitle: string;
+  text: string;
+}
+
+export interface SearchResultsDto {
+  courses: SearchHitDto[];
+  lessons: SearchHitDto[];
+  exams: SearchHitDto[];
+  questions: SearchHitDto[];
+}
+
 export interface StudentListItemDto {
   id: number;
   fullName: string;

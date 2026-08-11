@@ -20,6 +20,7 @@ import { Card } from '../../design-system/ui/Card';
 import Input from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
 import { Tabs } from '../../design-system/ui/Tabs';
+import AiToolsPanel from './AiToolsPanel';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
 import type { AssignmentDto, CourseDto, ExamListItemDto, ExamType, LessonDto, Stage, Subject } from '../../lib/types';
@@ -746,6 +747,8 @@ export default function ContentTab() {
           كورس جديد
         </Button>
       </div>
+
+      <AiToolsPanel courses={courses} onContentChanged={load} />
 
       {loading ? (
         <CompassLoader text="بنجيب الكورسات..." />

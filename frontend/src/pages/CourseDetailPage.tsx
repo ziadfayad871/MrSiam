@@ -1,6 +1,6 @@
 import { Bookmark, BookOpen, ClipboardList, FileText, PlayCircle, Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CompassLoader } from '../design-system/components/CompassLoader';
 import { Badge } from '../design-system/ui/Badge';
 import { Card } from '../design-system/ui/Card';
@@ -87,6 +87,8 @@ function VideoPlayer({ url, lessonId, onClose }: { url: string; lessonId: number
 
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
+  const [searchParams] = useSearchParams();
+  const autoLesson = searchParams.get('lesson');
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [lessons, setLessons] = useState<LessonDto[]>([]);
   const [exams, setExams] = useState<ExamListItemDto[]>([]);
@@ -178,6 +180,13 @@ export default function CourseDetailPage() {
   if (loading) return <CompassLoader text="بنرسم خريطة المادة..." />;
   if (error) return <ErrorState title={error} onRetry={() => window.location.reload()} />;
   if (!course) return <EmptyState icon="map" title="مفيش مادة" description="مفيش مادة بالكود ده." />;
+
+  if (autoLesson) {
+    const target = lessons.find((l) => String(l.id) === autoLesson);
+    if (target && !playing) {
+      setTimeout(() => openLesson(target), 0);
+    }
+  }
 
   const completedLessons = lessons.filter((l) => l.isCompleted).length;
 
