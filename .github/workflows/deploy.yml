@@ -20,6 +20,24 @@ jobs:
       - name: Publish API
         run: dotnet publish backend/src/MrSiam.Api/MrSiam.Api.csproj -c Release -o publish
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build frontend (same-origin bundle)
+        shell: pwsh
+        working-directory: frontend
+        run: |
+          $env:VITE_API_URL = "${{ secrets.API_URL }}"
+          npm ci
+          npm run build
+
+      - name: Bundle SPA into API publish (same origin)
+        shell: pwsh
+        run: |
+          Copy-Item -Path frontend/dist/* -Destination publish/wwwroot/ -Recurse -Force
+
       - name: Deploy API to MonsterASP
         uses: rasmusbuchholdt/simply-web-deploy@2.2.0
         with:

@@ -11,7 +11,7 @@ namespace MrSiam.Api.Controllers;
 [Route("api/top-students")]
 public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment env) : ControllerBase
 {
-    private const string UploadsRoot = "uploads/top-students";
+    private const string UploadsRoot = "app_data/top-students";
     private static readonly string[] AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     private const long MaxFileSize = 5 * 1024 * 1024;
 
@@ -59,7 +59,7 @@ public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment
             if (request.Photo.Length > MaxFileSize)
                 return BadRequest(new { success = false, message = "حجم الصورة أكبر من 5 ميجابايت" });
 
-            var uploadsDir = Path.Combine(env.WebRootPath, UploadsRoot);
+            var uploadsDir = Path.Combine(env.ContentRootPath, UploadsRoot);
             Directory.CreateDirectory(uploadsDir);
 
             var fileName = $"{Guid.NewGuid():N}{ext}";
@@ -69,7 +69,7 @@ public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment
                 await request.Photo.CopyToAsync(stream);
             }
 
-            photoUrl = $"/{UploadsRoot}/{fileName}";
+            photoUrl = $"/uploads/top-students/{fileName}";
         }
 
         var maxSort = await db.TopStudents.AnyAsync()
@@ -105,7 +105,7 @@ public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment
 
         if (!string.IsNullOrWhiteSpace(entry.PhotoUrl))
         {
-            var filePath = Path.Combine(env.WebRootPath, entry.PhotoUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+            var filePath = Path.Combine(env.ContentRootPath, UploadsRoot, Path.GetFileName(entry.PhotoUrl));
             if (System.IO.File.Exists(filePath))
                 System.IO.File.Delete(filePath);
         }

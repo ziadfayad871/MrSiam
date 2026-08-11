@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MrSiam.Application;
 using MrSiam.Infrastructure;
@@ -36,13 +37,26 @@ try
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
         ?? ["http://localhost:5173", "http://localhost:4173", "https://localhost:5173"];
 
+    var allowAllOrigins = corsOrigins.Contains("*", StringComparer.OrdinalIgnoreCase);
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("Frontend", policy =>
-            policy.WithOrigins(corsOrigins)
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials());
+        {
+            if (allowAllOrigins)
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            }
+            else
+            {
+                policy.WithOrigins(corsOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+        });
     });
 
     var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
@@ -78,7 +92,17 @@ try
     app.UseMiddleware<MrSiam.Api.Middleware.ExceptionHandlingMiddleware>();
 
     app.UseCors("Frontend");
+    app.UseDefaultFiles();
     app.UseStaticFiles();
+
+    var uploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "top-students");
+    Directory.CreateDirectory(uploadsDir);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(uploadsDir),
+        RequestPath = "/uploads/top-students"
+    });
+
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();

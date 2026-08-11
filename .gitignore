@@ -287,6 +287,9 @@ node_modules/
 frontend/dist/
 *.tsbuildinfo
 frontend/start-vite.bat
+backend/src/MrSiam.Api/app_data/
+backend/src/MrSiam.Api/wwwroot/*
+!backend/src/MrSiam.Api/wwwroot/.gitkeep
 
 # Visual Studio 6 build log
 *.plg
