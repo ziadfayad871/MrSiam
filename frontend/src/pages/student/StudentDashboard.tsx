@@ -2,11 +2,14 @@ import {
   ArrowLeft,
   Award,
   Bookmark,
+  CalendarDays,
   Flame,
   Map,
   NotebookPen,
   Play,
+  Radio,
   Shield,
+  Sparkles,
   Star,
   Target,
   Trophy,
@@ -18,12 +21,13 @@ import { AchievementBadge } from '../../design-system/components/AchievementBadg
 import { Compass as CompassBrand } from '../../design-system/components/Compass';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
+import { Badge } from '../../design-system/ui/Badge';
 import { Card } from '../../design-system/ui/Card';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Progress } from '../../design-system/ui/Progress';
 import { Stat } from '../../design-system/ui/Stat';
 import { api } from '../../lib/api';
-import type { StudentDashboardV2Dto } from '../../lib/types';
+import type { LiveLessonDto, MySubscriptionDto, StudentDashboardV2Dto } from '../../lib/types';
 
 function formatDuration(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -42,11 +46,21 @@ function timeAgo(iso: string): string {
   return `من ${days} يوم`;
 }
 
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('ar-EG', { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
+}
+
 export default function StudentDashboard() {
   const [data, setData] = useState<StudentDashboardV2Dto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [certs, setCerts] = useState<{ id: number }[]>([]);
+  const [sub, setSub] = useState<MySubscriptionDto | null>(null);
+  const [live, setLive] = useState<LiveLessonDto[] | null>(null);
 
   useEffect(() => {
     api
@@ -58,6 +72,14 @@ export default function StudentDashboard() {
       .get<{ id: number }[]>('/student/certificates')
       .then(setCerts)
       .catch(() => setCerts([]));
+    api
+      .get<MySubscriptionDto>('/subscriptions/mine')
+      .then(setSub)
+      .catch(() => setSub({ hasActiveSubscription: false }));
+    api
+      .get<LiveLessonDto[]>('/live/upcoming')
+      .then(setLive)
+      .catch(() => setLive([]));
   }, []);
 
   const markAllRead = async () => {
@@ -385,6 +407,85 @@ export default function StudentDashboard() {
               اكسب نقاط خبرة من الامتحانات الناجحة والتعلم المتواصل — <span className="font-bold text-gold">مع أبو كيان.. الدراسات في أمان</span>
             </p>
           </div>
+        </Card>
+      </div>
+
+      {/* Subscription + live lessons */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card>
+          <div className="mb-3 flex items-center gap-2">
+            <Shield size={16} className="text-gold" />
+            <h2 className="text-lg font-bold text-text-primary">اشتراكك</h2>
+          </div>
+          {sub === null ? (
+            <p className="text-sm text-text-muted">جاري التحميل...</p>
+          ) : sub.hasActiveSubscription ? (
+            <div>
+              <Badge variant="gold" icon={<Sparkles size={12} />}>
+                {sub.planName} · مفعل
+              </Badge>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Stat icon={<CalendarDays size={15} />} label="ينتهي في" value={sub.endsAt ? formatDate(sub.endsAt) : '—'} />
+                <Stat icon={<Shield size={15} />} label="متبقي" value={`${sub.daysLeft} يوم`} />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-text-muted">اشتراكك غير مفعل حالياً — تواصل مع الأمانة لتفعيل باقتك.</p>
+              <div className="mt-3 rounded-md border border-border-soft bg-surface px-3 py-2.5 text-[11px] text-text-secondary">
+                الباقات تشمل كل المقررات والامتحانات والجوائز 🏆
+              </div>
+            </div>
+          )}
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Radio size={16} className="text-gold" />
+              <h2 className="text-lg font-bold text-text-primary">البث المباشر</h2>
+            </div>
+            <Badge variant="gold" icon={<Sparkles size={12} />}>
+              قاعة أبو كيان
+            </Badge>
+          </div>
+          {live === null ? (
+            <p className="text-sm text-text-muted">جاري التحميل...</p>
+          ) : live.length === 0 ? (
+            <p className="text-sm text-text-muted">مفيش بث مجدول حالياً — ارجع قريب!</p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {live.map((l) => {
+                const isLive = new Date(l.scheduledAt).getTime() <= Date.now() && Date.now() <= new Date(l.scheduledAt).getTime() + l.durationMinutes * 60000;
+                return (
+                  <div key={l.id} className="flex items-center justify-between gap-3 rounded-md border border-border-soft px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-text-primary">{l.title}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-text-muted">
+                        <CalendarDays size={12} />
+                        {formatDateTime(l.scheduledAt)} · {l.durationMinutes} دقيقة
+                      </p>
+                      {l.courseTitle && <p className="text-[10px] text-text-muted">{l.courseTitle}</p>}
+                    </div>
+                    {l.meetUrl ? (
+                      <a
+                        href={l.meetUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`shrink-0 rounded-md px-3 py-1.5 text-xs font-bold transition-colors ${
+                          isLive ? 'bg-red-100 text-red-700' : 'bg-gold/15 text-gold hover:bg-gold/25'
+                        }`}
+                      >
+                        {isLive ? 'ادخل الآن 🔴' : 'رابط البث'}
+                      </a>
+                    ) : (
+                      <Badge variant="neutral">{isLive ? 'البث جاري 🔴' : 'جاري التحضير'}</Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </Card>
       </div>
     </div>

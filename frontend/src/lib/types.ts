@@ -1,9 +1,9 @@
 /** API DTO types — mirror the .NET backend DTOs */
 
-export type Role = 'Student' | 'Teacher' | 'Secretary' | 'Admin';
+export type Role = 'Student' | 'Teacher' | 'Secretary' | 'Admin' | 'Parent';
 export type Stage = 'PrepOne' | 'PrepTwo' | 'PrepThree' | 'SecOne' | 'SecTwo' | 'SecThree';
 export type Subject = 'History' | 'Geography' | 'SocialStudies';
-export type ExamType = 'Practice' | 'Lesson' | 'Unit' | 'Final';
+export type ExamType = 'Practice' | 'Lesson' | 'Unit' | 'Final' | 'Boss';
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -552,4 +552,86 @@ export interface CertificateDto {
   percentage: number;
   code: string;
   issuedAt: string;
+}
+
+export interface SubscriptionPlanDto {
+  id: number;
+  name: string;
+  months: number;
+  price: number;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface MySubscriptionDto {
+  hasActiveSubscription: boolean;
+  planName?: string;
+  amountPaid?: number;
+  startsAt?: string;
+  endsAt?: string;
+  daysLeft?: number;
+}
+
+export interface CouponDto {
+  id: number;
+  code: string;
+  discountPercent: number;
+  maxUses: number;
+  usedCount: number;
+  expiresAt?: string;
+  isActive: boolean;
+}
+
+export interface SubscriptionDto {
+  id: number;
+  studentId: number;
+  studentName: string;
+  planName: string;
+  amountPaid: number;
+  couponCode?: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+}
+
+export interface LiveLessonDto {
+  id: number;
+  courseId?: number;
+  courseTitle?: string;
+  title: string;
+  description?: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  meetUrl?: string;
+  isCancelled: boolean;
+}
+
+export interface ParentChildDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stageAr: string;
+  academicYear: string;
+  lessonsCompleted: number;
+  lessonsTotal: number;
+  examsTaken: number;
+  examsPassed: number;
+  passRate: number;
+  averagePercentage: number;
+  attendancePresent: number;
+  attendanceAbsent: number;
+  hasActiveSubscription: boolean;
+  subscriptionPlan?: string;
+  subscriptionEndsAt?: string;
+  xpTotal: number;
+  level: number;
+  lastExamTitle?: string;
+  lastExamPercentage?: number;
+  lastExamAt?: string;
+}
+
+export interface ParentDashboardDto {
+  parentName: string;
+  phone?: string;
+  children: ParentChildDto[];
 }

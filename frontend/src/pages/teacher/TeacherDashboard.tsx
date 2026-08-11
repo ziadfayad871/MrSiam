@@ -1,8 +1,9 @@
-import { BarChart3, BookOpen, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, Trash2, Upload, Users, XCircle } from 'lucide-react';
+import { BarChart3, BookOpen, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, Radio, Trash2, Upload, Users, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnalyticsTab from '../../components/AnalyticsTab';
 import ContentTab from '../../components/teacher/ContentTab';
+import LiveLessonsPanel from '../../components/teacher/LiveLessonsPanel';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Podium } from '../../design-system/components/Podium';
 import { Card } from '../../design-system/ui/Card';
@@ -149,6 +150,7 @@ export default function TeacherDashboard() {
           { key: 'overview', label: 'نظرة عامة' },
           { key: 'content', label: 'المحتوى', icon: <BookOpen size={15} /> },
           { key: 'analytics', label: 'التحليلات', icon: <BarChart3 size={15} /> },
+          { key: 'live', label: 'البث المباشر', icon: <Radio size={15} /> },
         ]}
       />
 
@@ -156,6 +158,8 @@ export default function TeacherDashboard() {
         <ContentTab />
       ) : tab === 'analytics' ? (
         <AnalyticsTab />
+      ) : tab === 'live' ? (
+        <LiveLessonsPanel />
       ) : (
         <>
       {/* Stats */}

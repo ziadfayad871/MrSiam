@@ -16,8 +16,10 @@ public class Student : Entity
     public int StreakCurrent { get; set; }
     public int StreakLongest { get; set; }
     public DateTime? LastActiveDay { get; set; }
+    public int? ParentId { get; set; }
 
     public AppUser? User { get; set; }
+    public Parent? Parent { get; set; }
     public ICollection<ExamAttempt> Attempts { get; set; } = new List<ExamAttempt>();
     public ICollection<StudentAchievement> Achievements { get; set; } = new List<StudentAchievement>();
     public ICollection<Payment> Payments { get; set; } = new List<Payment>();

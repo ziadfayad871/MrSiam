@@ -19,6 +19,7 @@ import ExamPage from './pages/ExamPage';
 import ResultsPage from './pages/ResultsPage';
 import AchievementsPage from './pages/AchievementsPage';
 import HistoryTimelinePage from './pages/HistoryTimelinePage';
+import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 
 function RequireAuth({ children, role }: { children: React.ReactNode; role?: string }) {
   const { user } = useAuth();
@@ -29,6 +30,10 @@ function RequireAuth({ children, role }: { children: React.ReactNode; role?: str
 
 function RequireStudent({ children }: { children: React.ReactNode }) {
   return <RequireAuth role="Student">{children}</RequireAuth>;
+}
+
+function RequireParent({ children }: { children: React.ReactNode }) {
+  return <RequireAuth role="Parent">{children}</RequireAuth>;
 }
 
 export default function App() {
@@ -188,6 +193,19 @@ export default function App() {
         }
       />
 
+      <Route
+        path="/parent"
+        element={
+          <RequireParent>
+            <DashboardLayout>
+              <ParchmentTransition motif="map">
+                <ParentDashboardPage />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireParent>
+        }
+      />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -198,5 +216,6 @@ function RoleRedirect() {
   if (!user) return null;
   if (user.role === 'Student') return <StudentDashboard />;
   if (user.role === 'Teacher') return <TeacherDashboard />;
+  if (user.role === 'Parent') return <ParentDashboardPage />;
   return <SecretaryDashboard />;
 }

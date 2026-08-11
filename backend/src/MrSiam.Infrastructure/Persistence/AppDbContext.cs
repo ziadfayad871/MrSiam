@@ -31,6 +31,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LessonResource> LessonResources => Set<LessonResource>();
     public DbSet<Certificate> Certificates => Set<Certificate>();
+    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<Parent> Parents => Set<Parent>();
+    public DbSet<LiveLesson> LiveLessons => Set<LiveLesson>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -215,6 +220,46 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(c => c.Student).WithMany().HasForeignKey(c => c.StudentId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(c => c.Exam).WithMany().HasForeignKey(c => c.ExamId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(c => c.Course).WithMany().HasForeignKey(c => c.CourseId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Parent>(e =>
+        {
+            e.Property(p => p.FullName).HasMaxLength(120);
+            e.Property(p => p.Phone).HasMaxLength(24);
+            e.HasOne(p => p.User).WithOne().HasForeignKey<Parent>(p => p.UserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Student>(e =>
+        {
+            e.HasOne(s => s.Parent).WithMany(p => p.Students).HasForeignKey(s => s.ParentId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<SubscriptionPlan>(e =>
+        {
+            e.Property(p => p.Name).HasMaxLength(120);
+            e.Property(p => p.Description).HasMaxLength(400);
+        });
+
+        builder.Entity<Coupon>(e =>
+        {
+            e.HasIndex(c => c.Code).IsUnique();
+            e.Property(c => c.Code).HasMaxLength(40);
+        });
+
+        builder.Entity<Subscription>(e =>
+        {
+            e.HasIndex(s => new { s.StudentId, s.Status });
+            e.HasOne(s => s.Student).WithMany().HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Plan).WithMany().HasForeignKey(s => s.PlanId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(s => s.Coupon).WithMany().HasForeignKey(s => s.CouponId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<LiveLesson>(e =>
+        {
+            e.Property(l => l.Title).HasMaxLength(200);
+            e.Property(l => l.Description).HasMaxLength(600);
+            e.Property(l => l.MeetUrl).HasMaxLength(400);
+            e.HasOne(l => l.Course).WithMany().HasForeignKey(l => l.CourseId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

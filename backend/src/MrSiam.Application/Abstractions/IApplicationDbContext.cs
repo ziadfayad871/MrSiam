@@ -30,6 +30,11 @@ public interface IApplicationDbContext
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<LessonResource> LessonResources { get; }
     DbSet<Certificate> Certificates { get; }
+    DbSet<SubscriptionPlan> SubscriptionPlans { get; }
+    DbSet<Coupon> Coupons { get; }
+    DbSet<Subscription> Subscriptions { get; }
+    DbSet<Parent> Parents { get; }
+    DbSet<LiveLesson> LiveLessons { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -33,6 +33,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isStudent = user?.role === 'Student';
+  const isParent = user?.role === 'Parent';
 
   const nav: NavItem[] = isStudent
     ? [
@@ -41,10 +42,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         { to: '/achievements', label: 'الاكتشافات', icon: Award },
         { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
       ]
-    : [
-        { to: '/dashboard', label: 'لوحة الإدارة', icon: Home },
-        { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
-      ];
+    : isParent
+      ? [{ to: '/parent', label: 'أبنائي', icon: Home }]
+      : [
+          { to: '/dashboard', label: 'لوحة الإدارة', icon: Home },
+          { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
+        ];
 
   const icon = nav.find((n) => window.location.pathname.startsWith(n.to))?.icon ?? Home;
 
@@ -153,7 +156,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="text-end leading-tight">
                 <p className="text-sm font-semibold text-text-primary">{user?.fullName}</p>
                 <p className="text-[11px] text-text-muted">
-                  {user?.role === 'Student' ? 'طالب' : user?.role === 'Teacher' ? 'مدرس' : user?.role === 'Secretary' ? 'أمين' : 'مدير'}
+                  {user?.role === 'Student' ? 'طالب' : user?.role === 'Teacher' ? 'مدرس' : user?.role === 'Secretary' ? 'أمين' : user?.role === 'Parent' ? 'ولي أمر' : 'مدير'}
                 </p>
               </div>
               <Avatar name={user?.fullName ?? 'مستخدم'} size="sm" />
