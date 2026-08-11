@@ -94,6 +94,9 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
 
         await CaptureMistakesAsync(request.StudentId, exam, attemptAnswers, attempt.Id, ct);
 
+        if (passed && percentage >= 80)
+            await GrantOrUpgradeCertificateAsync(request.StudentId, exam, percentage, ct);
+
         var unlocked = await achievementService.CheckAndUnlockAsync(request.StudentId, ct);
 
         if (unlocked.Count > 0)
@@ -157,6 +160,41 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
             UnlockedAchievements = unlocked,
             NextStop = nextStop
         }, passed ? "وصلت للمحطة!" : "كل محاولة بتقرّبك للهدف");
+    }
+
+    private async Task GrantOrUpgradeCertificateAsync(int studentId, Exam exam, decimal percentage, CancellationToken ct)
+    {
+        var existing = await db.Certificates.FirstOrDefaultAsync(c => c.StudentId == studentId && c.ExamId == exam.Id, ct);
+        if (existing is not null && existing.Percentage >= percentage)
+            return;
+
+        var studentName = await db.Students.AsNoTracking().Where(s => s.Id == studentId).Select(s => s.FullName).FirstOrDefaultAsync(ct) ?? string.Empty;
+
+        var grade = percentage switch
+        {
+            >= 95 => "امتياز",
+            >= 85 => "جيد جداً",
+            _ => "جيد"
+        };
+
+        if (existing is not null)
+        {
+            existing.Percentage = percentage;
+            existing.Grade = grade;
+            existing.IssuedAt = DateTime.UtcNow;
+            return;
+        }
+
+        db.Certificates.Add(new Certificate
+        {
+            StudentId = studentId,
+            ExamId = exam.Id,
+            CourseId = exam.CourseId,
+            Title = exam.Title,
+            Grade = grade,
+            Percentage = percentage,
+            Code = $"CERT-{studentName.GetHashCode():X8}-{exam.Id:D5}"
+        });
     }
 
     private async Task CaptureMistakesAsync(int studentId, Exam exam, IReadOnlyList<AttemptAnswer> answers, int attemptId, CancellationToken ct)

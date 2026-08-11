@@ -538,3 +538,14 @@ export interface CompareResultDto {
   topicB: string;
   points: ComparePointDto[];
 }
+
+export interface CertificateDto {
+  id: number;
+  studentName: string;
+  examTitle: string;
+  courseTitle: string;
+  grade: string;
+  percentage: number;
+  code: string;
+  issuedAt: string;
+}

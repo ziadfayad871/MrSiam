@@ -29,6 +29,7 @@ public interface IApplicationDbContext
     DbSet<Notification> Notifications { get; }
     DbSet<AuditLog> AuditLogs { get; }
     DbSet<LessonResource> LessonResources { get; }
+    DbSet<Certificate> Certificates { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

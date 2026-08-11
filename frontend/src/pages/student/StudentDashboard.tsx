@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Award,
   Bookmark,
   Flame,
   Map,
@@ -45,6 +46,7 @@ export default function StudentDashboard() {
   const [data, setData] = useState<StudentDashboardV2Dto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [certs, setCerts] = useState<{ id: number }[]>([]);
 
   useEffect(() => {
     api
@@ -52,6 +54,10 @@ export default function StudentDashboard() {
       .then((d) => setData(d))
       .catch((e) => setError(e instanceof Error ? e.message : 'فشل تحميل اللوحة'))
       .finally(() => setLoading(false));
+    api
+      .get<{ id: number }[]>('/student/certificates')
+      .then(setCerts)
+      .catch(() => setCerts([]));
   }, []);
 
   const markAllRead = async () => {
@@ -132,6 +138,9 @@ export default function StudentDashboard() {
         </Link>
         <Link to="/passport" className="block">
           <Stat icon={<Map size={16} />} label="جواز السفر" value="افتح" className="border-gold/40" />
+        </Link>
+        <Link to="/certificates" className="block">
+          <Stat icon={<Award size={16} />} label="شهاداتي" value={String(certs.length)} className="border-gold/40" />
         </Link>
       </div>
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
+using MrSiam.Application.Features.Certificates;
 using MrSiam.Application.Features.Dashboard;
 using MrSiam.Application.Features.StudentEngagement;
 using MrSiam.Domain.Enums;
@@ -174,6 +175,24 @@ public class StudentEngagementController(IMediator mediator, IApplicationDbConte
         if (studentId is null)
             return Unauthorized(ApiResponse<ExamReviewDto>.Fail("مفيش حساب طالب مرتبط"));
         return Ok(await mediator.Send(new GetExamReviewQuery(studentId.Value, examId, attemptId), ct));
+    }
+
+    [HttpGet("certificates")]
+    public async Task<ActionResult<ApiResponse<List<CertificateDto>>>> MyCertificates(CancellationToken ct)
+    {
+        var studentId = await GetStudentIdAsync(ct);
+        if (studentId is null)
+            return Unauthorized(ApiResponse<List<CertificateDto>>.Fail("مفيش حساب طالب مرتبط"));
+        return Ok(await mediator.Send(new GetMyCertificatesQuery(studentId.Value), ct));
+    }
+
+    [HttpGet("certificates/{id:int}")]
+    public async Task<ActionResult<ApiResponse<CertificateDto>>> Certificate(int id, CancellationToken ct)
+    {
+        var studentId = await GetStudentIdAsync(ct);
+        if (studentId is null)
+            return Unauthorized(ApiResponse<CertificateDto>.Fail("مفيش حساب طالب مرتبط"));
+        return Ok(await mediator.Send(new GetCertificateQuery(studentId.Value, id), ct));
     }
 }
 

@@ -30,6 +30,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<LessonResource> LessonResources => Set<LessonResource>();
+    public DbSet<Certificate> Certificates => Set<Certificate>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -202,6 +203,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(r => r.Kind).HasMaxLength(30);
             e.Property(r => r.FileUrl).HasMaxLength(400);
             e.HasOne<Lesson>().WithMany().HasForeignKey(r => r.LessonId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Certificate>(e =>
+        {
+            e.HasIndex(c => new { c.StudentId, c.ExamId }).IsUnique();
+            e.HasIndex(c => c.Code).IsUnique();
+            e.Property(c => c.Title).HasMaxLength(200);
+            e.Property(c => c.Grade).HasMaxLength(40);
+            e.Property(c => c.Code).HasMaxLength(40);
+            e.HasOne(c => c.Student).WithMany().HasForeignKey(c => c.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(c => c.Exam).WithMany().HasForeignKey(c => c.ExamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(c => c.Course).WithMany().HasForeignKey(c => c.CourseId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
