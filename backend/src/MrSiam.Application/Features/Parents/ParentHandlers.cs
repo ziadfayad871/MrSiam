@@ -177,6 +177,7 @@ public class GetParentDashboardQueryHandler(IApplicationDbContext db)
             var sub = await db.Subscriptions.AsNoTracking()
                 .Where(s => s.StudentId == studentId && s.Status == SubscriptionStatus.Active && s.EndsAt >= DateTime.UtcNow)
                 .OrderByDescending(s => s.EndsAt)
+                .Select(s => new { s.PlanId, s.EndsAt, PlanName = s.Plan != null ? s.Plan.Name : string.Empty })
                 .FirstOrDefaultAsync(ct);
 
             var xpTotal = await XpRules.GetTotalAsync(db, studentId, ct);
@@ -198,7 +199,7 @@ public class GetParentDashboardQueryHandler(IApplicationDbContext db)
                 AttendancePresent = attendance.Where(a => a.Key == AttendanceStatus.Present).Sum(a => a.Count),
                 AttendanceAbsent = attendance.Where(a => a.Key == AttendanceStatus.Absent).Sum(a => a.Count),
                 HasActiveSubscription = sub is not null,
-                SubscriptionPlan = sub?.Plan?.Name,
+                SubscriptionPlan = sub?.PlanName,
                 SubscriptionEndsAt = sub?.EndsAt,
                 XpTotal = xpTotal,
                 Level = level,

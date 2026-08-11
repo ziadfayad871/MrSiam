@@ -57,6 +57,12 @@ BEGIN
     ALTER TABLE [dbo].[Parents] ADD CONSTRAINT [FK_Parents_Users_UserId] FOREIGN KEY ([UserId]) REFERENCES [dbo].[Users] ([Id]) ON DELETE NO ACTION;
 END;
 
+IF COL_LENGTH(N'dbo.Students', N'ParentId') IS NULL
+BEGIN
+    ALTER TABLE [dbo].[Students] ADD [ParentId] int NULL;
+    ALTER TABLE [dbo].[Students] ADD CONSTRAINT [FK_Students_Parents_ParentId] FOREIGN KEY ([ParentId]) REFERENCES [dbo].[Parents] ([Id]) ON DELETE NO ACTION;
+END;
+
 IF OBJECT_ID(N'dbo.LiveLessons', N'U') IS NULL
 BEGIN
     CREATE TABLE [dbo].[LiveLessons] (

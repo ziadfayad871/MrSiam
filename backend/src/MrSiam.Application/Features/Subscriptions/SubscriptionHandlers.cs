@@ -144,6 +144,7 @@ public class GetMySubscriptionQueryHandler(IApplicationDbContext db)
         var sub = await db.Subscriptions.AsNoTracking()
             .Where(s => s.StudentId == request.StudentId && s.Status == SubscriptionStatus.Active)
             .OrderByDescending(s => s.EndsAt)
+            .Select(s => new { s.AmountPaid, s.StartsAt, s.EndsAt, PlanName = s.Plan != null ? s.Plan.Name : string.Empty })
             .FirstOrDefaultAsync(ct);
 
         if (sub is null || sub.EndsAt < now)
@@ -152,7 +153,7 @@ public class GetMySubscriptionQueryHandler(IApplicationDbContext db)
         return ApiResponse<MySubscriptionDto>.Ok(new MySubscriptionDto
         {
             HasActiveSubscription = true,
-            PlanName = sub.Plan != null ? sub.Plan.Name : string.Empty,
+            PlanName = sub.PlanName,
             AmountPaid = sub.AmountPaid,
             StartsAt = sub.StartsAt,
             EndsAt = sub.EndsAt,
