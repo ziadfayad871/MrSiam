@@ -289,6 +289,23 @@
   color: rgba(255, 255, 255, 0.42);
 }
 
+/* Light atlas tiles — clearly readable sea/land, ink labels */
+.realmap-shell-light .leaflet-container {
+  background: #aad3df;
+}
+.realmap-shell-light .leaflet-control-attribution {
+  color: rgba(10, 25, 50, 0.45);
+}
+.realmap-shell-light .leaflet-control-attribution a {
+  color: rgba(10, 25, 50, 0.6);
+}
+.realmap-shell-light .realmap-label {
+  color: #10233f;
+  text-shadow:
+    0 1px 2px rgba(255, 255, 255, 0.95),
+    0 0 8px rgba(255, 255, 255, 0.9);
+}
+
 .realmap-icon {
   background: transparent;
   border: none;

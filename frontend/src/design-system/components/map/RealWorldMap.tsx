@@ -86,6 +86,10 @@ export function RealWorldMap({
     map.setView([24, 20], 2);
     map.setMaxBounds(L.latLngBounds([-65, -180], [80, 180]));
 
+    if (tileStyle === 'light') {
+      map.getContainer().style.filter = 'saturate(1.05) contrast(1.02)';
+    }
+
     return () => {
       map.remove();
       mapRef.current = null;
@@ -160,7 +164,10 @@ export function RealWorldMap({
 
   return (
     <div className={`relative ${className}`} aria-label="خريطة العالم">
-      <div ref={containerRef} className="realmap-shell absolute inset-0" />
+      <div
+        ref={containerRef}
+        className={`realmap-shell absolute inset-0 ${tileStyle === 'light' ? 'realmap-shell-light' : ''}`}
+      />
     </div>
   );
 }
