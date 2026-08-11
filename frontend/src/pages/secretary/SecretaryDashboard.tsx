@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
-import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
+import { AlertTriangle, Banknote, BarChart3, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import AnalyticsTab from '../../components/AnalyticsTab';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
 import { Card } from '../../design-system/ui/Card';
@@ -657,10 +658,11 @@ export default function SecretaryDashboard() {
         items={[
           { key: 'overview', label: 'نظرة عامة' },
           { key: 'students', label: 'إدارة الطلبة', icon: <Users size={15} /> },
+          { key: 'analytics', label: 'التحليلات', icon: <BarChart3 size={15} /> },
         ]}
       />
 
-      {tab === 'overview' ? <OverviewTab data={data} /> : <StudentsTab />}
+      {tab === 'overview' ? <OverviewTab data={data} /> : tab === 'students' ? <StudentsTab /> : <AnalyticsTab />}
     </div>
   );
 }

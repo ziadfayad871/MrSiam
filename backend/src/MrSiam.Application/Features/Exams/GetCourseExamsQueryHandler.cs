@@ -5,7 +5,7 @@ using MrSiam.Application.Common;
 
 namespace MrSiam.Application.Features.Exams;
 
-public record GetCourseExamsQuery(int CourseId, int? StudentId = null) : IRequest<ApiResponse<IReadOnlyList<ExamListItemDto>>>;
+public record GetCourseExamsQuery(int CourseId, int? StudentId = null, bool IncludeUnpublished = false) : IRequest<ApiResponse<IReadOnlyList<ExamListItemDto>>>;
 
 public class GetCourseExamsQueryHandler(IApplicationDbContext db)
     : IRequestHandler<GetCourseExamsQuery, ApiResponse<IReadOnlyList<ExamListItemDto>>>
@@ -14,7 +14,7 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
     {
         var exams = await db.Exams
             .AsNoTracking()
-            .Where(e => e.CourseId == request.CourseId && e.IsPublished)
+            .Where(e => e.CourseId == request.CourseId && (e.IsPublished || request.IncludeUnpublished))
             .OrderBy(e => e.LessonId == null ? 0 : e.LessonId).ThenBy(e => e.Id)
             .Select(e => new ExamListItemDto
             {
@@ -27,6 +27,7 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
                 TypeAr = e.Type.ToString(),
                 DurationMinutes = e.DurationMinutes,
                 TotalMarks = e.TotalMarks,
+                IsPublished = e.IsPublished,
                 QuestionCount = e.Questions.Count
             })
             .ToListAsync(ct);

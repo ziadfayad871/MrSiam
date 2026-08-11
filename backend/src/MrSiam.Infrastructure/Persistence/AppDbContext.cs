@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<TopStudent> TopStudents => Set<TopStudent>();
+    public DbSet<Assignment> Assignments => Set<Assignment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -116,6 +117,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(t => t.Achievement).HasMaxLength(120);
             e.Property(t => t.Year).HasMaxLength(16);
             e.Property(t => t.PhotoUrl).HasMaxLength(300);
+        });
+
+        builder.Entity<Assignment>(e =>
+        {
+            e.Property(a => a.Title).HasMaxLength(160);
+            e.HasOne(a => a.Course).WithMany().HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

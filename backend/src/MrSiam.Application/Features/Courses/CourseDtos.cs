@@ -25,6 +25,7 @@ public record LessonDto
     public int Order { get; init; }
     public int DurationMinutes { get; init; }
     public required string ContentType { get; init; }
+    public string? VideoUrl { get; init; }
     public bool IsCompleted { get; set; }
     public decimal? BestPercentage { get; set; }
 }

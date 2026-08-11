@@ -10,9 +10,9 @@ namespace MrSiam.Api.Controllers;
 public class ExamsController(MediatR.IMediator mediator) : ControllerBase
 {
     [HttpGet("course/{courseId:int}")]
-    public async Task<IActionResult> GetByCourse(int courseId, [FromQuery] int? studentId)
+    public async Task<IActionResult> GetByCourse(int courseId, [FromQuery] int? studentId, [FromQuery] bool includeUnpublished = false)
     {
-        var result = await mediator.Send(new GetCourseExamsQuery(courseId, studentId));
+        var result = await mediator.Send(new GetCourseExamsQuery(courseId, studentId, includeUnpublished));
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

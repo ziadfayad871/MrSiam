@@ -1,4 +1,4 @@
-import { BookOpen, FileText, PlayCircle } from 'lucide-react';
+import { BookOpen, ClipboardList, FileText, PlayCircle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CompassLoader } from '../design-system/components/CompassLoader';
@@ -6,29 +6,69 @@ import { Badge } from '../design-system/ui/Badge';
 import { Card } from '../design-system/ui/Card';
 import { EmptyState } from '../design-system/ui/EmptyState';
 import { ErrorState } from '../design-system/ui/ErrorState';
+import { Modal } from '../design-system/ui/Modal';
 import { Progress } from '../design-system/ui/Progress';
 import { api } from '../lib/api';
-import type { CourseDto, ExamListItemDto, LessonDto } from '../lib/types';
+import type { AssignmentDto, CourseDto, ExamListItemDto, LessonDto } from '../lib/types';
+
+function embedUrl(url: string): string | null {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
+  return null;
+}
+
+function VideoPlayer({ url, onClose }: { url: string; onClose: () => void }) {
+  const embed = embedUrl(url);
+  return (
+    <div className="relative">
+      <button
+        onClick={onClose}
+        className="absolute -top-9 end-0 rounded-full p-1.5 text-text-muted transition-colors hover:bg-border-soft hover:text-text-primary"
+        aria-label="إغلاق"
+      >
+        <X size={18} />
+      </button>
+      {embed ? (
+        <iframe
+          src={embed}
+          title="فيديو الدرس"
+          className="aspect-video w-full rounded-lg border border-border-soft"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        <video src={url} controls className="aspect-video w-full rounded-lg border border-border-soft bg-black" />
+      )}
+    </div>
+  );
+}
 
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [lessons, setLessons] = useState<LessonDto[]>([]);
   const [exams, setExams] = useState<ExamListItemDto[]>([]);
+  const [assignments, setAssignments] = useState<AssignmentDto[]>([]);
+  const [playing, setPlaying] = useState<LessonDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [courses, lessonsList, examsList] = await Promise.all([
+        const [courses, lessonsList, examsList, assignmentsList] = await Promise.all([
           api.get<CourseDto[]>('/courses'),
           api.get<LessonDto[]>(`/courses/${courseId}/lessons`),
           api.get<ExamListItemDto[]>(`/exams/course/${courseId}`),
+          api.get<AssignmentDto[]>(`/courses/${courseId}/assignments`),
         ]);
         setCourse(courses.find((c) => String(c.id) === courseId) ?? null);
         setLessons(lessonsList);
         setExams(examsList);
+        setAssignments(assignmentsList);
       } catch (e) {
         setError(e instanceof Error ? e.message : 'فشل تحميل المادة');
       } finally {
@@ -79,17 +119,25 @@ export default function CourseDetailPage() {
           ) : (
             <div className="flex flex-col gap-2.5">
               {lessons.map((l) => (
-                <div key={l.id} className="flex items-center gap-3 rounded-md border border-border-soft bg-surface px-4 py-3">
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${l.isCompleted ? 'bg-success/15 text-success' : 'bg-border-soft text-text-muted'}`}>
-                    {l.isCompleted ? <PlayCircle size={16} /> : <span className="text-xs font-bold">{l.order}</span>}
+                <div
+                  key={l.id}
+                  className={`flex items-center gap-3 rounded-md border border-border-soft bg-surface px-4 py-3 ${l.contentType === 'video' && l.videoUrl ? 'cursor-pointer transition-colors hover:border-gold/50 hover:bg-gold/5' : ''}`}
+                  onClick={() => {
+                    if (l.contentType === 'video' && l.videoUrl) setPlaying(l);
+                  }}
+                >
+                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${l.isCompleted ? 'bg-success/15 text-success' : l.contentType === 'video' ? 'bg-gold/10 text-gold' : 'bg-border-soft text-text-muted'}`}>
+                    {l.isCompleted ? <PlayCircle size={16} /> : l.contentType === 'video' ? <PlayCircle size={16} /> : <span className="text-xs font-bold">{l.order}</span>}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-text-primary">{l.title}</p>
                     <p className="truncate text-[11px] text-text-muted">
-                      {l.durationMinutes} دقيقة{l.bestPercentage !== undefined && l.bestPercentage > 0 ? ` · أفضل نتيجة ${l.bestPercentage}%` : ''}
+                      {l.contentType === 'video' ? 'فيديو' : `${l.durationMinutes} دقيقة`}
+                      {l.bestPercentage !== undefined && l.bestPercentage > 0 ? ` · أفضل نتيجة ${l.bestPercentage}%` : ''}
                     </p>
                   </div>
                   {l.isCompleted && <Badge variant="success">خلصت</Badge>}
+                  {l.contentType === 'video' && l.videoUrl && <span className="text-[10px] font-bold text-gold">شاهد ▶</span>}
                 </div>
               ))}
             </div>
@@ -125,6 +173,40 @@ export default function CourseDetailPage() {
           )}
         </section>
       </div>
+
+      {/* Assignments */}
+      <section className="mt-8">
+        <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-text-primary">
+          <ClipboardList size={18} className="text-gold" /> الواجبات ({assignments.length})
+        </h2>
+        {assignments.length === 0 ? (
+          <Card className="border-dashed">
+            <p className="py-6 text-center text-sm text-text-muted">مفيش واجبات لسه — الواجب الجاي هيظهر هنا.</p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-2.5">
+            {assignments.map((a) => (
+              <Card key={a.id}>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">{a.title}</p>
+                    {a.description && <p className="mt-1 text-xs leading-relaxed text-text-secondary">{a.description}</p>}
+                  </div>
+                  {a.dueDate && (
+                    <span className="shrink-0 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold text-gold">
+                      آخر موعد: {new Date(a.dueDate).toLocaleDateString('ar-EG')}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <Modal open={playing !== null} onClose={() => setPlaying(null)} title={playing?.title ?? ''}>
+        {playing?.videoUrl && <VideoPlayer url={playing.videoUrl} onClose={() => setPlaying(null)} />}
+      </Modal>
     </div>
   );
 }

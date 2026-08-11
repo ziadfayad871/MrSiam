@@ -57,8 +57,47 @@ export interface LessonDto {
   order: number;
   durationMinutes: number;
   contentType: string;
+  videoUrl?: string;
   isCompleted: boolean;
   bestPercentage?: number;
+}
+
+export interface AssignmentDto {
+  id: number;
+  courseId: number;
+  title: string;
+  description: string;
+  dueDate?: string;
+  createdAt: string;
+}
+
+export interface AnalyticsOverviewDto {
+  totalStudents: number;
+  totalCourses: number;
+  totalExams: number;
+  totalAttempts: number;
+  overallAverage: number;
+  overallPassRate: number;
+  attemptsLastWeek: number;
+  stages: { stage: string; stageAr: string; studentCount: number; attemptCount: number; avgPercentage: number; passRate: number }[];
+  courses: { courseId: number; title: string; examCount: number; attemptCount: number; avgPercentage: number; passRate: number }[];
+  exams: { examId: number; courseId: number; title: string; attemptCount: number; avgPercentage: number; passRate: number; bestPercentage: number }[];
+}
+
+export interface StudentAnalyticsDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stageAr: string;
+  academicYear: string;
+  joinedAt: string;
+  examsTaken: number;
+  totalAttempts: number;
+  passedExams: number;
+  bestPercentage: number;
+  avgPercentage: number;
+  attempts: { examId: number; examTitle: string; score: number; percentage: number; passed: boolean; submittedAt?: string }[];
+  subjects: { subject: string; subjectAr: string; attemptCount: number; avgPercentage: number }[];
 }
 
 export interface ExamListItemDto {
@@ -72,6 +111,7 @@ export interface ExamListItemDto {
   durationMinutes: number;
   totalMarks: number;
   questionCount: number;
+  isPublished: boolean;
   hasAttempt: boolean;
   bestPercentage?: number;
   attemptsUsed: number;

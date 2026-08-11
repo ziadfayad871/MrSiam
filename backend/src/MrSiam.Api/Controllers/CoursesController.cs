@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MrSiam.Application.Features.Content;
 using MrSiam.Application.Features.Courses;
 
 namespace MrSiam.Api.Controllers;
@@ -20,6 +21,13 @@ public class CoursesController(MediatR.IMediator mediator) : ControllerBase
     public async Task<IActionResult> GetLessons(int courseId, [FromQuery] int? studentId)
     {
         var result = await mediator.Send(new GetCourseLessonsQuery(courseId, studentId));
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpGet("{courseId:int}/assignments")]
+    public async Task<IActionResult> GetAssignments(int courseId)
+    {
+        var result = await mediator.Send(new GetCourseAssignmentsQuery(courseId));
         return result.Success ? Ok(result) : BadRequest(result);
     }
 }

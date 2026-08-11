@@ -14,6 +14,7 @@ public record ExamListItemDto
     public int DurationMinutes { get; init; }
     public decimal TotalMarks { get; init; }
     public int QuestionCount { get; init; }
+    public bool IsPublished { get; init; }
     public bool HasAttempt { get; set; }
     public decimal? BestPercentage { get; set; }
     public int AttemptsUsed { get; set; }
