@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
+using MrSiam.Domain.Enums;
 
 namespace MrSiam.Application.Features.Exams;
 
@@ -34,6 +35,19 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
 
         if (request.StudentId is not null)
         {
+            var lessonExamIds = await db.Exams.AsNoTracking()
+                .Where(e => e.CourseId == request.CourseId && e.LessonId != null)
+                .Select(e => e.LessonId!.Value)
+                .Distinct()
+                .ToListAsync(ct);
+
+            var passedLessonExams = await db.ExamAttempts
+                .Where(a => a.StudentId == request.StudentId && a.Passed && a.Exam != null && a.Exam.CourseId == request.CourseId)
+                .Select(a => a.Exam!.LessonId)
+                .Distinct()
+                .ToListAsync(ct);
+            var completedCount = passedLessonExams.Where(x => x.HasValue && lessonExamIds.Contains(x.Value)).Select(x => x!.Value).Distinct().Count();
+
             foreach (var exam in exams)
             {
                 var attempts = await db.ExamAttempts
@@ -44,6 +58,10 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
                 exam.HasAttempt = attempts.Count > 0;
                 exam.BestPercentage = attempts.FirstOrDefault()?.Percentage;
                 exam.AttemptsUsed = attempts.Count;
+                exam.IsBoss = exam.Type == ExamType.Boss;
+                exam.LessonsTotal = lessonExamIds.Count;
+                exam.LessonsCompleted = completedCount;
+                exam.BossLocked = exam.IsBoss && lessonExamIds.Count > 0 && completedCount < lessonExamIds.Count;
             }
         }
 

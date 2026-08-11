@@ -5,6 +5,7 @@ using MrSiam.Application.Common;
 using MrSiam.Application.Features.Achievements;
 using MrSiam.Application.Features.StudentEngagement;
 using MrSiam.Domain.Entities;
+using MrSiam.Domain.Enums;
 
 namespace MrSiam.Application.Features.Attempts;
 
@@ -28,6 +29,29 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
         var studentExists = await db.Students.AnyAsync(s => s.Id == request.StudentId, ct);
         if (!studentExists)
             return ApiResponse<AttemptResultDto>.Fail("الطالب غير موجود");
+
+        if (exam.Type == ExamType.Boss)
+        {
+            var lessonExamCounts = await db.Exams
+                .AsNoTracking()
+                .Where(e => e.CourseId == exam.CourseId && e.LessonId != null)
+                .Select(e => e.LessonId!.Value)
+                .ToListAsync(ct);
+
+            if (lessonExamCounts.Count > 0)
+            {
+                var passedLessonExams = await db.ExamAttempts
+                    .Where(a => a.StudentId == request.StudentId && a.Passed && a.Exam != null && a.Exam.CourseId == exam.CourseId)
+                    .Select(a => a.Exam!.LessonId)
+                    .Distinct()
+                    .ToListAsync(ct);
+
+                var remaining = lessonExamCounts.Except(passedLessonExams.Where(x => x.HasValue).Select(x => x!.Value)).ToList();
+                if (remaining.Count > 0)
+                    return ApiResponse<AttemptResultDto>.Fail(
+                        $"بوس المادة لسه مقفول — خلص كل دروسك الأول ({lessonExamCounts.Count - remaining.Count}/{lessonExamCounts.Count} مكتمل)");
+            }
+        }
 
         var answersByQuestion = request.Answers.ToDictionary(a => a.QuestionId, a => a.SelectedOptionId);
 
@@ -119,6 +143,8 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
             await XpRules.AwardAsync(db, request.StudentId, XpRules.ExamPass, $"exam-pass:{exam.Id}", examId: exam.Id, ct: ct);
             if (perfect)
                 await XpRules.AwardAsync(db, request.StudentId, XpRules.PerfectExamBonus, $"exam-perfect:{exam.Id}", examId: exam.Id, ct: ct);
+            if (exam.Type == ExamType.Boss)
+                await XpRules.AwardAsync(db, request.StudentId, XpRules.BossPass, $"boss:{exam.Id}", examId: exam.Id, ct: ct);
 
             if (exam.LessonId is not null)
                 await XpRules.AwardAsync(db, request.StudentId, XpRules.LessonComplete, $"lesson:{exam.LessonId}", courseId: exam.CourseId, ct: ct);

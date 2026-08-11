@@ -12,6 +12,7 @@ public static class XpRules
     public const int LessonComplete = 10;
     public const int CourseComplete = 100;
     public const int AchievementUnlock = 25;
+    public const int BossPass = 150;
 
     private static readonly (int Threshold, string Title)[] Levels =
     [

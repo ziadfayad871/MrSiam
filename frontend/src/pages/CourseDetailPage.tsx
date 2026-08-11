@@ -1,4 +1,4 @@
-import { Bookmark, BookOpen, ClipboardList, FileText, PlayCircle, Plus, X } from 'lucide-react';
+import { Bookmark, BookOpen, ClipboardList, Crown, FileText, PlayCircle, Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CompassLoader } from '../design-system/components/CompassLoader';
@@ -229,7 +229,38 @@ export default function CourseDetailPage() {
           {lessons.length === 0 ? (
             <EmptyState icon="scroll" title="مفيش دروس" description="الدرس الأول جاي قريب." />
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <>
+              {/* Journey map */}
+              <div className="mb-5 overflow-x-auto rounded-lg border border-border-soft bg-surface/60 p-4">
+                <p className="mb-3 text-[10px] font-bold tracking-wider text-text-muted">خريطة الرحلة — المحطات</p>
+                <div className="flex min-w-max items-start gap-0">
+                  {lessons.map((l, i) => (
+                    <div key={l.id} className="flex items-start">
+                      <div className="flex w-16 flex-col items-center">
+                        <span
+                          className={`flex h-10 w-10 items-center justify-center rounded-full border-2 text-[11px] font-black ${
+                            l.isCompleted
+                              ? 'border-success bg-success/15 text-success'
+                              : i === completedLessons
+                                ? 'border-gold bg-gold text-navy-deep shadow-[0_0_12px_rgba(185,138,47,0.45)]'
+                                : 'border-border-soft bg-surface text-text-muted'
+                          }`}
+                        >
+                          {l.isCompleted ? '✓' : l.order}
+                        </span>
+                        <p className={`mt-1.5 line-clamp-2 text-center text-[9px] leading-tight ${l.isCompleted ? 'text-success' : i === completedLessons ? 'text-gold' : 'text-text-muted'}`}>
+                          {l.title}
+                        </p>
+                      </div>
+                      {i < lessons.length - 1 && (
+                        <span className={`mt-5 h-0.5 w-6 shrink-0 ${i < completedLessons ? 'bg-success/60' : 'bg-border-soft'}`} />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2.5">
               {lessons.map((l) => (
                 <div
                   key={l.id}
@@ -262,7 +293,8 @@ export default function CourseDetailPage() {
                   {l.contentType === 'video' && l.videoUrl && <span className="text-[10px] font-bold text-gold">شاهد ▶</span>}
                 </div>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </section>
 
@@ -275,22 +307,65 @@ export default function CourseDetailPage() {
             <EmptyState icon="scroll" title="مفيش امتحانات" description="الامتحان الأول جاي قريب." />
           ) : (
             <div className="flex flex-col gap-2.5">
-              {exams.map((e) => (
-                <Link
-                  key={e.id}
-                  to={`/exam/${e.id}`}
-                  className="group flex items-center justify-between rounded-md border border-border-soft bg-surface px-4 py-3 transition-colors hover:border-gold/50 hover:bg-gold/5"
-                >
-                  <div>
-                    <p className="text-sm font-bold text-text-primary group-hover:text-gold">{e.title}</p>
-                    <p className="mt-0.5 text-[11px] text-text-muted">
-                      {e.questionCount} سؤال · {e.totalMarks} درجة · {e.durationMinutes} دقيقة
-                      {e.hasAttempt ? ` · أفضل نتيجة ${e.bestPercentage}%` : ''}
-                    </p>
+              {exams.map((e) =>
+                e.isBoss ? (
+                  <div
+                    key={e.id}
+                    className={`relative overflow-hidden rounded-md border px-4 py-3 ${
+                      e.bossLocked ? 'border-border-soft bg-surface/50 opacity-80' : 'border-gold/50 bg-gold/5'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/15 text-gold">
+                          <Crown size={16} />
+                        </span>
+                        <div>
+                          <p className="text-sm font-bold text-text-primary">{e.title}</p>
+                          <p className="mt-0.5 text-[11px] text-text-muted">
+                            {e.questionCount} سؤال · {e.totalMarks} درجة · {e.durationMinutes} دقيقة
+                            {e.hasAttempt ? ` · أفضل نتيجة ${e.bestPercentage}%` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {e.bossLocked ? (
+                        <Badge variant="neutral">🔒 بوس مقفول</Badge>
+                      ) : (
+                        <Link
+                          to={`/exam/${e.id}`}
+                          className="shrink-0 rounded-full bg-gold px-4 py-1.5 text-[11px] font-bold text-navy-deep transition-colors hover:bg-gold/90"
+                        >
+                          ابدأ البوس ⚔️
+                        </Link>
+                      )}
+                    </div>
+                    {e.bossLocked && (
+                      <div className="mt-3">
+                        <div className="mb-1 flex justify-between text-[10px] text-text-muted">
+                          <span>خلص كل المحطات الأول عشان يفتح البوس</span>
+                          <span className="font-bold text-gold">{e.lessonsCompleted}/{e.lessonsTotal}</span>
+                        </div>
+                        <Progress value={e.lessonsTotal > 0 ? (e.lessonsCompleted / e.lessonsTotal) * 100 : 0} />
+                      </div>
+                    )}
                   </div>
-                  <Badge variant={e.type === 'Final' ? 'gold' : e.type === 'Unit' ? 'warning' : 'neutral'}>{e.typeAr}</Badge>
-                </Link>
-              ))}
+                ) : (
+                  <Link
+                    key={e.id}
+                    to={`/exam/${e.id}`}
+                    className="group flex items-center justify-between rounded-md border border-border-soft bg-surface px-4 py-3 transition-colors hover:border-gold/50 hover:bg-gold/5"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-text-primary group-hover:text-gold">{e.title}</p>
+                      <p className="mt-0.5 text-[11px] text-text-muted">
+                        {e.questionCount} سؤال · {e.totalMarks} درجة · {e.durationMinutes} دقيقة
+                        {e.hasAttempt ? ` · أفضل نتيجة ${e.bestPercentage}%` : ''}
+                      </p>
+                    </div>
+                    <Badge variant={e.type === 'Final' ? 'gold' : e.type === 'Unit' ? 'warning' : 'neutral'}>{e.typeAr}</Badge>
+                  </Link>
+                ),
+              )}
             </div>
           )}
         </section>

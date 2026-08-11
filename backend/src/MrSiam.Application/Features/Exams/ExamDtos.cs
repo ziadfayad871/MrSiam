@@ -18,6 +18,10 @@ public record ExamListItemDto
     public bool HasAttempt { get; set; }
     public decimal? BestPercentage { get; set; }
     public int AttemptsUsed { get; set; }
+    public bool IsBoss { get; set; }
+    public bool BossLocked { get; set; }
+    public int LessonsTotal { get; set; }
+    public int LessonsCompleted { get; set; }
 }
 
 public record ExamDetailDto

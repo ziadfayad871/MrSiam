@@ -38,7 +38,7 @@ public class GetPassportQueryHandler(IApplicationDbContext db)
         var attempts = await db.ExamAttempts
             .AsNoTracking()
             .Where(a => a.StudentId == request.StudentId && a.SubmittedAt != null)
-            .Select(a => new { a.Percentage, a.Passed, a.SubmittedAt, ExamTitle = a.Exam != null ? a.Exam.Title : string.Empty, CourseTitle = a.Exam != null && a.Exam.Course != null ? a.Exam.Course.Title : string.Empty })
+            .Select(a => new { a.Percentage, a.Passed, a.SubmittedAt, ExamTitle = a.Exam != null ? a.Exam.Title : string.Empty, CourseTitle = a.Exam != null && a.Exam.Course != null ? a.Exam.Course.Title : string.Empty, ExamType = a.Exam != null ? a.Exam.Type : ExamType.Practice })
             .ToListAsync(ct);
 
         foreach (var best in attempts
@@ -48,7 +48,18 @@ public class GetPassportQueryHandler(IApplicationDbContext db)
             if (!best.Passed)
                 continue;
 
-            if (best.Percentage >= 99.5m)
+            if (best.ExamType == ExamType.Boss)
+            {
+                stamps.Add(new PassportStampDto
+                {
+                    Kind = "boss",
+                    Title = best.ExamTitle,
+                    Detail = "هزمت بوس المادة!",
+                    Icon = "crown",
+                    Date = best.SubmittedAt
+                });
+            }
+            else if (best.Percentage >= 99.5m)
             {
                 stamps.Add(new PassportStampDto
                 {

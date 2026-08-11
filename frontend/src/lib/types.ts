@@ -115,6 +115,10 @@ export interface ExamListItemDto {
   hasAttempt: boolean;
   bestPercentage?: number;
   attemptsUsed: number;
+  isBoss: boolean;
+  bossLocked: boolean;
+  lessonsTotal: number;
+  lessonsCompleted: number;
 }
 
 export interface ExamDetailDto {

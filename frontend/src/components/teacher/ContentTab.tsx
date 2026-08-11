@@ -45,6 +45,7 @@ const EXAM_TYPES = [
   { key: 'Lesson', ar: 'درس' },
   { key: 'Unit', ar: 'وحدة' },
   { key: 'Final', ar: 'نهائي' },
+  { key: 'Boss', ar: 'بوس ⚔️' },
 ] as const;
 
 const TH = 'py-2 text-center font-medium';
