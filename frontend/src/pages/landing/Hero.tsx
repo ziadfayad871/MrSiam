@@ -5,9 +5,24 @@ import { useNavigate } from 'react-router-dom';
 import { BrandLogo } from '../../design-system/components/BrandLogo';
 import { Compass as CompassBrand } from '../../design-system/components/Compass';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
-import { HistoricalMap } from '../../design-system/components/map/HistoricalMap';
+import { RealWorldMap } from '../../design-system/components/map/RealWorldMap';
 import { Button } from '../../design-system/ui/Button';
 import { usePrefersReducedMotion } from '../../design-system/motion/hooks';
+
+const WORLD_MARKERS = [
+  { id: 'cairo', lat: 30.05, lng: 31.23, label: 'القاهرة', state: 'current' as const },
+  { id: 'paris', lat: 48.86, lng: 2.35, label: 'باريس', state: 'discovered' as const },
+  { id: 'london', lat: 51.51, lng: -0.13, label: 'لندن', state: 'discovered' as const },
+  { id: 'rome', lat: 41.9, lng: 12.5, label: 'روما', state: 'discovered' as const },
+  { id: 'athens', lat: 37.98, lng: 23.73, label: 'أثينا', state: 'discovered' as const },
+  { id: 'mekka', lat: 21.42, lng: 39.83, label: 'مكة', state: 'discovered' as const },
+];
+
+const WORLD_ROUTES = [
+  { id: 'route1', points: [[30.05, 31.23], [48.86, 2.35], [51.51, -0.13]] as [number, number][] },
+  { id: 'route2', points: [[30.05, 31.23], [41.9, 12.5], [37.98, 23.73]] as [number, number][] },
+  { id: 'route3', points: [[30.05, 31.23], [21.42, 39.83]] as [number, number][] },
+];
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -21,26 +36,13 @@ export function Hero() {
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-navy-deep text-white">
-      {/* Base map */}
+      {/* Base map — real world cartography */}
       <motion.div className="absolute inset-0" style={reduced ? undefined : { y: mapY }}>
-        <HistoricalMap
-          style="world"
-          showGraticule
+        <RealWorldMap
+          tileStyle="dark"
           animated={!reduced}
-          className="opacity-90"
-          markers={[
-            { id: 'cairo', x: 42, y: 33, label: 'القاهرة', state: 'current' },
-            { id: 'paris', x: 40, y: 14, label: 'باريس', state: 'discovered' },
-            { id: 'london', x: 36, y: 10, label: 'لندن', state: 'discovered' },
-            { id: 'rome', x: 45, y: 18, label: 'روما', state: 'discovered' },
-            { id: 'athens', x: 49, y: 17, label: 'أثينا', state: 'discovered' },
-            { id: 'mekka', x: 55, y: 25, label: 'مكة', state: 'discovered' },
-          ]}
-          routes={[
-            { id: 'route1', points: [[42, 33], [40, 14], [36, 10]] },
-            { id: 'route2', points: [[42, 33], [45, 18], [49, 17]] },
-            { id: 'route3', points: [[42, 33], [55, 25]] },
-          ]}
+          markers={WORLD_MARKERS}
+          routes={WORLD_ROUTES}
         />
       </motion.div>
 

@@ -274,6 +274,93 @@
   animation: route-dash 1.2s linear infinite;
 }
 
+/* ---------- Real world map (Leaflet) ---------- */
+.realmap-shell .leaflet-container {
+  background: transparent;
+  font-family: inherit;
+}
+.realmap-shell .leaflet-control-attribution {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 9px;
+  direction: ltr;
+}
+.realmap-shell .leaflet-control-attribution a {
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.realmap-icon {
+  background: transparent;
+  border: none;
+}
+.realmap-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.realmap-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--gold-accent);
+  border: 1.5px solid rgba(0, 0, 0, 0.55);
+  box-shadow: 0 0 10px var(--gold-glow);
+}
+.realmap-marker.current .realmap-dot {
+  width: 11px;
+  height: 11px;
+  box-shadow: 0 0 16px var(--gold-glow), 0 0 6px var(--gold-accent);
+}
+.realmap-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--gold-accent);
+  transform: translate(-50%, -50%);
+  animation: realmap-pulse 2.6s var(--ease-standard) infinite;
+}
+@keyframes realmap-pulse {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(4.2);
+  }
+}
+.realmap-label {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  direction: rtl;
+}
+.realmap-marker.locked .realmap-dot {
+  background: var(--text-muted);
+}
+.realmap-route {
+  animation: realmap-route-dash 1.5s linear infinite;
+}
+@keyframes realmap-route-dash {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realmap-pulse,
+  .realmap-route {
+    animation: none !important;
+  }
+}
+
 /* Keyframes */
 @keyframes compass-spin {
   from { transform: rotate(0deg); }
