@@ -39,6 +39,17 @@ public class UpdateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
         }
 
         await db.SaveChangesAsync(ct);
+
+        db.AuditLogs.Add(new Domain.Entities.AuditLog
+        {
+            Action = "update",
+            Entity = "Student",
+            EntityId = student.Id.ToString(),
+            Details = $"تعديل بيانات الطالب {student.FullName}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تحديث بيانات الطالب");
     }
 }

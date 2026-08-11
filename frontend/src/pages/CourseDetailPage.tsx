@@ -1,5 +1,5 @@
-import { BookOpen, ClipboardList, FileText, PlayCircle, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Bookmark, BookOpen, ClipboardList, FileText, PlayCircle, Plus, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CompassLoader } from '../design-system/components/CompassLoader';
 import { Badge } from '../design-system/ui/Badge';
@@ -9,7 +9,7 @@ import { ErrorState } from '../design-system/ui/ErrorState';
 import { Modal } from '../design-system/ui/Modal';
 import { Progress } from '../design-system/ui/Progress';
 import { api } from '../lib/api';
-import type { AssignmentDto, CourseDto, ExamListItemDto, LessonDto } from '../lib/types';
+import type { AssignmentDto, CourseDto, ExamListItemDto, LessonDto, NoteDto } from '../lib/types';
 
 function embedUrl(url: string): string | null {
   if (!url) return null;
@@ -20,7 +20,38 @@ function embedUrl(url: string): string | null {
   return null;
 }
 
-function VideoPlayer({ url, onClose }: { url: string; onClose: () => void }) {
+function VideoPlayer({ url, lessonId, onClose }: { url: string; lessonId: number; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const lastSaved = useRef(0);
+  const [saving, setSaving] = useState(false);
+
+  const save = useCallback(async (position: number, duration: number) => {
+    if (position <= 0 || duration <= 0) return;
+    setSaving(true);
+    try {
+      await api.put(`/student/watch/${lessonId}`, { positionSeconds: Math.floor(position), durationSeconds: Math.floor(duration) });
+    } catch {
+      // silent — tracking is best effort
+    } finally {
+      setSaving(false);
+    }
+  }, [lessonId]);
+
+  const handleTimeUpdate = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.currentTime - lastSaved.current >= 10) {
+      lastSaved.current = v.currentTime;
+      void save(v.currentTime, v.duration);
+    }
+  };
+
+  const handlePause = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    void save(v.currentTime, v.duration);
+  };
+
   const embed = embedUrl(url);
   return (
     <div className="relative">
@@ -40,8 +71,16 @@ function VideoPlayer({ url, onClose }: { url: string; onClose: () => void }) {
           allowFullScreen
         />
       ) : (
-        <video src={url} controls className="aspect-video w-full rounded-lg border border-border-soft bg-black" />
+        <video
+          ref={videoRef}
+          src={url}
+          controls
+          className="aspect-video w-full rounded-lg border border-border-soft bg-black"
+          onTimeUpdate={handleTimeUpdate}
+          onPause={handlePause}
+        />
       )}
+      {saving && <span className="mt-1 inline-block text-[10px] text-text-muted">بنحفظ تقدمك…</span>}
     </div>
   );
 }
@@ -56,19 +95,27 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
+  const [notes, setNotes] = useState<NoteDto[]>([]);
+  const [noteText, setNoteText] = useState('');
+  const [savingNote, setSavingNote] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
       try {
-        const [courses, lessonsList, examsList, assignmentsList] = await Promise.all([
+        const [courses, lessonsList, examsList, assignmentsList, bookmarks] = await Promise.all([
           api.get<CourseDto[]>('/courses'),
           api.get<LessonDto[]>(`/courses/${courseId}/lessons`),
           api.get<ExamListItemDto[]>(`/exams/course/${courseId}`),
           api.get<AssignmentDto[]>(`/courses/${courseId}/assignments`),
+          api.get<{ lessonId: number }[]>(`/student/bookmarks?kind=lesson&courseId=${courseId}`).catch(() => []),
         ]);
         setCourse(courses.find((c) => String(c.id) === courseId) ?? null);
         setLessons(lessonsList);
         setExams(examsList);
         setAssignments(assignmentsList);
+        setBookmarked(new Set(bookmarks.filter((b) => b.lessonId).map((b) => b.lessonId as number)));
       } catch (e) {
         setError(e instanceof Error ? e.message : 'فشل تحميل المادة');
       } finally {
@@ -76,6 +123,57 @@ export default function CourseDetailPage() {
       }
     })();
   }, [courseId]);
+
+  const openLesson = async (l: LessonDto) => {
+    setPlaying(l);
+    setFeedback(null);
+    setNoteText('');
+    if (l.contentType === 'video' && l.videoUrl) {
+      try {
+        const list = await api.get<NoteDto[]>(`/student/lessons/${l.id}/notes`);
+        setNotes(list);
+      } catch {
+        setNotes([]);
+      }
+    }
+  };
+
+  const toggleBookmark = async (l: LessonDto) => {
+    const was = bookmarked.has(l.id);
+    setBookmarked((prev) => {
+      const next = new Set(prev);
+      if (was) next.delete(l.id);
+      else next.add(l.id);
+      return next;
+    });
+    try {
+      await api.post('/student/bookmarks/toggle', { kind: 'lesson', lessonId: l.id });
+    } catch {
+      setBookmarked((prev) => {
+        const next = new Set(prev);
+        if (was) next.add(l.id);
+        else next.delete(l.id);
+        return next;
+      });
+      setFeedback('مقدرناش نحفظ الإشارة — جرب تاني');
+    }
+  };
+
+  const addNote = async () => {
+    if (!playing || !noteText.trim()) return;
+    setSavingNote(true);
+    try {
+      await api.post('/student/notes', { lessonId: playing.id, text: noteText.trim() });
+      const list = await api.get<NoteDto[]>(`/student/lessons/${playing.id}/notes`);
+      setNotes(list);
+      setNoteText('');
+      setFeedback('اتسجلت الملاحظة ✓');
+    } catch {
+      setFeedback('مقدرناش نسجل الملاحظة — جرب تاني');
+    } finally {
+      setSavingNote(false);
+    }
+  };
 
   if (loading) return <CompassLoader text="بنرسم خريطة المادة..." />;
   if (error) return <ErrorState title={error} onRetry={() => window.location.reload()} />;
@@ -108,6 +206,10 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
+      {feedback && (
+        <p className="mt-4 rounded-md border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold">{feedback}</p>
+      )}
+
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
         {/* Lessons */}
         <section>
@@ -123,7 +225,7 @@ export default function CourseDetailPage() {
                   key={l.id}
                   className={`flex items-center gap-3 rounded-md border border-border-soft bg-surface px-4 py-3 ${l.contentType === 'video' && l.videoUrl ? 'cursor-pointer transition-colors hover:border-gold/50 hover:bg-gold/5' : ''}`}
                   onClick={() => {
-                    if (l.contentType === 'video' && l.videoUrl) setPlaying(l);
+                    if (l.contentType === 'video' && l.videoUrl) void openLesson(l);
                   }}
                 >
                   <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${l.isCompleted ? 'bg-success/15 text-success' : l.contentType === 'video' ? 'bg-gold/10 text-gold' : 'bg-border-soft text-text-muted'}`}>
@@ -136,6 +238,16 @@ export default function CourseDetailPage() {
                       {l.bestPercentage !== undefined && l.bestPercentage > 0 ? ` · أفضل نتيجة ${l.bestPercentage}%` : ''}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void toggleBookmark(l);
+                    }}
+                    className={`rounded-full p-1.5 transition-colors ${bookmarked.has(l.id) ? 'bg-gold/15 text-gold' : 'text-text-muted hover:bg-border-soft hover:text-text-primary'}`}
+                    title={bookmarked.has(l.id) ? 'إزالة من الإشارات المرجعية' : 'أضف للإشارات المرجعية'}
+                  >
+                    <Bookmark size={15} fill={bookmarked.has(l.id) ? 'currentColor' : 'none'} />
+                  </button>
                   {l.isCompleted && <Badge variant="success">خلصت</Badge>}
                   {l.contentType === 'video' && l.videoUrl && <span className="text-[10px] font-bold text-gold">شاهد ▶</span>}
                 </div>
@@ -204,8 +316,43 @@ export default function CourseDetailPage() {
         )}
       </section>
 
-      <Modal open={playing !== null} onClose={() => setPlaying(null)} title={playing?.title ?? ''}>
-        {playing?.videoUrl && <VideoPlayer url={playing.videoUrl} onClose={() => setPlaying(null)} />}
+      <Modal open={playing !== null} onClose={() => setPlaying(null)} title={playing?.title ?? ''} size="lg">
+        {playing?.videoUrl && <VideoPlayer url={playing.videoUrl} lessonId={playing.id} onClose={() => setPlaying(null)} />}
+
+        {/* Notes */}
+        <div className="mt-5">
+          <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold text-text-primary">
+            <BookOpen size={14} className="text-gold" /> ملاحظاتك على الدرس
+          </h3>
+          <div className="flex gap-2">
+            <input
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && void addNote()}
+              placeholder="اكتب ملاحظة.. ولو فيديو هنتذكر مكانها تلقائياً"
+              className="min-w-0 flex-1 rounded-md border border-border-soft bg-surface px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
+            />
+            <button
+              onClick={() => void addNote()}
+              disabled={savingNote || !noteText.trim()}
+              className="flex shrink-0 items-center gap-1 rounded-md bg-gold px-3 py-2 text-xs font-bold text-navy-deep transition-colors hover:bg-gold/90 disabled:opacity-50"
+            >
+              <Plus size={14} /> {savingNote ? 'بنسجل...' : 'أضف'}
+            </button>
+          </div>
+          <div className="mt-3 flex flex-col gap-2">
+            {notes.length === 0 && <p className="text-xs text-text-muted">مفيش ملاحظات على الدرس ده.</p>}
+            {notes.map((n) => (
+              <div key={n.id} className="rounded-md border border-border-soft bg-parchment-soft px-3 py-2">
+                <p className="text-xs leading-relaxed text-text-secondary">{n.text}</p>
+                <p className="mt-1 text-[10px] text-text-muted">
+                  {new Date(n.createdAt).toLocaleDateString('ar-EG')}
+                  {n.videoTimestampSec !== undefined && n.videoTimestampSec > 0 && ` · عند الدقيقة ${Math.floor(n.videoTimestampSec / 60)}:${String(n.videoTimestampSec % 60).padStart(2, '0')}`}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
       </Modal>
     </div>
   );

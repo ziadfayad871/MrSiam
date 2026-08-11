@@ -238,6 +238,175 @@ export interface TeacherDashboardDto {
   recentAttempts: { id: number; studentName: string; examTitle: string; percentage: number; passed: boolean; submittedAt: string }[];
 }
 
+export interface XpInfoDto {
+  total: number;
+  level: number;
+  levelTitle: string;
+  nextLevelTitle: string;
+  nextThreshold: number;
+  progressPercent: number;
+}
+
+export interface StreakDto {
+  current: number;
+  longest: number;
+}
+
+export interface ContinueWatchingDto {
+  lessonId: number;
+  courseId: number;
+  courseTitle: string;
+  lessonTitle: string;
+  contentType?: string;
+  videoUrl?: string;
+  positionSeconds: number;
+  durationSeconds: number;
+  percent: number;
+}
+
+export interface WeakTopicDto {
+  courseId: number;
+  title: string;
+  subjectAr: string;
+  wrongCount: number;
+}
+
+export interface RecommendedLessonDto {
+  lessonId: number;
+  courseId: number;
+  courseTitle: string;
+  lessonTitle: string;
+  order: number;
+}
+
+export interface NotificationDto {
+  id: number;
+  title: string;
+  body: string;
+  type: string;
+  link?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export interface RecentResultDto {
+  attemptId: number;
+  examId: number;
+  examTitle: string;
+  percentage: number;
+  passed: boolean;
+  submittedAt?: string;
+}
+
+export interface StudentDashboardV2Dto {
+  student: {
+    id: number;
+    fullName: string;
+    studentCode: string;
+    stage: Stage;
+    stageAr: string;
+    academicYear: string;
+  };
+  xp: XpInfoDto;
+  streak: StreakDto;
+  continueWatching?: ContinueWatchingDto;
+  upcomingExams: { id: number; courseId: number; courseTitle: string; title: string; questionCount: number }[];
+  recentResults: RecentResultDto[];
+  weakTopics: WeakTopicDto[];
+  recommendedLessons: RecommendedLessonDto[];
+  notifications: NotificationDto[];
+  recentAchievements: { id: number; title: string; icon: string; unlockedAt: string }[];
+  leaderboard: LeaderboardEntryDto[];
+  completedCourses: number;
+  totalCourses: number;
+  stats: {
+    examsTaken: number;
+    passedExams: number;
+    average: number;
+    achievementsCount: number;
+    rank: number;
+    totalStudents: number;
+  };
+}
+
+export interface NoteDto {
+  id: number;
+  lessonId: number;
+  lessonTitle: string;
+  text: string;
+  videoTimestampSec?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BookmarkDto {
+  id: number;
+  kind?: string;
+  lessonId?: number;
+  lessonTitle?: string;
+  lessonType?: string;
+  examId?: number;
+  examTitle?: string;
+  createdAt: string;
+}
+
+export interface MistakeDto {
+  id: number;
+  questionId: number;
+  examId?: number;
+  questionText: string;
+  studentAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+  lessonTitle: string;
+  topic?: string;
+  wrongCount: number;
+  lastWrongAt: string;
+}
+
+export interface PassportStampDto {
+  kind: string;
+  title: string;
+  detail: string;
+  icon?: string;
+  date?: string;
+}
+
+export interface PassportDto {
+  studentName: string;
+  studentCode: string;
+  stageAr: string;
+  academicYear: string;
+  stamps: PassportStampDto[];
+}
+
+export interface ExamReviewItemDto {
+  questionId: number;
+  questionText: string;
+  studentAnswer: string;
+  correctAnswer: string;
+  explanation?: string;
+  lessonTitle: string;
+  isCorrect: boolean;
+  isSkipped: boolean;
+  marks: number;
+  studentAnswerText?: string;
+  correctAnswerText?: string;
+}
+
+export interface ExamReviewDto {
+  attemptId: number;
+  examId: number;
+  examTitle: string;
+  score: number;
+  percentage: number;
+  passed: boolean;
+  submittedAt?: string;
+  allowReview: boolean;
+  showCorrectAnswers: boolean;
+  items: ExamReviewItemDto[];
+}
+
 export interface StudentListItemDto {
   id: number;
   fullName: string;

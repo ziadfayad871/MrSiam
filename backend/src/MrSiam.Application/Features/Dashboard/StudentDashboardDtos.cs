@@ -1,3 +1,4 @@
+using MrSiam.Application.Features.StudentEngagement;
 using MrSiam.Domain.Enums;
 
 namespace MrSiam.Application.Features.Dashboard;
@@ -93,4 +94,22 @@ public record StudentStatsDto
     public int AchievementsCount { get; init; }
     public int Rank { get; init; }
     public int TotalStudents { get; init; }
+}
+
+public record StudentDashboardV2Dto
+{
+    public required StudentSummaryDto Student { get; init; }
+    public required XpInfoDto Xp { get; init; }
+    public required StreakDto Streak { get; init; }
+    public ContinueWatchingDto? ContinueWatching { get; init; }
+    public IReadOnlyList<ExamUpcomingDto> UpcomingExams { get; init; } = Array.Empty<ExamUpcomingDto>();
+    public IReadOnlyList<RecentResultDto> RecentResults { get; init; } = Array.Empty<RecentResultDto>();
+    public IReadOnlyList<WeakTopicDto> WeakTopics { get; init; } = Array.Empty<WeakTopicDto>();
+    public IReadOnlyList<RecommendedLessonDto> RecommendedLessons { get; init; } = Array.Empty<RecommendedLessonDto>();
+    public IReadOnlyList<NotificationDto> Notifications { get; init; } = Array.Empty<NotificationDto>();
+    public IReadOnlyList<AchievementMiniDto> RecentAchievements { get; init; } = Array.Empty<AchievementMiniDto>();
+    public IReadOnlyList<LeaderboardEntryDto> Leaderboard { get; init; } = Array.Empty<LeaderboardEntryDto>();
+    public int CompletedCourses { get; init; }
+    public int TotalCourses { get; init; }
+    public required StudentStatsDto Stats { get; init; }
 }

@@ -26,6 +26,17 @@ public class LoginCommandHandler(IApplicationDbContext db, IJwtTokenService jwt,
         user.LastLoginAt = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
 
+        db.AuditLogs.Add(new AuditLog
+        {
+            UserId = user.Id,
+            Username = user.Username,
+            Action = "login",
+            Entity = "AppUser",
+            EntityId = user.Id.ToString(),
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
         logger.LogInformation("User {Username} logged in", user.Username);
 
         return ApiResponse<AuthResult>.Ok(new AuthResult

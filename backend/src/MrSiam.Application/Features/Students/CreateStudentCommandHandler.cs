@@ -52,6 +52,17 @@ public class CreateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
         db.Students.Add(student);
         await db.SaveChangesAsync(ct);
 
+        db.AuditLogs.Add(new Domain.Entities.AuditLog
+        {
+            Username = username,
+            Action = "create",
+            Entity = "Student",
+            EntityId = student.Id.ToString(),
+            Details = $"تسجيل طالب جديد {fullName} — {studentCode}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<CreateStudentResult>.Ok(
             new CreateStudentResult(student.Id, username, studentCode),
             "تم تسجيل الطالب بنجاح");

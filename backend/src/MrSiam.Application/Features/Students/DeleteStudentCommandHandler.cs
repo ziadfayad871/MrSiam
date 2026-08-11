@@ -32,6 +32,16 @@ public class DeleteStudentCommandHandler(IApplicationDbContext db)
             }
         }
 
+        db.AuditLogs.Add(new Domain.Entities.AuditLog
+        {
+            Action = "delete",
+            Entity = "Student",
+            EntityId = request.StudentId.ToString(),
+            Details = $"حذف الطالب {student.FullName}",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم حذف الطالب");
     }
 }

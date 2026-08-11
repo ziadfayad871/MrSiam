@@ -21,6 +21,14 @@ public interface IApplicationDbContext
     DbSet<AttendanceRecord> AttendanceRecords { get; }
     DbSet<TopStudent> TopStudents { get; }
     DbSet<Assignment> Assignments { get; }
+    DbSet<StudentNote> StudentNotes { get; }
+    DbSet<Bookmark> Bookmarks { get; }
+    DbSet<WatchProgress> WatchProgress { get; }
+    DbSet<XPTransaction> XPTransactions { get; }
+    DbSet<MistakeNotebook> MistakeNotebook { get; }
+    DbSet<Notification> Notifications { get; }
+    DbSet<AuditLog> AuditLogs { get; }
+    DbSet<LessonResource> LessonResources { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

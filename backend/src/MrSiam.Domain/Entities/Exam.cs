@@ -14,6 +14,8 @@ public class Exam : Entity
     public decimal PassMark { get; set; }
     public bool IsPublished { get; set; } = true;
     public int AttemptsAllowed { get; set; } = 3;
+    public bool AllowReview { get; set; } = true;
+    public bool ShowCorrectAnswers { get; set; } = true;
 
     public Course? Course { get; set; }
     public Lesson? Lesson { get; set; }

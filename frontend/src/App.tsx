@@ -7,6 +7,8 @@ import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './pages/LandingPage';
 import PortalLoginPage from './pages/PortalLoginPage';
 import StudentDashboard from './pages/student/StudentDashboard';
+import MistakesPage from './pages/student/MistakesPage';
+import PassportPage from './pages/student/PassportPage';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
 import TeacherProfile from './pages/TeacherProfile';
@@ -143,6 +145,30 @@ export default function App() {
             <DashboardLayout>
               <ParchmentTransition motif="achievements">
                 <AchievementsPage />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireStudent>
+        }
+      />
+      <Route
+        path="/mistakes"
+        element={
+          <RequireStudent>
+            <DashboardLayout>
+              <ParchmentTransition motif="map">
+                <MistakesPage />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireStudent>
+        }
+      />
+      <Route
+        path="/passport"
+        element={
+          <RequireStudent>
+            <DashboardLayout>
+              <ParchmentTransition motif="map">
+                <PassportPage />
               </ParchmentTransition>
             </DashboardLayout>
           </RequireStudent>

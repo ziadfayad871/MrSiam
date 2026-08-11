@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
 using MrSiam.Application.Features.Achievements;
+using MrSiam.Application.Features.StudentEngagement;
 using MrSiam.Domain.Entities;
 
 namespace MrSiam.Application.Features.Attempts;
@@ -91,7 +92,44 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
         db.ExamAttempts.Add(attempt);
         await db.SaveChangesAsync(ct);
 
+        await CaptureMistakesAsync(request.StudentId, exam, attemptAnswers, attempt.Id, ct);
+
         var unlocked = await achievementService.CheckAndUnlockAsync(request.StudentId, ct);
+
+        if (unlocked.Count > 0)
+        {
+            var userId = await db.Students.AsNoTracking().Where(s => s.Id == request.StudentId).Select(s => s.UserId).FirstOrDefaultAsync(ct);
+            foreach (var achievement in unlocked)
+            {
+                await XpRules.AwardAsync(db, request.StudentId, XpRules.AchievementUnlock, $"achievement:{achievement.Id}", ct: ct);
+                if (userId > 0)
+                    await NotificationService.PushAsync(db, userId,
+                        "إنجاز جديد! 🏛️",
+                        $"فتحت إنجاز «{achievement.Title}»",
+                        "achievement", "/passport", ct);
+            }
+        }
+
+        if (passed)
+        {
+            var perfect = percentage >= 99.5m;
+            await XpRules.AwardAsync(db, request.StudentId, XpRules.ExamPass, $"exam-pass:{exam.Id}", examId: exam.Id, ct: ct);
+            if (perfect)
+                await XpRules.AwardAsync(db, request.StudentId, XpRules.PerfectExamBonus, $"exam-perfect:{exam.Id}", examId: exam.Id, ct: ct);
+
+            if (exam.LessonId is not null)
+                await XpRules.AwardAsync(db, request.StudentId, XpRules.LessonComplete, $"lesson:{exam.LessonId}", courseId: exam.CourseId, ct: ct);
+
+            var courseExamCount = await db.Exams.CountAsync(e => e.CourseId == exam.CourseId && e.IsPublished, ct);
+            var passedInCourse = await db.ExamAttempts
+                .Where(a => a.StudentId == request.StudentId && a.Passed && a.Exam != null && a.Exam.CourseId == exam.CourseId)
+                .Select(a => a.ExamId)
+                .Distinct()
+                .CountAsync(ct);
+
+            if (courseExamCount > 0 && passedInCourse >= courseExamCount)
+                await XpRules.AwardAsync(db, request.StudentId, XpRules.CourseComplete, $"course:{exam.CourseId}", courseId: exam.CourseId, ct: ct);
+        }
 
         var rank = await db.ExamAttempts
             .Where(a => a.ExamId == request.ExamId)
@@ -119,6 +157,54 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
             UnlockedAchievements = unlocked,
             NextStop = nextStop
         }, passed ? "وصلت للمحطة!" : "كل محاولة بتقرّبك للهدف");
+    }
+
+    private async Task CaptureMistakesAsync(int studentId, Exam exam, IReadOnlyList<AttemptAnswer> answers, int attemptId, CancellationToken ct)
+    {
+        var answersByQuestion = answers.ToDictionary(a => a.QuestionId);
+
+        foreach (var question in exam.Questions)
+        {
+            var answer = answersByQuestion.GetValueOrDefault(question.Id);
+            if (answer is null || answer.IsCorrect)
+                continue;
+
+            var selectedOption = answer.SelectedOptionId is not null
+                ? question.Options.FirstOrDefault(o => o.Id == answer.SelectedOptionId.Value)
+                : null;
+            var correctOption = question.Options.FirstOrDefault(o => o.IsCorrect);
+
+            var existing = await db.MistakeNotebook.FirstOrDefaultAsync(
+                m => m.StudentId == studentId && m.QuestionId == question.Id, ct);
+
+            if (existing is not null)
+            {
+                existing.WrongCount++;
+                existing.LastWrongAt = DateTime.UtcNow;
+                existing.AttemptId = attemptId;
+                existing.ExamId = exam.Id;
+            }
+            else
+            {
+                db.MistakeNotebook.Add(new MistakeNotebook
+                {
+                    StudentId = studentId,
+                    QuestionId = question.Id,
+                    ExamId = exam.Id,
+                    AttemptId = attemptId,
+                    QuestionText = question.Text,
+                    StudentAnswer = selectedOption?.Text ?? "لم يُجب",
+                    CorrectAnswer = correctOption?.Text ?? string.Empty,
+                    Explanation = exam.Lesson != null ? $"من درس: {exam.Lesson.Title}" : string.Empty,
+                    LessonTitle = exam.Lesson?.Title ?? exam.Title,
+                    Topic = exam.Course != null ? exam.Course.Subject.ToString() : null,
+                    WrongCount = 1,
+                    LastWrongAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        await db.SaveChangesAsync(ct);
     }
 
     private async Task<string> GetNextStopAsync(int studentId, int courseId, CancellationToken ct)

@@ -32,6 +32,12 @@ try
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddScoped<MrSiam.Application.Abstractions.ICurrentUserService, MrSiam.Api.Services.CurrentUserService>();
 
+    builder.Services.AddHttpClient("gemini", client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(90);
+    });
+    builder.Services.AddScoped<MrSiam.Application.Abstractions.IGeminiService, MrSiam.Infrastructure.AI.GeminiService>();
+
     var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins")
         .Get<string>()?
         .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

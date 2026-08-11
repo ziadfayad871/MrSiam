@@ -22,6 +22,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<TopStudent> TopStudents => Set<TopStudent>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<StudentNote> StudentNotes => Set<StudentNote>();
+    public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
+    public DbSet<WatchProgress> WatchProgress => Set<WatchProgress>();
+    public DbSet<XPTransaction> XPTransactions => Set<XPTransaction>();
+    public DbSet<MistakeNotebook> MistakeNotebook => Set<MistakeNotebook>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<LessonResource> LessonResources => Set<LessonResource>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -123,6 +131,76 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.Property(a => a.Title).HasMaxLength(160);
             e.HasOne(a => a.Course).WithMany().HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<StudentNote>(e =>
+        {
+            e.HasIndex(n => new { n.StudentId, n.LessonId });
+            e.Property(n => n.Text).HasMaxLength(4000);
+            e.HasOne<Student>().WithMany().HasForeignKey(n => n.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Lesson>().WithMany().HasForeignKey(n => n.LessonId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Bookmark>(e =>
+        {
+            e.HasIndex(b => new { b.StudentId, b.Kind });
+            e.HasOne<Student>().WithMany().HasForeignKey(b => b.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(b => b.Lesson).WithMany().HasForeignKey(b => b.LessonId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(b => b.Exam).WithMany().HasForeignKey(b => b.ExamId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<WatchProgress>(e =>
+        {
+            e.HasIndex(w => new { w.StudentId, w.LessonId }).IsUnique();
+            e.HasOne<Student>().WithMany().HasForeignKey(w => w.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(w => w.Lesson).WithMany().HasForeignKey(w => w.LessonId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<XPTransaction>(e =>
+        {
+            e.HasIndex(x => new { x.StudentId, x.CreatedAt });
+            e.HasOne<Student>().WithMany().HasForeignKey(x => x.StudentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<MistakeNotebook>(e =>
+        {
+            e.HasIndex(m => new { m.StudentId, m.QuestionId }).IsUnique();
+            e.Property(m => m.QuestionText).HasMaxLength(2000);
+            e.Property(m => m.StudentAnswer).HasMaxLength(1000);
+            e.Property(m => m.CorrectAnswer).HasMaxLength(1000);
+            e.Property(m => m.Explanation).HasMaxLength(2000);
+            e.Property(m => m.LessonTitle).HasMaxLength(200);
+            e.Property(m => m.Topic).HasMaxLength(120);
+            e.HasOne<Student>().WithMany().HasForeignKey(m => m.StudentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Question>().WithMany().HasForeignKey(m => m.QuestionId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(m => m.Exam).WithMany().HasForeignKey(m => m.ExamId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Notification>(e =>
+        {
+            e.HasIndex(n => new { n.UserId, n.CreatedAt });
+            e.Property(n => n.Title).HasMaxLength(160);
+            e.Property(n => n.Body).HasMaxLength(600);
+            e.Property(n => n.Type).HasMaxLength(40);
+            e.Property(n => n.Link).HasMaxLength(300);
+        });
+
+        builder.Entity<AuditLog>(e =>
+        {
+            e.HasIndex(a => new { a.CreatedAt, a.Action });
+            e.Property(a => a.Action).HasMaxLength(60);
+            e.Property(a => a.Entity).HasMaxLength(60);
+            e.Property(a => a.EntityId).HasMaxLength(40);
+            e.Property(a => a.Username).HasMaxLength(64);
+            e.Property(a => a.IpAddress).HasMaxLength(45);
+        });
+
+        builder.Entity<LessonResource>(e =>
+        {
+            e.Property(r => r.Title).HasMaxLength(200);
+            e.Property(r => r.Kind).HasMaxLength(30);
+            e.Property(r => r.FileUrl).HasMaxLength(400);
+            e.HasOne<Lesson>().WithMany().HasForeignKey(r => r.LessonId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

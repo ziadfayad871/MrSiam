@@ -13,6 +13,9 @@ public class Student : Entity
     public Stage Stage { get; set; } = Stage.PrepOne;
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
     public bool IsActive { get; set; } = true;
+    public int StreakCurrent { get; set; }
+    public int StreakLongest { get; set; }
+    public DateTime? LastActiveDay { get; set; }
 
     public AppUser? User { get; set; }
     public ICollection<ExamAttempt> Attempts { get; set; } = new List<ExamAttempt>();

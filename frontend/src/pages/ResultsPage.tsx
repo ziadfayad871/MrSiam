@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Compass, Flag, MapPin, Trophy } from 'lucide-react';
+import { ArrowLeft, BookOpenCheck, Check, Compass, Flag, MapPin, Trophy, X as XIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { AchievementBadge } from '../design-system/components/AchievementBadge';
@@ -9,8 +9,10 @@ import { HistoryMadeOverlay } from '../design-system/motion/HistoryMadeOverlay';
 import { Button } from '../design-system/ui/Button';
 import { Card } from '../design-system/ui/Card';
 import { EmptyState } from '../design-system/ui/EmptyState';
-import type { AttemptResultDto } from '../lib/types';
+import { Modal } from '../design-system/ui/Modal';
+import type { AttemptResultDto, ExamReviewDto } from '../lib/types';
 import { useAuth } from '../lib/auth';
+import { api } from '../lib/api';
 
 function ScoreRing({ percentage, totalMarks }: { percentage: number; totalMarks: number }) {
   const r = 56;
@@ -49,6 +51,8 @@ export default function ResultsPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const location = useLocation();
   const [celebrated, setCelebrated] = useState(false);
+  const [review, setReview] = useState<ExamReviewDto | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const { user } = useAuth();
   const result = useMemo<AttemptResultDto | null>(() => {
     const fromState = (location.state as { result?: AttemptResultDto } | null)?.result;
@@ -79,6 +83,18 @@ export default function ResultsPage() {
   }
 
   const passed = result.passed;
+  const openReview = async () => {
+    setReviewLoading(true);
+    try {
+      const r = await api.get<ExamReviewDto>(`/student/exams/${result.examId}/attempts/${result.attemptId}/review`);
+      setReview(r);
+    } catch (e) {
+      setReview(null);
+      window.alert(e instanceof Error ? e.message : 'المراجعة مش متاحة دلوقتي');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
   const grade =
     result.percentage >= 90
       ? 'ممتاز — إنت مستكشف من الطراز الأول!'
@@ -195,6 +211,13 @@ export default function ResultsPage() {
       </motion.div>
 
       <div className="mt-8 flex justify-center gap-2">
+        <button
+          onClick={() => void openReview()}
+          disabled={reviewLoading}
+          className="flex items-center gap-1.5 rounded-md bg-gold px-4 py-2 text-xs font-bold text-navy-deep transition-colors hover:bg-gold/90 disabled:opacity-50"
+        >
+          <BookOpenCheck size={15} /> {reviewLoading ? 'بنجيب المراجعة...' : 'راجع إجاباتك'}
+        </button>
         <Link to="/courses">
           <Button variant="outline" icon={<ArrowLeft size={15} className="rotate-180" />}>
             المواد
@@ -204,6 +227,65 @@ export default function ResultsPage() {
           <Button variant="ghost">كل الميداليات</Button>
         </Link>
       </div>
+
+      {/* Exam review modal */}
+      <Modal open={review !== null} onClose={() => setReview(null)} title={`مراجعة: ${review?.examTitle ?? ''}`} size="lg">
+        {review && (
+          <div className="flex flex-col gap-4">
+            {!review.allowReview ? (
+              <p className="py-4 text-center text-sm text-text-muted">المدرّس قفل المراجعة على الامتحان ده دلوقتي — راجع لاحقاً.</p>
+            ) : review.items.length === 0 ? (
+              <p className="py-4 text-center text-sm text-text-muted">مفيش تفاصيل مراجعة متاحة للامتحان ده.</p>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-2 rounded-md border border-gold/30 bg-gold/5 px-3 py-2 text-xs">
+                  <span className="font-bold text-text-primary">النتيجة: {review.percentage}%</span>
+                  <span className={`rounded-full px-2 py-0.5 font-bold ${review.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                    {review.passed ? 'ناجح ✓' : 'محتاجة مراجعة'}
+                  </span>
+                  {!review.showCorrectAnswers && <span className="text-text-muted">(الإجابات الصحيحة مخفية)</span>}
+                </div>
+                {review.items.map((item) => (
+                  <div key={item.questionId} className="rounded-md border border-border-soft p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-bold text-text-primary">{item.questionText}</p>
+                      {item.isSkipped ? (
+                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">متخطى</span>
+                      ) : item.isCorrect ? (
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                          <Check size={10} /> صح
+                        </span>
+                      ) : (
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                          <XIcon size={10} /> خطأ
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {item.studentAnswerText && (
+                        <div className={`rounded-md border px-3 py-1.5 ${item.isCorrect && !item.isSkipped ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}>
+                          <p className="text-[10px] font-bold text-text-muted">إجابتك</p>
+                          <p className="text-xs text-text-secondary">{item.studentAnswerText}</p>
+                        </div>
+                      )}
+                      {item.correctAnswerText && review.showCorrectAnswers && (
+                        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5">
+                          <p className="text-[10px] font-bold text-emerald-700">الإجابة الصحيحة</p>
+                          <p className="text-xs text-text-secondary">{item.correctAnswerText}</p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-2 text-[10px] text-text-muted">الدرس: {item.lessonTitle}</p>
+                    {item.explanation && review.showCorrectAnswers && (
+                      <p className="mt-1.5 rounded-md bg-parchment-soft px-3 py-1.5 text-xs leading-relaxed text-text-secondary">{item.explanation}</p>
+                    )}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

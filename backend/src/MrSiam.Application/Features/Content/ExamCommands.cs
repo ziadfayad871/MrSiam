@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
+using MrSiam.Application.Features.StudentEngagement;
 using MrSiam.Domain.Entities;
 using MrSiam.Domain.Enums;
 
@@ -117,6 +118,23 @@ public class CreateExamCommandHandler(IApplicationDbContext db)
 
         db.Exams.Add(exam);
         await db.SaveChangesAsync(ct);
+
+        if (exam.IsPublished)
+            await NotificationService.PushToStudentsAsync(db,
+                "امتحان جديد في انتظارك 📜",
+                $"اتنشر «{exam.Title}» — جاهز تجرب حظك فيه",
+                "exam", "/courses", ct);
+
+        db.AuditLogs.Add(new AuditLog
+        {
+            Action = "create",
+            Entity = "Exam",
+            EntityId = exam.Id.ToString(),
+            Details = $"إنشاء اختبار {exam.Title} (منشور: {exam.IsPublished})",
+            CreatedAt = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<int>.Ok(exam.Id, "تم إنشاء الاختبار");
     }
 }
@@ -176,6 +194,13 @@ public class UpdateExamCommandHandler(IApplicationDbContext db)
         }
 
         await db.SaveChangesAsync(ct);
+
+        if (request.IsPublished == true && exam.IsPublished)
+            await NotificationService.PushToStudentsAsync(db,
+                "امتحان جديد في انتظارك 📜",
+                $"اتنشر «{exam.Title}» — جاهز تجرب حظك فيه",
+                "exam", "/courses", ct);
+
         return ApiResponse<bool>.Ok(true, "تم تعديل الاختبار");
     }
 }
