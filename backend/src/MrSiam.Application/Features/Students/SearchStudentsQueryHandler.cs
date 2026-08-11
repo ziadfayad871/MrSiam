@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
+using MrSiam.Domain.Entities;
 using MrSiam.Domain.Enums;
 
 namespace MrSiam.Application.Features.Students;
@@ -11,7 +12,8 @@ public class SearchStudentsQueryHandler(IApplicationDbContext db)
 {
     public async Task<ApiResponse<PagedResult<StudentListItemDto>>> Handle(SearchStudentsQuery request, CancellationToken ct)
     {
-        var query = db.Students.AsNoTracking();
+        IQueryable<Student> query = db.Students.AsNoTracking()
+            .Include(s => s.User);
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -37,6 +39,7 @@ public class SearchStudentsQueryHandler(IApplicationDbContext db)
                 Id = s.Id,
                 FullName = s.FullName,
                 StudentCode = s.StudentCode,
+                Username = s.User != null ? s.User.Username : string.Empty,
                 Stage = s.Stage,
                 StageAr = s.Stage.ToArabic(),
                 GuardianPhone = s.GuardianPhone,

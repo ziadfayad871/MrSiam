@@ -25,6 +25,7 @@ public class StudentsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Create([FromBody] CreateStudentCommand command)
     {
         var result = await mediator.Send(command);
@@ -38,6 +39,14 @@ public class StudentsController(MediatR.IMediator mediator) : ControllerBase
             return BadRequest();
 
         var result = await mediator.Send(command);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpDelete("{studentId:int}")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
+    public async Task<IActionResult> Delete(int studentId)
+    {
+        var result = await mediator.Send(new DeleteStudentCommand(studentId));
         return result.Success ? Ok(result) : BadRequest(result);
     }
 }

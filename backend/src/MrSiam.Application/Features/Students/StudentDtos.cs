@@ -9,6 +9,7 @@ public record StudentListItemDto
     public int Id { get; init; }
     public required string FullName { get; init; }
     public required string StudentCode { get; init; }
+    public required string Username { get; init; }
     public Stage Stage { get; init; }
     public required string StageAr { get; init; }
     public required string GuardianPhone { get; init; }
@@ -39,12 +40,14 @@ public record StudentDetailDto
 
 public record CreateStudentCommand(
     string FullName,
-    string StudentCode,
     string GuardianPhone,
     Stage Stage,
     string AcademicYear,
-    string Username,
-    string Password) : IRequest<ApiResponse<int>>;
+    string Password) : IRequest<ApiResponse<CreateStudentResult>>;
+
+public record CreateStudentResult(int StudentId, string Username, string StudentCode);
+
+public record DeleteStudentCommand(int StudentId) : IRequest<ApiResponse<bool>>;
 
 public record UpdateStudentCommand(
     int Id,

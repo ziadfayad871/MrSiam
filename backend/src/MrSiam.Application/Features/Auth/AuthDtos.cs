@@ -6,15 +6,6 @@ namespace MrSiam.Application.Features.Auth;
 
 public record LoginCommand(string Username, string Password) : IRequest<ApiResponse<AuthResult>>;
 
-public record RegisterStudentCommand(
-    string FullName,
-    string StudentCode,
-    string GuardianPhone,
-    Stage Stage,
-    string AcademicYear,
-    string Username,
-    string Password) : IRequest<ApiResponse<AuthResult>>;
-
 public record AuthResult
 {
     public required string Token { get; init; }

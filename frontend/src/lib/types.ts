@@ -198,6 +198,27 @@ export interface TeacherDashboardDto {
   recentAttempts: { id: number; studentName: string; examTitle: string; percentage: number; passed: boolean; submittedAt: string }[];
 }
 
+export interface StudentListItemDto {
+  id: number;
+  fullName: string;
+  studentCode: string;
+  username: string;
+  stage: Stage;
+  stageAr: string;
+  guardianPhone: string;
+  academicYear: string;
+  joinedAt: string;
+  isActive: boolean;
+  average: number;
+  examsTaken: number;
+}
+
+export interface CreateStudentResult {
+  studentId: number;
+  username: string;
+  studentCode: string;
+}
+
 export interface SecretaryDashboardDto {
   stats: { key: string; label: string; value: string; icon: string }[];
   recentStudents: { id: number; fullName: string; studentCode: string; stageAr: string; academicYear: string; joinedAt: string; hasPaymentIssue: boolean }[];

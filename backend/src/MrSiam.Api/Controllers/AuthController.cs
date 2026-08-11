@@ -13,11 +13,4 @@ public class AuthController(MediatR.IMediator mediator) : ControllerBase
         var result = await mediator.Send(command);
         return result.Success ? Ok(result) : Unauthorized(result);
     }
-
-    [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterStudentCommand command)
-    {
-        var result = await mediator.Send(command);
-        return result.Success ? Ok(result) : BadRequest(result);
-    }
 }

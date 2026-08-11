@@ -23,11 +23,8 @@ const PORTALS = {
     subtitle: 'رحلتك التعليمية تبدأ من هنا',
     accent: 'الطلاب',
     roleMessage: 'دي بوابة الطلاب — الحساب ده تبع بوابة المستر',
-    demoNote: 'حسابات تجريبية للطلاب — كلمة المرور: 123456',
-    demo: [
-      { label: 'أحمد سمير', username: 'ahmed.samir', desc: 'تالتة إعدادي' },
-      { label: 'ملك محمود', username: 'malak.mahmoud', desc: 'تالتة إعدادي' },
-    ],
+    demoNote: null,
+    demo: [],
   },
   staff: {
     path: '/login',
@@ -197,25 +194,33 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
           </motion.form>
 
           <div className="mt-8 border-t border-white/10 pt-5">
-            <p className="mb-3 text-center text-[11px] text-white/40">{meta.demoNote}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {meta.demo.map((acc) => (
-                <button
-                  key={acc.username}
-                  onClick={() => {
-                    setUsername(acc.username);
-                    setPassword('123456');
-                  }}
-                  className="rounded-md border border-white/10 bg-white/5 px-2 py-2 text-center transition-colors hover:border-gold/50 hover:bg-gold/10"
-                >
-                  <p className="text-xs font-bold text-gold-bright">{acc.label}</p>
-                  <p className="mt-0.5 font-plex text-[9px] text-white/40" dir="ltr">
-                    {acc.username}
-                  </p>
-                  <p className="mt-0.5 text-[9px] text-white/30">{acc.desc}</p>
-                </button>
-              ))}
-            </div>
+            {meta.demoNote ? (
+              <>
+                <p className="mb-3 text-center text-[11px] text-white/40">{meta.demoNote}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {meta.demo.map((acc) => (
+                    <button
+                      key={acc.username}
+                      onClick={() => {
+                        setUsername(acc.username);
+                        setPassword('123456');
+                      }}
+                      className="rounded-md border border-white/10 bg-white/5 px-2 py-2 text-center transition-colors hover:border-gold/50 hover:bg-gold/10"
+                    >
+                      <p className="text-xs font-bold text-gold-bright">{acc.label}</p>
+                      <p className="mt-0.5 font-plex text-[9px] text-white/40" dir="ltr">
+                        {acc.username}
+                      </p>
+                      <p className="mt-0.5 text-[9px] text-white/30">{acc.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="rounded-md border border-gold/20 bg-gold/5 px-3 py-3 text-center text-xs leading-relaxed text-white/60">
+                حسابك بينشئه أمين المعهد — اسأله عن اسم المستخدم (SIMO…) وكلمة المرور الخاصة بيك
+              </p>
+            )}
           </div>
 
           <div className="mt-6 text-center">
