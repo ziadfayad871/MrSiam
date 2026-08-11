@@ -1,7 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ArrowLeft, Lock, User } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Compass as CompassBrand } from '../design-system/components/Compass';
 import CoordinateLabel from '../design-system/components/CoordinateLabel';
 import { HistoricalMap } from '../design-system/components/map/HistoricalMap';
@@ -9,18 +9,47 @@ import { Button } from '../design-system/ui/Button';
 import Input from '../design-system/ui/Field';
 import { useAuth } from '../lib/auth';
 import { useToast } from '../design-system/ui/Toast';
+import type { UserDto } from '../lib/types';
 
-const DEMO_ACCOUNTS = [
-  { label: 'طالب', username: 'ahmed.samir', desc: 'أحمد سمير — تالتة إعدادي' },
-  { label: 'مدرس', username: 'siam', desc: 'مستر محمد صيام' },
-  { label: 'أمين', username: 'secretary', desc: 'أمين المعهد' },
-];
+interface PortalLoginProps {
+  portal: 'student' | 'staff';
+}
 
-export default function LoginPage() {
+const PORTALS = {
+  student: {
+    path: '/staff-login',
+    pathLabel: 'بوابة المستر',
+    title: 'محطة الوصول',
+    subtitle: 'رحلتك التعليمية تبدأ من هنا',
+    accent: 'الطلاب',
+    roleMessage: 'دي بوابة الطلاب — الحساب ده تبع بوابة المستر',
+    demoNote: 'حسابات تجريبية للطلاب — كلمة المرور: 123456',
+    demo: [
+      { label: 'أحمد سمير', username: 'ahmed.samir', desc: 'تالتة إعدادي' },
+      { label: 'ملك محمود', username: 'malak.mahmoud', desc: 'تالتة إعدادي' },
+    ],
+  },
+  staff: {
+    path: '/login',
+    pathLabel: 'بوابة الطلاب',
+    title: 'بوابة المستر',
+    subtitle: 'من هنا بتدير رحلتك التعليمية',
+    accent: 'أعضاء التدريس',
+    roleMessage: 'دي بوابة المستر — الحساب ده تبع بوابة الطلاب',
+    demoNote: 'حسابات تجريبية — كلمة المرور: 123456',
+    demo: [
+      { label: 'مستر صيام', username: 'siam', desc: 'مدرس' },
+      { label: 'أمين المعهد', username: 'secretary', desc: 'أمين' },
+    ],
+  },
+} as const;
+
+export default function PortalLoginPage({ portal }: PortalLoginProps) {
   const { login, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const reduced = useReducedMotion();
+  const meta = PORTALS[portal];
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +61,11 @@ export default function LoginPage() {
     setError(null);
     try {
       const user = await login(username.trim(), password);
+      if (!portalAllows(portal, user)) {
+        setError(meta.roleMessage);
+        setShakeKey((k) => k + 1);
+        return;
+      }
       setArrived(true);
       toast('أهلاً بيك في رحلتك', `مرحباً يا ${user.fullName}`, 'success');
       setTimeout(() => navigate('/dashboard'), 750);
@@ -112,9 +146,9 @@ export default function LoginPage() {
           className="mt-4 w-full rounded-lg border border-gold/25 bg-white/[0.06] p-8 shadow-floating backdrop-blur-md"
         >
           <h1 className="display-serif text-center text-2xl font-bold text-white">
-            محطة الوصول
+            {meta.title}
           </h1>
-          <p className="mt-2 text-center text-sm text-white/60">رحلتك التعليمية تبدأ من هنا</p>
+          <p className="mt-2 text-center text-sm text-white/60">{meta.subtitle}</p>
 
           {/* Field validation column-raise on error */}
           <motion.form
@@ -163,9 +197,9 @@ export default function LoginPage() {
           </motion.form>
 
           <div className="mt-8 border-t border-white/10 pt-5">
-            <p className="mb-3 text-center text-[11px] text-white/40">حسابات تجريبية — كلمة المرور: 123456</p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO_ACCOUNTS.map((acc) => (
+            <p className="mb-3 text-center text-[11px] text-white/40">{meta.demoNote}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {meta.demo.map((acc) => (
                 <button
                   key={acc.username}
                   onClick={() => {
@@ -178,9 +212,16 @@ export default function LoginPage() {
                   <p className="mt-0.5 font-plex text-[9px] text-white/40" dir="ltr">
                     {acc.username}
                   </p>
+                  <p className="mt-0.5 text-[9px] text-white/30">{acc.desc}</p>
                 </button>
               ))}
             </div>
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link to={meta.path} className="text-xs text-white/50 underline-offset-4 transition-colors hover:text-gold hover:underline">
+              {meta.pathLabel} — لوج إن منفصل
+            </Link>
           </div>
         </motion.div>
 
@@ -194,4 +235,9 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
+
+function portalAllows(portal: 'student' | 'staff', user: UserDto): boolean {
+  if (portal === 'student') return user.role === 'Student';
+  return user.role === 'Teacher' || user.role === 'Secretary' || user.role === 'Admin';
 }

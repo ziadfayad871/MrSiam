@@ -68,9 +68,14 @@ export function SiteHeader() {
               </Button>
             </div>
           ) : (
-            <Button variant="gold" size="sm" onClick={() => navigate('/login')}>
-              دخول الطلاب
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/staff-login')}>
+                بوابة المستر
+              </Button>
+              <Button variant="gold" size="sm" onClick={() => navigate('/login')}>
+                دخول الطلاب
+              </Button>
+            </div>
           )}
         </div>
 
@@ -111,9 +116,14 @@ export function SiteHeader() {
                 لوحتي
               </Button>
             ) : (
-              <Button variant="gold" className="w-full" onClick={() => { setMenuOpen(false); navigate('/login'); }}>
-                دخول الطلاب
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button variant="gold" className="w-full" onClick={() => { setMenuOpen(false); navigate('/login'); }}>
+                  دخول الطلاب
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => { setMenuOpen(false); navigate('/staff-login'); }}>
+                  بوابة المستر
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -144,6 +154,9 @@ export function SiteFooter() {
             </Link>
             <Link to="/login" className="transition-colors hover:text-gold">
               دخول الطلاب
+            </Link>
+            <Link to="/staff-login" className="transition-colors hover:text-gold">
+              بوابة المستر
             </Link>
           </div>
         </div>

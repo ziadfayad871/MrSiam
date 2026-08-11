@@ -32,12 +32,19 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const nav: NavItem[] = [
-    { to: '/dashboard', label: 'الرحلة', icon: Home },
-    { to: '/courses', label: 'المقررات', icon: Map },
-    { to: '/achievements', label: 'الاكتشافات', icon: Award },
-    { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
-  ];
+  const isStudent = user?.role === 'Student';
+
+  const nav: NavItem[] = isStudent
+    ? [
+        { to: '/dashboard', label: 'الرحلة', icon: Home },
+        { to: '/courses', label: 'المقررات', icon: Map },
+        { to: '/achievements', label: 'الاكتشافات', icon: Award },
+        { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
+      ]
+    : [
+        { to: '/dashboard', label: 'لوحة الإدارة', icon: Home },
+        { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
+      ];
 
   const icon = nav.find((n) => window.location.pathname.startsWith(n.to))?.icon ?? Home;
 

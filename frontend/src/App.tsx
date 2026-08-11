@@ -5,7 +5,7 @@ import { useAuth } from './lib/auth';
 import SiteLayout from './layouts/SiteLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
+import PortalLoginPage from './pages/PortalLoginPage';
 import StudentDashboard from './pages/student/StudentDashboard';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
@@ -19,9 +19,13 @@ import HistoryTimelinePage from './pages/HistoryTimelinePage';
 
 function RequireAuth({ children, role }: { children: React.ReactNode; role?: string }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to="/login" replace />;
-  if (role && user.role !== role) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to={role === 'Student' ? '/login' : '/staff-login'} replace />;
+  if (role && user.role !== role) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
+}
+
+function RequireStudent({ children }: { children: React.ReactNode }) {
+  return <RequireAuth role="Student">{children}</RequireAuth>;
 }
 
 export default function App() {
@@ -41,7 +45,15 @@ export default function App() {
         path="/login"
         element={
           <PageTransition>
-            <LoginPage />
+            <PortalLoginPage portal="student" />
+          </PageTransition>
+        }
+      />
+      <Route
+        path="/staff-login"
+        element={
+          <PageTransition>
+            <PortalLoginPage portal="staff" />
           </PageTransition>
         }
       />
@@ -81,59 +93,59 @@ export default function App() {
       <Route
         path="/courses"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <ParchmentTransition motif="map">
                 <CoursesPage />
               </ParchmentTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
       <Route
         path="/courses/:courseId"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <PageTransition>
                 <CourseDetailPage />
               </PageTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
       <Route
         path="/exam/:examId"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <ParchmentTransition motif="exams">
                 <ExamPage />
               </ParchmentTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
       <Route
         path="/results/:attemptId"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <ParchmentTransition motif="exams">
               <ResultsPage />
             </ParchmentTransition>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
       <Route
         path="/achievements"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <ParchmentTransition motif="achievements">
                 <AchievementsPage />
               </ParchmentTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
 
