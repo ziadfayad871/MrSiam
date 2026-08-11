@@ -516,3 +516,25 @@ export interface TopStudentDto {
   photoUrl?: string;
   createdAt: string;
 }
+
+export interface StudySummaryResultDto {
+  title: string;
+  bullets: string[];
+}
+
+export interface FlashcardDto {
+  front: string;
+  back: string;
+}
+
+export interface ComparePointDto {
+  aspect: string;
+  first: string;
+  second: string;
+}
+
+export interface CompareResultDto {
+  topicA: string;
+  topicB: string;
+  points: ComparePointDto[];
+}

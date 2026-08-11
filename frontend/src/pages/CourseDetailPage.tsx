@@ -6,6 +6,7 @@ import { Badge } from '../design-system/ui/Badge';
 import { Card } from '../design-system/ui/Card';
 import { EmptyState } from '../design-system/ui/EmptyState';
 import { ErrorState } from '../design-system/ui/ErrorState';
+import LessonStudyPanel from '../components/student/LessonStudyPanel';
 import { Modal } from '../design-system/ui/Modal';
 import { Progress } from '../design-system/ui/Progress';
 import { api } from '../lib/api';
@@ -327,6 +328,8 @@ export default function CourseDetailPage() {
 
       <Modal open={playing !== null} onClose={() => setPlaying(null)} title={playing?.title ?? ''} size="lg">
         {playing?.videoUrl && <VideoPlayer url={playing.videoUrl} lessonId={playing.id} onClose={() => setPlaying(null)} />}
+
+        <LessonStudyPanel lesson={playing} courseLessons={lessons} />
 
         {/* Notes */}
         <div className="mt-5">
