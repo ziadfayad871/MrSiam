@@ -1,13 +1,15 @@
 import { ArrowLeft, Compass, Landmark, Map } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe } from '../design-system/components/Globe';
 import { HallOfFame } from '../design-system/components/HallOfFame';
 import { HistoricalDivider } from '../design-system/components/HistoricalDivider';
 import { HistoricalSectionHeader } from '../design-system/components/HistoricalSectionHeader';
 import { HistoricalTimeline } from '../design-system/components/HistoricalTimeline';
-import { Podium } from '../design-system/components/Podium';
 import { Reveal } from '../design-system/motion/Reveal';
 import { Card } from '../design-system/ui/Card';
+import { api } from '../lib/api';
+import type { TopStudentDto } from '../lib/types';
 import Hero from './landing/Hero';
 
 const SUBJECTS = [
@@ -46,12 +48,6 @@ const HISTORY_YEARS = [
   { year: 1882, title: 'الاحتلال البريطاني', description: 'بداية عصر المقاومة والكفاح الوطني.' },
   { year: 1919, title: 'ثورة 1919', description: 'أول ثورة شعبية شاملة بقيادة سعد زغلول.' },
   { year: 1952, title: 'ثورة 23 يوليو', description: 'أنهت الملكية وبدأت عهد الجمهورية.' },
-];
-
-const PODIUM_DEMO = [
-  { rank: 1, name: 'ملك محمود', score: 98.4, stage: 'الثالث الثانوي' },
-  { rank: 2, name: 'أحمد سمير', score: 96.2, stage: 'الثالث الإعدادي' },
-  { rank: 3, name: 'عمر خالد', score: 94.8, stage: 'الثاني الثانوي' },
 ];
 
 const GLOBE_MARKERS = [
@@ -112,6 +108,17 @@ const GLOBE_MARKERS = [
 ];
 
 export default function LandingPage() {
+  const [topStudents, setTopStudents] = useState<TopStudentDto[]>([]);
+  const [albumLoading, setAlbumLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<TopStudentDto[]>('/top-students')
+      .then(setTopStudents)
+      .catch(() => setTopStudents([]))
+      .finally(() => setAlbumLoading(false));
+  }, []);
+
   return (
     <div>
       <Hero />
@@ -209,20 +216,20 @@ export default function LandingPage() {
 
       <HistoricalDivider />
 
-      {/* Podium */}
-      <section className="mx-auto max-w-5xl px-4 py-24 sm:px-6">
+      {/* Hall of Top Students — real album */}
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
         <HistoricalSectionHeader
           number="05"
           title="أوائل مستر محمد صيام"
           subtitle="THE TOP STUDENTS"
           align="center"
         >
-          منصة التكريم — حيث تتحول الدرجات إلى ميداليات.
+          ألبوم الشرف — صور حقيقية لإنجازات حقيقية، بيتحدث كل مرة يضيف الأستاذ نجمة جديدة.
         </HistoricalSectionHeader>
 
-        <div className="mt-14">
-          <Podium entries={PODIUM_DEMO} />
-        </div>
+        <Reveal className="mt-14">
+          <HallOfFame entries={topStudents} loading={albumLoading} />
+        </Reveal>
 
         <Reveal className="mt-14 text-center">
           <Link
@@ -232,19 +239,6 @@ export default function LandingPage() {
             اعمل حسابك وابقى من الأوائل <ArrowLeft size={16} />
           </Link>
         </Reveal>
-      </section>
-
-      <HistoricalDivider />
-
-      {/* Hall of Top Students */}
-      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
-        <HallOfFame
-          entries={[
-            { rank: 1, name: 'ملك محمود', grade: 'الثالث الثانوي', score: 98.4, percentage: 98.4, achievement: 'مؤرخ المستقبل', year: '2026' },
-            { rank: 2, name: 'أحمد سمير', grade: 'الثالث الإعدادي', score: 96.2, percentage: 96.2, achievement: 'ملك الخرائط', year: '2026' },
-            { rank: 3, name: 'عمر خالد', grade: 'الثاني الثانوي', score: 94.8, percentage: 94.8, achievement: 'بطل الشهر', year: '2026' },
-          ]}
-        />
       </section>
     </div>
   );

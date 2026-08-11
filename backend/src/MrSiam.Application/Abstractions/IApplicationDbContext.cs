@@ -19,6 +19,7 @@ public interface IApplicationDbContext
     DbSet<StudentAchievement> StudentAchievements { get; }
     DbSet<Payment> Payments { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
+    DbSet<TopStudent> TopStudents { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

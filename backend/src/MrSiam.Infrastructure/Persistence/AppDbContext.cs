@@ -20,6 +20,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudentAchievement> StudentAchievements => Set<StudentAchievement>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<TopStudent> TopStudents => Set<TopStudent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -60,7 +61,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         builder.Entity<Exam>(e =>
         {
             e.HasOne(x => x.Course).WithMany(c => c.Exams).HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(x => x.Lesson).WithMany().HasForeignKey(x => x.LessonId).OnDelete(DeleteBehavior.SetNull);
+            e.HasOne(x => x.Lesson).WithMany().HasForeignKey(x => x.LessonId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<Question>(e =>
@@ -106,6 +107,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasIndex(a => new { a.StudentId, a.Date }).IsUnique();
             e.HasOne(a => a.Student).WithMany(s => s.Attendance).HasForeignKey(a => a.StudentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<TopStudent>(e =>
+        {
+            e.Property(t => t.FullName).HasMaxLength(120);
+            e.Property(t => t.StageAr).HasMaxLength(40);
+            e.Property(t => t.Achievement).HasMaxLength(120);
+            e.Property(t => t.Year).HasMaxLength(16);
+            e.Property(t => t.PhotoUrl).HasMaxLength(300);
         });
     }
 }

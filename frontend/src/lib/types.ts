@@ -220,3 +220,14 @@ export interface TeacherProfileDto {
   milestones: { year: number; title: string; description: string }[];
   stats: { studentsCount: number; coursesCount: number; examsCount: number; successRate: number };
 }
+
+export interface TopStudentDto {
+  id: number;
+  fullName: string;
+  stageAr: string;
+  achievement: string;
+  score?: number;
+  year?: string;
+  photoUrl?: string;
+  createdAt: string;
+}

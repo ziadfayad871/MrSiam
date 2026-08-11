@@ -78,6 +78,7 @@ try
     app.UseMiddleware<MrSiam.Api.Middleware.ExceptionHandlingMiddleware>();
 
     app.UseCors("Frontend");
+    app.UseStaticFiles();
     app.UseHttpsRedirection();
     app.UseAuthentication();
     app.UseAuthorization();

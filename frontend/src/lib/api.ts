@@ -58,4 +58,21 @@ export const api = {
     request<T>(path, { method: 'PUT', body: body === undefined ? undefined : JSON.stringify(body) }),
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body === undefined ? undefined : JSON.stringify(body) }),
+  del: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  upload: <T>(path: string, formData: FormData) => {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return fetch(`${API_BASE}/api${path}`, { method: 'POST', body: formData, headers }).then(async (res) => {
+      const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+      if (!res.ok) throw new ApiError(body?.message ?? 'فشل رفع البيانات', res.status);
+      if (body && !body.success) throw new ApiError(body.message ?? 'فشلت العملية', res.status);
+      return (body?.data ?? body) as T;
+    });
+  },
 };
+
+export function resolveFileUrl(photoUrl?: string | null): string | undefined {
+  if (!photoUrl) return undefined;
+  return photoUrl.startsWith('http') ? photoUrl : `${API_BASE}${photoUrl}`;
+}

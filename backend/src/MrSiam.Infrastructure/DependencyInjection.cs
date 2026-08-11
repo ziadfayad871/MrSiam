@@ -14,8 +14,16 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Default")
                                ?? "Data Source=mrsiam.db";
 
+        var useSqlServer = connectionString.StartsWith("Server=", StringComparison.OrdinalIgnoreCase)
+                           || connectionString.Contains("databaseasp", StringComparison.OrdinalIgnoreCase);
+
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlite(connectionString));
+        {
+            if (useSqlServer)
+                options.UseSqlServer(connectionString);
+            else
+                options.UseSqlite(connectionString);
+        });
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         services.AddScoped<IPasswordHasher, PasswordHasherService>();
