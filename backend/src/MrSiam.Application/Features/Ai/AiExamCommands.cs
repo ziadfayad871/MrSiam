@@ -357,14 +357,25 @@ public class BuildRandomExamCommandHandler(IApplicationDbContext db)
         await db.SaveChangesAsync(ct);
 
         var questions = await db.Questions
+            .AsNoTracking()
             .Where(q => picked.Contains(q.Id))
+            .Include(q => q.Options)
             .ToListAsync(ct);
 
         var order = 1;
         foreach (var q in questions)
         {
-            q.ExamId = exam.Id;
-            q.Order = order++;
+            var clone = new Question
+            {
+                ExamId = exam.Id,
+                LessonId = q.LessonId,
+                Text = q.Text,
+                Type = q.Type,
+                Marks = q.Marks,
+                Order = order++,
+                Options = q.Options.Select(o => new AnswerOption { Text = o.Text, IsCorrect = o.IsCorrect }).ToList()
+            };
+            db.Questions.Add(clone);
         }
         await db.SaveChangesAsync(ct);
 
