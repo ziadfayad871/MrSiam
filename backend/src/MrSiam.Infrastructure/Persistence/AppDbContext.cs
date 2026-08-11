@@ -212,9 +212,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(c => c.Title).HasMaxLength(200);
             e.Property(c => c.Grade).HasMaxLength(40);
             e.Property(c => c.Code).HasMaxLength(40);
-            e.HasOne(c => c.Student).WithMany().HasForeignKey(c => c.StudentId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(c => c.Exam).WithMany().HasForeignKey(c => c.ExamId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(c => c.Course).WithMany().HasForeignKey(c => c.CourseId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(c => c.Student).WithMany().HasForeignKey(c => c.StudentId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.Exam).WithMany().HasForeignKey(c => c.ExamId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(c => c.Course).WithMany().HasForeignKey(c => c.CourseId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

@@ -93,6 +93,10 @@ public class DeleteCourseCommandHandler(IApplicationDbContext db)
         if (course is null)
             return ApiResponse<bool>.Fail("الكورس غير موجود");
 
+        var certificates = await db.Certificates.Where(c => c.CourseId == request.Id).ToListAsync(ct);
+        if (certificates.Count > 0)
+            db.Certificates.RemoveRange(certificates);
+
         db.Courses.Remove(course);
         await db.SaveChangesAsync(ct);
         return ApiResponse<bool>.Ok(true, "تم حذف الكورس");
