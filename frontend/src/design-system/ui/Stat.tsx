@@ -18,7 +18,7 @@ export function Stat({ icon, label, value, hint, trend, className = '' }: StatPr
 
   return (
     <Reveal>
-      <div className={`relative overflow-hidden rounded-lg border border-border-subtle bg-surface p-5 shadow-sm ${className}`}>
+      <div className={`platform-stat relative overflow-hidden rounded-xl border border-border-gold/55 bg-surface/90 p-5 shadow-sm ${className}`}>
         {/* faint coordinates backdrop */}
         <span className="pointer-events-none absolute -top-2 -left-2 font-plex text-[9px] tracking-widest text-map-line" dir="ltr">
           30°02′N / 31°14′E

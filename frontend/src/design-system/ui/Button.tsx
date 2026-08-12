@@ -50,7 +50,7 @@ export function Button({
       whileTap={reduced || disabled ? undefined : { scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 420, damping: 24 }}
       disabled={disabled || loading}
-      className={`relative inline-flex cursor-pointer select-none items-center justify-center overflow-hidden rounded-md transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={`relative inline-flex cursor-pointer select-none items-center justify-center overflow-hidden rounded-lg transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-50 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       {...rest}
     >
       {loading ? (

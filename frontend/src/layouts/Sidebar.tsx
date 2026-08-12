@@ -87,7 +87,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         isOpen ? 'max-lg:!flex' : 'max-lg:!hidden'
       } lg:flex fixed inset-y-0 start-0 z-50 flex-col transition-all duration-300 ease-in-out ${
         collapsed ? 'w-16' : 'w-64'
-      } border-e border-border-gold/55 bg-[#091522]/95 shadow-[0_16px_45px_rgba(0,0,0,.26)] backdrop-blur-xl lg:relative lg:inset-auto lg:z-auto lg:my-3 lg:ms-3 lg:rounded-2xl lg:border`}
+      } border-s border-border-gold/55 bg-[#091522]/95 shadow-[0_16px_45px_rgba(0,0,0,.26)] backdrop-blur-xl lg:relative lg:inset-auto lg:z-auto lg:my-3 lg:me-3 lg:rounded-2xl lg:border`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -109,11 +109,11 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
           <NavLink
             key={item.to}
             to={item.to}
-            onClick={() => !collapsed && onToggle()}
+            onClick={() => onToggle()}
             className={({ isActive: active }) => `
               relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all duration-200
               ${active
-                ? 'bg-gradient-to-l from-gold/25 to-gold/5 font-semibold text-gold border-r-2 border-gold shadow-[inset_0_0_22px_rgba(201,162,39,.08)]'
+                ? 'bg-gradient-to-l from-gold/25 to-gold/5 font-semibold text-gold border-s-2 border-gold shadow-[inset_0_0_22px_rgba(201,162,39,.08)]'
                 : 'text-text-secondary hover:bg-white/[.045] hover:text-gold-bright'
               }
               ${collapsed ? 'justify-center' : ''}
@@ -221,7 +221,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
 
       <button
         onClick={() => onCollapseChange(!collapsed)}
-        className={`absolute -top-10 left-full z-10 hidden h-10 w-10 items-center justify-center rounded-e-lg border border-border-gold/50 bg-surface-elevated shadow-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/50 lg:flex ${
+        className={`absolute -top-10 right-full z-10 hidden h-10 w-10 items-center justify-center rounded-s-lg border border-border-gold/50 bg-surface-elevated shadow-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/50 lg:flex ${
           collapsed ? 'rotate-180' : ''
         }`}
         aria-label={collapsed ? 'توسيع الشريط الجانبي' : 'طي الشريط الجانبي'}

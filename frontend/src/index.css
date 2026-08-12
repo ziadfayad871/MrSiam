@@ -223,6 +223,15 @@
     radial-gradient(circle at 25% 80%, rgba(31, 83, 125, 0.13), transparent 30rem),
     linear-gradient(135deg, #07111d 0%, #091827 48%, #06101a 100%);
 }
+.dashboard-shell::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid rgba(201, 162, 39, 0.12);
+  margin: 12px;
+  border-radius: 18px;
+}
 .dashboard-shell::before {
   content: "";
   position: fixed;
@@ -238,9 +247,80 @@
 .dashboard-content {
   min-height: calc(100vh - 6.5rem);
 }
+.dashboard-content > * {
+  position: relative;
+  z-index: 1;
+}
+.platform-topbar {
+  min-height: 4rem;
+}
+.platform-topbar::after {
+  content: "";
+  position: absolute;
+  inset-inline: 1.25rem;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(220, 172, 76, 0.6), transparent);
+}
 .dashboard-shell .bg-surface,
 .dashboard-shell .bg-surface-elevated {
   background-color: rgba(13, 29, 44, 0.9);
+}
+.dashboard-shell .rounded-md.border,
+.dashboard-shell .rounded-lg.border,
+.dashboard-shell .rounded-xl.border {
+  border-color: rgba(201, 162, 39, 0.28);
+}
+.dashboard-shell .rounded-md.border:hover,
+.dashboard-shell .rounded-lg.border:hover,
+.dashboard-shell .rounded-xl.border:hover {
+  border-color: rgba(225, 177, 76, 0.72);
+}
+.dashboard-shell .bg-parchment-soft {
+  background:
+    radial-gradient(circle at 85% 10%, rgba(201, 162, 39, 0.18), transparent 18rem),
+    linear-gradient(135deg, rgba(17, 37, 55, 0.96), rgba(7, 20, 32, 0.97));
+}
+.platform-stat::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(217, 167, 78, 0.8), transparent);
+}
+.dashboard-shell .text-orange-500,
+.dashboard-shell .text-orange-600 {
+  color: #e2ae55;
+}
+.dashboard-shell .bg-orange-100\/60 {
+  background-color: rgba(201, 162, 39, 0.09);
+}
+.dashboard-shell .border-orange-300\/40 {
+  border-color: rgba(201, 162, 39, 0.38);
+}
+
+/* Platform panels share one navy-and-gold language across every dashboard page. */
+.dashboard-shell [class*="bg-white"],
+.dashboard-shell [class*="bg-gray"] {
+  background-color: rgba(13, 29, 44, 0.94) !important;
+}
+.dashboard-shell .bg-emerald-100,
+.dashboard-shell .bg-red-100 {
+  background-color: rgba(201, 162, 39, 0.1) !important;
+}
+.dashboard-shell .text-emerald-700,
+.dashboard-shell .text-red-700 {
+  color: var(--gold-bright-accent) !important;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-shell > aside {
+    order: 2;
+  }
+  .dashboard-shell > div {
+    order: 1;
+  }
 }
 .dashboard-shell input,
 .dashboard-shell select,

@@ -119,7 +119,7 @@ export function TopNavbar({
   };
 
   return (
-    <header className="sticky top-0 z-30 mx-3 mt-3 rounded-2xl border border-border-gold/45 bg-[#091522]/88 shadow-[0_8px_30px_rgba(0,0,0,.22)] backdrop-blur-xl">
+    <header className="platform-topbar sticky top-0 z-30 mx-3 mt-3 rounded-2xl border border-border-gold/45 bg-[#091522]/88 shadow-[0_8px_30px_rgba(0,0,0,.22)] backdrop-blur-xl" dir="rtl">
       <div className="mx-auto flex h-16 max-w-full items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Left: Menu toggle + Breadcrumbs */}
         <div className="flex items-center gap-4 min-w-0 flex-1">
