@@ -15,8 +15,12 @@ import {
   Trophy,
   UsersRound,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { HallOfFame } from '../design-system/components/HallOfFame';
 import { Reveal } from '../design-system/motion/Reveal';
+import { api } from '../lib/api';
+import type { TopStudentDto } from '../lib/types';
 import Hero from './landing/Hero';
 
 const stages = [
@@ -64,6 +68,17 @@ const platformFeatures = [
 ];
 
 export default function LandingPage() {
+  const [topStudents, setTopStudents] = useState<TopStudentDto[]>([]);
+  const [albumLoading, setAlbumLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<TopStudentDto[]>('/top-students')
+      .then(setTopStudents)
+      .catch(() => setTopStudents([]))
+      .finally(() => setAlbumLoading(false));
+  }, []);
+
   return (
     <div dir="rtl" className="overflow-hidden bg-background">
       <Hero />
@@ -111,6 +126,12 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:pb-28">
+        <Reveal>
+          <HallOfFame entries={topStudents} loading={albumLoading} />
+        </Reveal>
       </section>
 
       <section className="relative overflow-hidden bg-navy-deep py-20 text-white lg:py-24">
