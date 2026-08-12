@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Moon, Quote, Sun } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Crown, Eye, EyeOff, LockKeyhole, Mail, Moon, Quote, Sun } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../design-system/ui/Toast';
@@ -24,7 +24,7 @@ const PORTALS = {
 } as const;
 
 export default function PortalLoginPage({ portal }: PortalLoginProps) {
-  const { login, loading } = useAuth();
+  const { login, loading, logout } = useAuth();
   const { toast } = useToast();
   const { theme, toggle } = useTheme();
   const navigate = useNavigate();
@@ -43,6 +43,7 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
     try {
       const user = await login(username.trim(), password);
       if (!portalAllows(portal, user)) {
+        logout();
         setError(meta.roleMessage);
         return;
       }
@@ -72,8 +73,9 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,10,8,.75),transparent_45%)]" />
           <div className="absolute inset-y-12 right-10 w-px bg-gradient-to-b from-transparent via-[#c99236]/70 to-transparent" />
           <div className="relative flex h-full max-w-[45%] flex-col justify-center pr-14 text-right">
-            <div className="mb-8 grid h-28 w-28 place-items-center rounded-full border border-[#d8a548]/70 bg-[#19150e]/75 p-3 shadow-[0_0_35px_rgba(210,148,44,.2)]">
-              <img src="/caesar-logo.jpeg" alt="شعار القيصر" className="login-caesar-logo h-full w-full object-contain" />
+            <div className="login-caesar-emblem mb-8" role="img" aria-label="شعار القيصر">
+              <Crown size={42} strokeWidth={1.35} />
+              <span>ق</span>
             </div>
             <p className="text-4xl font-extrabold text-[#dca444]">القيصر</p>
             <p className="mt-2 text-lg font-bold text-white">مستر محمد صيام</p>
@@ -88,7 +90,7 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
         </motion.aside>
 
         <section className="relative flex min-h-[calc(100vh-1.5rem)] items-center justify-center py-16 md:py-8">
-          <motion.div initial={{ opacity: 0, y: reduced ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6 }} className="w-full max-w-[620px] rounded-[1.6rem] border border-[#b98131]/55 bg-[#151512]/85 px-6 py-10 shadow-[0_24px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-12 sm:py-14">
+          <motion.div initial={{ opacity: 0, y: reduced ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6 }} className="login-form-card w-full max-w-[620px] rounded-[1.6rem] border border-[#b98131]/55 px-6 py-10 shadow-[0_24px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-12 sm:py-14">
             <header className="text-center">
               <div className="flex items-center justify-center gap-3 text-[#d9a247]"><span className="h-px w-10 bg-current/40" /> <span className="text-2xl">♛</span> <span className="h-px w-10 bg-current/40" /></div>
               <h1 className="mt-3 text-3xl font-extrabold sm:text-4xl">{meta.title}</h1>

@@ -13,6 +13,7 @@ public class DashboardController(MediatR.IMediator mediator, IApplicationDbConte
     : BaseApiController(mediator, currentUser)
 {
     [HttpGet("student")]
+    [Authorize(Roles = nameof(Role.Student))]
     public async Task<IActionResult> GetStudentDashboard([FromQuery] int? studentId)
     {
         var resolved = await ResolveStudentIdAsync(studentId, db, HttpContext.RequestAborted);

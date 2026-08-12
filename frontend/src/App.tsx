@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { PageTransition } from './design-system/motion/PageTransition';
 import { ParchmentTransition } from './design-system/motion/ParchmentTransition';
 import { useAuth } from './lib/auth';
+import type { Role } from './lib/types';
 import SiteLayout from './layouts/SiteLayout';
 import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './pages/LandingPage';
@@ -22,27 +23,40 @@ import HistoryTimelinePage from './pages/HistoryTimelinePage';
 import ParentDashboardPage from './pages/parent/ParentDashboardPage';
 import SearchPage from './pages/SearchPage';
 
-function RequireAuth({ children, role }: { children: React.ReactNode; role?: string }) {
+function homeForRole(role: Role): string {
+  if (role === 'Student') return '/dashboard';
+  if (role === 'Teacher' || role === 'Admin') return '/teacher';
+  if (role === 'Secretary') return '/secretary';
+  return '/parent';
+}
+
+function RequireAuth({ children, roles }: { children: React.ReactNode; roles?: Role[] }) {
   const { user } = useAuth();
-  if (!user) return <Navigate to={role === 'Student' ? '/login' : '/staff-login'} replace />;
-  if (role && user.role !== role) return <Navigate to="/dashboard" replace />;
+  if (!user) return <Navigate to={roles?.includes('Student') ? '/login' : '/staff-login'} replace />;
+  if (roles && !roles.includes(user.role)) return <Navigate to={homeForRole(user.role)} replace />;
   return <>{children}</>;
 }
 
 function RequireStudent({ children }: { children: React.ReactNode }) {
-  return <RequireAuth role="Student">{children}</RequireAuth>;
+  return <RequireAuth roles={['Student']}>{children}</RequireAuth>;
 }
 
 function RequireTeacher({ children }: { children: React.ReactNode }) {
-  return <RequireAuth role="Teacher">{children}</RequireAuth>;
+  return <RequireAuth roles={['Teacher', 'Admin']}>{children}</RequireAuth>;
 }
 
 function RequireSecretary({ children }: { children: React.ReactNode }) {
-  return <RequireAuth role="Secretary">{children}</RequireAuth>;
+  return <RequireAuth roles={['Secretary', 'Admin']}>{children}</RequireAuth>;
 }
 
 function RequireParent({ children }: { children: React.ReactNode }) {
-  return <RequireAuth role="Parent">{children}</RequireAuth>;
+  return <RequireAuth roles={['Parent']}>{children}</RequireAuth>;
+}
+
+function PortalRoute({ portal }: { portal: 'student' | 'staff' }) {
+  const { user } = useAuth();
+  if (user) return <Navigate to={homeForRole(user.role)} replace />;
+  return <PortalLoginPage portal={portal} />;
 }
 
 export default function App() {
@@ -62,7 +76,7 @@ export default function App() {
         path="/login"
         element={
           <PageTransition>
-            <PortalLoginPage portal="student" />
+            <PortalRoute portal="student" />
           </PageTransition>
         }
       />
@@ -70,7 +84,7 @@ export default function App() {
         path="/staff-login"
         element={
           <PageTransition>
-            <PortalLoginPage portal="staff" />
+            <PortalRoute portal="staff" />
           </PageTransition>
         }
       />
@@ -98,13 +112,13 @@ export default function App() {
       <Route
         path="/dashboard"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <ParchmentTransition motif="map">
                 <StudentDashboard />
               </ParchmentTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
       <Route
@@ -301,13 +315,13 @@ export default function App() {
       <Route
         path="/search"
         element={
-          <RequireAuth>
+          <RequireStudent>
             <DashboardLayout>
               <PageTransition>
                 <SearchPage />
               </PageTransition>
             </DashboardLayout>
-          </RequireAuth>
+          </RequireStudent>
         }
       />
 

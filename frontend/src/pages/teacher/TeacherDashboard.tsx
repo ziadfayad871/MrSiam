@@ -139,7 +139,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
   return (
     <div className="teacher-command-center flex flex-col gap-5 p-1 sm:p-2">
       <div className="teacher-welcome relative overflow-hidden rounded-2xl border border-border-gold/40 bg-[#101411] text-white shadow-[0_14px_44px_rgba(0,0,0,.2)]">
-        <img src="/siam-teacher-dashboard.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-contain object-left opacity-90" />
+        <img src="/siam-teacher-dashboard.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-left opacity-90" />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,14,11,.9)_0%,rgba(9,14,11,.68)_42%,rgba(9,14,11,.12)_100%)]" />
         <div className="relative flex min-h-[205px] items-center justify-between gap-5 px-6 py-7 sm:px-9">
           <div className="max-w-xl">
