@@ -1,174 +1,187 @@
 import { motion, useScroll, useTransform } from 'motion/react';
-import { ArrowLeft, Compass, MapPin } from 'lucide-react';
-import { useRef } from 'react';
+import { ArrowDown, CalendarCheck, Compass, PlayCircle, Sparkles, UserRoundPlus, Users } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BrandLogo } from '../../design-system/components/BrandLogo';
-import { Compass as CompassBrand } from '../../design-system/components/Compass';
-import CoordinateLabel from '../../design-system/components/CoordinateLabel';
-import { RealWorldMap } from '../../design-system/components/map/RealWorldMap';
-import { Button } from '../../design-system/ui/Button';
-import { usePrefersReducedMotion } from '../../design-system/motion/hooks';
+import { api } from '../../lib/api';
+import type { TeacherProfileDto } from '../../lib/types';
 
-const WORLD_MARKERS = [
-  { id: 'cairo', lat: 30.05, lng: 31.23, label: 'القاهرة', state: 'current' as const },
-  { id: 'paris', lat: 48.86, lng: 2.35, label: 'باريس', state: 'discovered' as const },
-  { id: 'london', lat: 51.51, lng: -0.13, label: 'لندن', state: 'discovered' as const },
-  { id: 'rome', lat: 41.9, lng: 12.5, label: 'روما', state: 'discovered' as const },
-  { id: 'athens', lat: 37.98, lng: 23.73, label: 'أثينا', state: 'discovered' as const },
-  { id: 'mekka', lat: 21.42, lng: 39.83, label: 'مكة', state: 'discovered' as const },
-];
+/* Seeded pseudorandom — same layout on every render */
+function seeded(i: number, salt: number): number {
+  const x = Math.sin(i * 127.1 + salt * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+}
 
-const WORLD_ROUTES = [
-  { id: 'route1', points: [[30.05, 31.23], [48.86, 2.35], [51.51, -0.13]] as [number, number][] },
-  { id: 'route2', points: [[30.05, 31.23], [41.9, 12.5], [37.98, 23.73]] as [number, number][] },
-  { id: 'route3', points: [[30.05, 31.23], [21.42, 39.83]] as [number, number][] },
-];
+const STARS = Array.from({ length: 60 }, (_, i) => ({
+  id: i,
+  left: seeded(i, 1) * 100,
+  top: seeded(i, 2) * 100,
+  size: 1 + seeded(i, 3) * 2.2,
+  delay: seeded(i, 4) * 4,
+  duration: 2.6 + seeded(i, 5) * 3.4,
+}));
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
-  const reduced = usePrefersReducedMotion();
   const navigate = useNavigate();
+  const [teacher, setTeacher] = useState<TeacherProfileDto | null>(null);
 
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
-  const mapY = useTransform(scrollYProgress, [0, 1], [0, 90]);
-  const textY = useTransform(scrollYProgress, [0, 1], [0, -40]);
-  const opacity = useTransform(scrollYProgress, [0, 0.75], [1, 0.15]);
+  const textY = useTransform(scrollYProgress, [0, 1], [0, -60]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.1]);
+
+  useEffect(() => {
+    api.get<TeacherProfileDto>('/teacher/profile').then(setTeacher).catch(() => setTeacher(null));
+  }, []);
+
+  const years = teacher?.experienceYears ?? 18;
 
   return (
     <section ref={ref} className="relative overflow-hidden bg-navy-deep text-white">
-      {/* Base map — real world cartography (atlas tiles) */}
-      <motion.div className="absolute inset-0" style={reduced ? undefined : { y: mapY }}>
-        <RealWorldMap
-          tileStyle="light"
-          animated={!reduced}
-          markers={WORLD_MARKERS}
-          routes={WORLD_ROUTES}
-        />
-      </motion.div>
+      {/* Grid + stars + glows */}
+      <div className="sultan-grid absolute inset-0" />
+      <div className="sultan-stars absolute inset-0" aria-hidden>
+        {STARS.map((s) => (
+          <span
+            key={s.id}
+            className="sultan-star"
+            style={{
+              left: `${s.left}%`,
+              top: `${s.top}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              animationDelay: `${s.delay}s`,
+              animationDuration: `${s.duration}s`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="sultan-glow start-[-120px] top-[-60px] h-80 w-80 bg-gold/45" />
+      <div className="sultan-glow end-[-140px] top-1/3 h-96 w-96 bg-[#1d4ed8]/40" style={{ animationDelay: '3s' }} />
+      <div className="sultan-glow start-1/4 bottom-[-120px] h-80 w-80 bg-gold/30" style={{ animationDelay: '6s' }} />
 
-      {/* Soft top/bottom fades — keep the atlas clearly visible */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-background/60 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-background/70 to-transparent" />
+      {/* Watermark behind */}
+      <div className="pointer-events-none absolute inset-x-0 top-20 select-none overflow-hidden text-center" aria-hidden>
+        <span className="sultan-watermark" dir="rtl">القيصر في التاريخ والجغرافيا</span>
+      </div>
 
-      {/* Coordinates ambience */}
-      <CoordinateLabel
-        latitude={{ degrees: 30, minutes: 3, hemisphere: 'N' }}
-        longitude={{ degrees: 31, minutes: 14, hemisphere: 'E' }}
-        ambient
-        className="absolute top-10 start-6 hidden sm:inline-flex"
-      />
-      <CoordinateLabel
-        latitude={{ degrees: 31, minutes: 12, hemisphere: 'N' }}
-        longitude={{ degrees: 29, minutes: 58, hemisphere: 'E' }}
-        ambient
-        className="absolute bottom-28 end-6 hidden sm:inline-flex"
-      />
-      <span className="absolute top-24 end-10 hidden font-plex text-[10px] tracking-[0.3em] text-navy-deep/40 md:block" dir="ltr">
-        1798 · 1805 · 1882 · 1952
-      </span>
-
-      {/* Compass — small rotating dial */}
+      {/* Content */}
       <motion.div
-        className="absolute start-10 top-1/3 hidden opacity-60 lg:block"
-        animate={reduced ? undefined : { rotate: [0, 180, 360] }}
-        transition={{ duration: 90, ease: 'linear', repeat: Infinity }}
+        className="relative z-10 mx-auto flex min-h-[100vh] max-w-6xl flex-col items-center justify-center px-4 py-28 lg:flex-row lg:gap-20"
+        style={{ opacity }}
       >
-        <CompassBrand size="large" animated />
-      </motion.div>
-
-      {/* Content — dark glass panel over the atlas map */}
-      <motion.div
-        className="relative z-10 mx-auto flex min-h-[92vh] max-w-4xl flex-col items-center justify-center px-4 py-24 text-center"
-        style={reduced ? undefined : { y: textY, opacity }}
-      >
+        {/* Portrait */}
         <motion.div
-          initial={reduced ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="w-full max-w-3xl rounded-2xl border border-gold/25 bg-navy-deep/85 px-6 py-12 shadow-[0_24px_80px_rgba(8,14,28,0.55)] backdrop-blur-md sm:px-12"
+          initial={{ opacity: 0, scale: 0.92, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="relative"
         >
-          <div className="mb-10">
-            <BrandLogo variant="hero" imageSrc="/mr-siam-logo.jpeg" />
+          <div className="absolute -inset-10 rounded-full bg-gold/25 blur-3xl" />
+          <div className="sultan-portrait-ring relative h-60 w-60 rounded-full p-2.5 sm:h-80 sm:w-80">
+            <div className="grid h-full w-full place-items-center overflow-hidden rounded-full border-2 border-gold/50 bg-[#0d1f3c] shadow-[0_24px_90px_rgba(8,14,28,0.6)]">
+              <img src="/mr-siam-logo.jpeg" alt="مستر محمد صيام" className="h-full w-full object-cover" />
+            </div>
           </div>
 
-          <motion.h1
-            initial={reduced ? false : { opacity: 0, y: 26 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-            className="display-serif text-3xl font-bold leading-[1.6] text-white sm:text-4xl md:text-5xl md:leading-[1.5]"
-          >
-            التاريخ مش مجرد أحداث...
-            <br />
-            <span className="text-gold-bright">التاريخ حكايات وقصة لازم تعيشها</span>
-            <br />
-            <span className="text-xl font-semibold text-white/80 md:text-2xl">وتفاصيلها مع مستر صيمو.</span>
-          </motion.h1>
+          {/* Floating chips */}
+          <div className="absolute -end-2 top-6 flex items-center gap-1.5 rounded-full border border-gold/40 bg-navy-deep/85 px-3.5 py-1.5 text-xs font-bold text-gold-bright backdrop-blur sm:-end-6">
+            <Sparkles size={13} /> {years}+ سنة خبرة
+          </div>
+          <div className="absolute -start-3 bottom-10 flex items-center gap-1.5 rounded-full border border-white/15 bg-navy-deep/85 px-3.5 py-1.5 text-xs font-bold text-white/90 backdrop-blur sm:-start-6">
+            <Users size={13} className="text-gold" />
+            {teacher ? `${teacher.stats.studentsCount} طالب` : 'آلاف الطلاب'}
+          </div>
+          <div className="absolute bottom-2 end-10 flex items-center gap-1.5 rounded-full border border-gold/30 bg-navy-deep/85 px-3 py-1 text-[10px] font-semibold text-white/70 backdrop-blur">
+            التاريخ · الجغرافيا · الدراسات
+          </div>
+        </motion.div>
 
-          {/* Brand tagline */}
-          <motion.p
-            initial={reduced ? false : { opacity: 0, scale: 0.95, letterSpacing: '0.1em' }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.78, duration: 0.7 }}
-            className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-5 py-1.5 text-sm font-bold text-gold-bright"
-          >
-            مع أبو كيان .. الدراسات في أمان
-          </motion.p>
+        {/* Text + actions */}
+        <motion.div
+          initial={{ opacity: 0, y: 26 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          style={{ y: textY }}
+          className="mt-12 max-w-2xl text-center lg:mt-0 lg:text-start"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 text-xs font-bold text-gold-bright">
+            <Compass size={13} /> منصة القيصر الرقمي للتعليم
+          </span>
 
-          <motion.p
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.85, duration: 0.8 }}
-            className="mt-6 max-w-xl text-base leading-relaxed text-white/75 sm:text-lg"
-          >
-            مع مستر محمد صيام — افهم التاريخ، اقرأ الخريطة، واصنع تفوقك.
-          </motion.p>
+          <h1 className="display-serif mt-6 text-4xl font-bold leading-[1.35] sm:text-5xl md:text-6xl">
+            م / <span className="text-gold-bright">محمد صيام</span>
+          </h1>
 
-          <motion.div
-            initial={reduced ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: 0.8 }}
-            className="mt-10 flex flex-col items-center gap-3 sm:flex-row"
-          >
-            <Button
-              variant="gold"
-              size="lg"
+          <div className="mt-2 inline-block pb-1">
+            <span className="text-xl font-bold text-white/90 sm:text-2xl">في التاريخ والجغرافيا</span>
+            <svg viewBox="0 0 320 26" className="mt-1 block h-6 w-full" aria-hidden>
+              <path className="sultan-scribble" d="M6 18 C 70 7, 150 4, 314 12" />
+            </svg>
+          </div>
+
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg lg:mx-0">
+            التاريخ حكاية تُروى والخريطة تُقرأ — رحلة تعليمية من الإعدادية للثانوية،
+            بمتعة الاستكشاف وذكاء القيصر.{" "}
+            <span className="font-bold text-gold-bright">مع أبو كيان .. الدراسات في أمان 😍</span>
+          </p>
+
+          {/* Action buttons grid */}
+          <div className="mt-9 grid grid-cols-3 gap-3 sm:gap-3.5">
+            <button
               onClick={() => navigate('/login')}
-              icon={<ArrowLeft size={18} />}
-              className="text-base"
+              className="col-span-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-4 py-3.5 text-sm font-bold text-navy-deep shadow-[0_10px_34px_rgba(201,162,39,0.35)] transition-all hover:bg-gold-bright hover:shadow-[0_14px_44px_rgba(201,162,39,0.5)] sm:col-span-1"
             >
-              ابدأ رحلتك
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate('/teacher-profile')}
-              className="border-white/25 text-white hover:border-gold hover:text-gold"
+              <UserRoundPlus size={17} /> طالب جديد
+            </button>
+            <button
+              onClick={() => navigate('/parent')}
+              className="col-span-1 flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3.5 text-sm font-bold text-gold-bright transition-colors hover:bg-gold/20"
             >
-              اكتشف مستر محمد صيام
-            </Button>
-          </motion.div>
+              <Users size={17} /> ولي أمر
+            </button>
+            <button
+              onClick={() => navigate('/login')}
+              className="col-span-1 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:border-gold/50 hover:text-gold-bright"
+            >
+              <Sparkles size={17} /> عايز اشترك
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="col-span-1 flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3.5 text-sm font-bold text-white transition-colors hover:border-gold/50 hover:text-gold-bright"
+            >
+              <CalendarCheck size={17} /> جدول دراسي
+            </button>
+          </div>
 
-          <motion.div
-            initial={reduced ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4, duration: 1 }}
-            className="mt-12 flex items-center justify-center gap-6 text-[11px] text-white/40"
-          >
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-white/45 lg:justify-start">
             <span className="flex items-center gap-1.5">
-              <MapPin size={12} className="text-gold" /> 12+ عاماً من التدريس
+              <Sparkles size={12} className="text-gold" /> 6 مراحل دراسية
             </span>
             <span className="h-1 w-1 rounded-full bg-white/25" />
             <span className="flex items-center gap-1.5">
-              <Compass size={12} className="text-gold" /> آلاف الطلاب
+              <Compass size={12} className="text-gold" /> إعدادية · ثانوية
             </span>
             <span className="h-1 w-1 rounded-full bg-white/25" />
-            <span>إعدادية · ثانوية</span>
-          </motion.div>
+            <span className="flex items-center gap-1.5">
+              <PlayCircle size={12} className="text-gold" /> حصص ومحاضرات مسجلة
+            </span>
+          </div>
         </motion.div>
       </motion.div>
 
-      {/* Bottom fade */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      {/* Scroll down */}
+      <button
+        onClick={() => document.getElementById('sultan-start')?.scrollIntoView({ behavior: 'smooth' })}
+        className="absolute bottom-24 start-1/2 z-10 -translate-x-1/2 text-white/50 transition-colors hover:text-gold"
+        aria-label="التمرير للأسفل"
+      >
+        <span className="sultan-bounce flex flex-col items-center gap-1">
+          <ArrowDown size={20} />
+        </span>
+      </button>
+
+      {/* Bottom fade to page background */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 }

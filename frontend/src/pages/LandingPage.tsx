@@ -1,4 +1,18 @@
-import { ArrowLeft, Compass, Landmark, Map } from 'lucide-react';
+import {
+  ArrowLeft,
+  Award,
+  BookOpen,
+  Compass,
+  GraduationCap,
+  Landmark,
+  Map,
+  Rocket,
+  ShieldCheck,
+  Sparkles,
+  Trophy,
+  UserRoundPlus,
+  Users,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe } from '../design-system/components/Globe';
@@ -9,7 +23,7 @@ import { HistoricalTimeline } from '../design-system/components/HistoricalTimeli
 import { Reveal } from '../design-system/motion/Reveal';
 import { Card } from '../design-system/ui/Card';
 import { api } from '../lib/api';
-import type { TopStudentDto } from '../lib/types';
+import type { TeacherProfileDto, TopStudentDto } from '../lib/types';
 import Hero from './landing/Hero';
 
 const SUBJECTS = [
@@ -31,6 +45,15 @@ const SUBJECTS = [
     desc: 'خريطة + زمن = فهم أعمق لتاريخ مصر وجغرافيتها في المرحلة الإعدادية.',
     tag: 'الإعدادية',
   },
+];
+
+const QUALIFICATIONS = [
+  { icon: GraduationCap, title: 'بكالوريوس التربية', desc: 'كلية التربية - جامعة عين شمس، وطريق التدريس بدأ من هناك' },
+  { icon: BookOpen, title: 'الدراسات الاجتماعية', desc: 'مدرس إعدادية — المعلومة عندي بقت حكاية تُروى مش سطر يُحفظ' },
+  { icon: Landmark, title: 'التاريخ والجغرافيا', desc: 'للثانوية العامة — الزمن يُحكى والخريطة تُقرأ بمنهج "القيصر"' },
+  { icon: Compass, title: 'فلسفة الرحلة', desc: 'المنهج الجيد لا يُحفظ بل يُعاش — كل درس محطة وكل امتحان تحدٍّ' },
+  { icon: Users, title: 'آلاف الطلاب', desc: 'مرّ على حصصه آلاف الطلاب من محافظات مصر كلها' },
+  { icon: Rocket, title: 'القيصر الرقمي', desc: 'يبني منصته الرقمية لتكون رفيق كل طالب في رحلته' },
 ];
 
 const JOURNEY_STOPS = [
@@ -110,6 +133,7 @@ const GLOBE_MARKERS = [
 export default function LandingPage() {
   const [topStudents, setTopStudents] = useState<TopStudentDto[]>([]);
   const [albumLoading, setAlbumLoading] = useState(true);
+  const [teacher, setTeacher] = useState<TeacherProfileDto | null>(null);
 
   useEffect(() => {
     api
@@ -117,22 +141,129 @@ export default function LandingPage() {
       .then(setTopStudents)
       .catch(() => setTopStudents([]))
       .finally(() => setAlbumLoading(false));
+    api.get<TeacherProfileDto>('/teacher/profile').then(setTeacher).catch(() => setTeacher(null));
   }, []);
+
+  const stats = teacher?.stats;
+  const statCards = [
+    { icon: GraduationCap, label: 'سنوات الخبرة', value: `${teacher?.experienceYears ?? 18}+`, unit: 'سنة' },
+    { icon: Users, label: 'طلاب المنصة', value: stats ? String(stats.studentsCount) : '—' },
+    { icon: BookOpen, label: 'مقررات دراسية', value: stats ? String(stats.coursesCount) : '—' },
+    { icon: Trophy, label: 'نسبة النجاح', value: stats ? `${stats.successRate}%` : '—' },
+  ];
 
   return (
     <div>
       <Hero />
 
-      {/* Teacher intro */}
-      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
-        <HistoricalSectionHeader
-          number="01"
-          title="مين هو مستر محمد صيام؟"
-          subtitle="THE TEACHER"
+      {/* ===== Sultan promo banner ===== */}
+      <section id="sultan-start" className="mx-auto max-w-7xl px-4 pt-16 sm:px-6">
+        <div
+          className="relative overflow-hidden rounded-2xl border-2 border-gold/60 px-6 py-8 shadow-[0_18px_60px_rgba(11,30,54,0.35)] sm:px-10"
+          style={{ background: 'linear-gradient(135deg, #0b1e36 0%, #1d3a6b 55%, #c9a227 130%)' }}
         >
+          <div className="pointer-events-none absolute -top-16 end-16 h-40 w-40 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-12 start-10 h-28 w-28 rounded-full bg-gold/25" />
+          <div className="relative z-10 flex flex-col items-center justify-between gap-6 lg:flex-row">
+            <div className="max-w-2xl text-center lg:text-start">
+              <h4 className="display-serif text-xl font-bold text-white sm:text-2xl">
+                سجّل حسابك وابدأ رحلة القيصر الرقمي — من غير ما تتعقد
+              </h4>
+              <p className="mt-2 text-sm text-white/85">
+                دلوقتي تقدر تشترك في المقررات بسهولة وأمان، وتذاكر التاريخ والجغرافيا بالطريقة اللي بتحبها.
+              </p>
+              <ul className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-xs font-semibold text-white/75 lg:justify-start">
+                <li className="flex items-center gap-1.5"><Sparkles size={12} className="text-gold-bright" /> خطوتين بس عشان تسجل</li>
+                <li className="flex items-center gap-1.5"><ShieldCheck size={12} className="text-gold-bright" /> وصول فوري لكل المحتوى</li>
+              </ul>
+            </div>
+            <Link
+              to="/login"
+              className="flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-bold text-navy-deep shadow-lg transition-all hover:bg-gold-bright"
+            >
+              <UserRoundPlus size={17} /> اضغط هنا للاشتراك
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== Sultan "من هو المستر؟" timeline ===== */}
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+        <HistoricalSectionHeader number="01" title="مين هو مستر محمد صيام؟" subtitle="THE TEACHER">
           مدرس دراسات اجتماعية للمرحلة الإعدادية، ومدرس تاريخ وجغرافيا للمرحلة الثانوية.
-          مؤمن إن التاريخ حكاية تُروى، والجغرافيا خريطة تُقرأ، وإن كل طالب يملك بوصلة
-          تقوده لأي علم ما دام عرف يقرأ الخريطة ويحكي الحكاية.
+        </HistoricalSectionHeader>
+
+        <div className="mt-14 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {QUALIFICATIONS.map((q, i) => (
+            <Reveal key={q.title} delay={i * 0.08}>
+              <div className="group relative h-full overflow-hidden rounded-xl border border-border-soft bg-gradient-to-b from-surface to-surface-sunken/60 p-6 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-gold/40 hover:shadow-[0_16px_44px_rgba(201,162,39,0.12)]">
+                <div className="absolute -end-10 -top-10 h-28 w-28 rounded-full bg-gold/5 transition-colors duration-300 group-hover:bg-gold/10" />
+                <div className="relative">
+                  <div className="grid h-12 w-12 place-items-center rounded-xl border border-gold/30 bg-gold/10 text-gold">
+                    <q.icon size={22} strokeWidth={1.8} />
+                  </div>
+                  <h3 className="mt-4 text-base font-bold text-text-primary">{q.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-text-secondary">{q.desc}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ===== Sultan stats ===== */}
+      <section className="relative overflow-hidden bg-navy-deep py-16 text-white">
+        <div className="sultan-grid absolute inset-0" />
+        <div className="sultan-stars absolute inset-0" aria-hidden>
+          {Array.from({ length: 26 }, (_, i) => (
+            <span
+              key={i}
+              className="sultan-star"
+              style={{
+                left: `${(Math.sin(i * 91.7) * 0.5 + 0.5) * 100}%`,
+                top: `${(Math.sin(i * 47.3) * 0.5 + 0.5) * 100}%`,
+                width: `${1 + (Math.sin(i * 13.1) * 0.5 + 0.5) * 2}px`,
+                height: `${1 + (Math.sin(i * 13.1) * 0.5 + 0.5) * 2}px`,
+                animationDelay: `${(Math.sin(i * 23.7) * 0.5 + 0.5) * 4}s`,
+                animationDuration: `${2.6 + (Math.sin(i * 37.9) * 0.5 + 0.5) * 3.4}s`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mb-10 flex items-center justify-center gap-2.5">
+            <Sparkles size={18} className="text-gold" />
+            <h2 className="text-center text-2xl font-bold sm:text-3xl">
+              بعض <span className="text-gold-bright">الإحصائيات</span>
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {statCards.map((s) => (
+              <div
+                key={s.label}
+                className="flex items-center gap-4 rounded-xl border border-gold/20 bg-white/5 px-5 py-6 backdrop-blur-sm transition-colors hover:border-gold/45 hover:bg-white/10"
+              >
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold/15 text-gold-bright">
+                  <s.icon size={22} strokeWidth={1.8} />
+                </div>
+                <div className="min-w-0">
+                  <p className="display-serif text-2xl font-bold text-white">
+                    {s.value}
+                    {s.unit && <span className="ms-1 text-sm font-normal text-gold">{s.unit}</span>}
+                  </p>
+                  <p className="mt-0.5 truncate text-[11px] font-semibold text-white/60">{s.label}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent" />
+      </section>
+
+      {/* ===== Subjects ===== */}
+      <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6">
+        <HistoricalSectionHeader number="02" title="رحلتك مع أبو كيان" subtitle="THE SUBJECTS" align="center">
+          التخصصات اللي بيحولها المستر لحكاية — اختر محطتك.
         </HistoricalSectionHeader>
 
         <div className="mt-12 grid gap-5 md:grid-cols-3">
