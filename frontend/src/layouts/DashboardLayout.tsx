@@ -4,7 +4,8 @@ import { TopNavbar } from './TopNavbar';
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  // The reference UI uses a compact icon rail; users can expand it from the gold toggle.
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className="dashboard-shell flex min-h-screen" dir="rtl">

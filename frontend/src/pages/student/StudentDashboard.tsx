@@ -93,9 +93,9 @@ export default function StudentDashboard() {
   const { student, xp, streak, stats } = data;
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6">
+    <div className="platform-dashboard flex flex-col gap-5 p-2 sm:p-4">
       {/* Hero: greeting + XP compass + streak + rank */}
-      <div className="relative overflow-hidden rounded-lg border border-gold/20 bg-parchment-soft p-6 shadow-soft">
+      <div className="platform-dashboard-hero relative overflow-hidden rounded-2xl border border-gold/35 bg-parchment-soft p-6 shadow-soft">
         <CoordinateLabel
           latitude={{ degrees: 31, minutes: 15, hemisphere: 'N' }}
           longitude={{ degrees: 32, minutes: 18, hemisphere: 'E' }}
@@ -150,7 +150,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-6">
+      <div className="platform-dashboard-stats grid grid-cols-2 gap-3 lg:grid-cols-6">
         <Stat icon={<Bookmark size={16} />} label="كورسات مكتملة" value={`${data.completedCourses}/${data.totalCourses}`} />
         <Stat icon={<Trophy size={16} />} label="امتحانات ناجحة" value={`${stats.passedExams}/${stats.examsTaken}`} />
         <Stat icon={<Target size={16} />} label="المعدل العام" value={`${stats.average}%`} />

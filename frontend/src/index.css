@@ -289,6 +289,54 @@
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(217, 167, 78, 0.8), transparent);
 }
+.platform-dashboard {
+  max-width: 1540px;
+  margin-inline: auto;
+}
+.platform-dashboard-hero {
+  min-height: 172px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 232, 190, 0.06);
+}
+.platform-dashboard-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.42;
+  background:
+    linear-gradient(135deg, transparent 0 62%, rgba(201, 162, 39, 0.09) 62.2% 62.6%, transparent 62.8%),
+    radial-gradient(circle at 92% 80%, rgba(201, 162, 39, 0.24) 0 2px, transparent 3px);
+  background-size: auto, 22px 22px;
+}
+.platform-dashboard-hero > * {
+  position: relative;
+  z-index: 1;
+}
+.platform-dashboard-stats > * {
+  min-height: 122px;
+}
+.platform-dashboard .platform-stat {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(17, 38, 56, 0.96), rgba(8, 22, 34, 0.96));
+}
+.platform-dashboard .platform-stat > div > div {
+  width: 100%;
+}
+.platform-dashboard .platform-stat [class*="text-3xl"] {
+  color: #edb957;
+  font-size: 1.7rem;
+}
+.dashboard-shell .shadow-soft,
+.dashboard-shell .shadow-sm {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+}
+.dashboard-shell .border-gold\/20,
+.dashboard-shell .border-gold\/30,
+.dashboard-shell .border-gold\/40 {
+  border-color: rgba(201, 162, 39, 0.36);
+}
 .dashboard-shell .text-orange-500,
 .dashboard-shell .text-orange-600 {
   color: #e2ae55;
@@ -316,10 +364,10 @@
 
 @media (min-width: 1024px) {
   .dashboard-shell > aside {
-    order: 2;
+    order: 1;
   }
   .dashboard-shell > div {
-    order: 1;
+    order: 2;
   }
 }
 .dashboard-shell input,
