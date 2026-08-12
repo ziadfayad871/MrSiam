@@ -1,6 +1,6 @@
 import { Menu, Moon, Sun } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useTheme } from '../lib/theme';
 import { Drawer } from '../design-system/ui/Drawer';
@@ -173,9 +173,12 @@ export function SiteFooter() {
 }
 
 export default function SiteLayout({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  const isHome = pathname === '/';
+
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      {!isHome && <SiteHeader />}
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>
