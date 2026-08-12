@@ -722,6 +722,11 @@
 }
 .login-submit:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
 .login-submit:disabled { cursor: wait; opacity: 0.7; }
+.login-caesar-logo,
+.hero-caesar-logo {
+  mix-blend-mode: multiply;
+  filter: contrast(1.3) saturate(1.3);
+}
 
 /* Teacher command center */
 .teacher-command-center .platform-stat,

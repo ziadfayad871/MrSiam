@@ -111,10 +111,10 @@ export default function StudentDashboard() {
             )}
           </div>
         </Card>
-        <div className="student-welcome relative min-h-[230px] overflow-hidden rounded-2xl border border-gold/35 shadow-[0_14px_44px_rgba(0,0,0,.2)]">
-          <img src="/siam-student-dashboard.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-[52%_42%]" />
+        <div className="student-welcome relative min-h-[260px] overflow-hidden rounded-2xl border border-gold/35 shadow-[0_14px_44px_rgba(0,0,0,.2)]">
+          <img src="/siam-student-dashboard.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-contain object-left" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,13,11,.18),rgba(8,13,11,.78)_73%,rgba(8,13,11,.94))]" />
-          <div className="relative flex min-h-[230px] items-center justify-end p-7 text-right sm:p-10">
+          <div className="relative flex min-h-[260px] items-center justify-end p-7 text-right sm:p-10">
             <div className="max-w-md">
               <p className="text-xs font-bold tracking-[.16em] text-gold-bright">منصة القيصر التعليمية</p>
               <h1 className="display-serif mt-3 text-3xl font-extrabold text-white sm:text-4xl">مرحباً بك يا {student.fullName} 👋</h1>

@@ -72,7 +72,9 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,10,8,.75),transparent_45%)]" />
           <div className="absolute inset-y-12 right-10 w-px bg-gradient-to-b from-transparent via-[#c99236]/70 to-transparent" />
           <div className="relative flex h-full max-w-[45%] flex-col justify-center pr-14 text-right">
-            <div className="mb-8 grid h-24 w-24 place-items-center rounded-full border border-[#d8a548]/70 bg-[#19150e]/65 text-5xl font-serif text-[#dca444] shadow-[0_0_35px_rgba(210,148,44,.2)]">ك</div>
+            <div className="mb-8 grid h-28 w-28 place-items-center rounded-full border border-[#d8a548]/70 bg-[#19150e]/75 p-3 shadow-[0_0_35px_rgba(210,148,44,.2)]">
+              <img src="/caesar-logo.jpeg" alt="شعار القيصر" className="login-caesar-logo h-full w-full object-contain" />
+            </div>
             <p className="text-4xl font-extrabold text-[#dca444]">القيصر</p>
             <p className="mt-2 text-lg font-bold text-white">مستر محمد صيام</p>
             <span className="my-7 h-px w-28 bg-[#c99236]/70" />

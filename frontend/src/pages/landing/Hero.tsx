@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { BookOpen, Compass, LogIn, Moon, Sparkles, Sun, UserPlus, Users } from 'lucide-react';
+import { BookOpen, Compass, LogIn, Moon, Sparkles, Sun, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -24,13 +24,9 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-[1600px] flex-col px-4 pb-8 pt-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between" dir="rtl">
-          <button
-            onClick={toggle}
-            className="history-hero-theme grid h-11 w-20 place-items-center rounded-full border border-[#c99b4b]/65 text-[#e5b45a] transition hover:bg-[#d7a54a]/15"
-            aria-label="تبديل الوضع الليلي"
-          >
-            {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
-          </button>
+          <div className="history-hero-theme grid h-14 w-20 place-items-center rounded-full border border-[#c99b4b]/65 bg-[#17120b]/65 p-1.5">
+            <img src="/caesar-logo.jpeg" alt="شعار القيصر" className="hero-caesar-logo h-full w-full object-contain" />
+          </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <button
@@ -40,10 +36,11 @@ export function Hero() {
               <LogIn size={16} /> تسجيل الدخول
             </button>
             <button
-              onClick={() => navigate('/login')}
-              className="flex items-center gap-2 rounded-xl bg-[#d9a74e] px-4 py-2.5 text-sm font-bold text-[#21170c] shadow-[0_8px_25px_rgba(217,167,78,.25)] transition hover:bg-[#efbd63] sm:px-6"
+              onClick={toggle}
+              className="history-hero-theme grid h-11 w-20 place-items-center rounded-full border border-[#c99b4b]/65 text-[#e5b45a] transition hover:bg-[#d7a54a]/15"
+              aria-label="تبديل الوضع الليلي"
             >
-              <UserPlus size={16} /> حساب جديد
+              {theme === 'light' ? <Moon size={19} /> : <Sun size={19} />}
             </button>
           </div>
         </div>
