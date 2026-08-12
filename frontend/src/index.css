@@ -661,6 +661,22 @@
     radial-gradient(circle at 18% 82%, rgba(190, 132, 38, 0.06), transparent 27%),
     linear-gradient(135deg, #080907, #15140f 52%, #0a0b09);
 }
+.login-mobile-portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(180deg, rgba(7, 9, 7, 0.5) 0%, rgba(7, 9, 7, 0.78) 38%, rgba(7, 9, 7, 0.96) 100%),
+    linear-gradient(90deg, rgba(7, 9, 7, 0.58), transparent 80%),
+    url('/siam-platform-portrait.jpeg');
+  background-position: center center;
+  background-size: cover;
+  opacity: 0.62;
+  filter: saturate(0.8) contrast(1.08);
+}
+@media (min-width: 768px) {
+  .login-mobile-portrait { display: none; }
+}
 .login-input {
   width: 100%;
   border: 1px solid rgba(194, 148, 74, 0.42);

@@ -56,17 +56,18 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
   return (
     <main className="login-page min-h-screen bg-[#0b0d0b] p-3 text-[#f8eddb] sm:p-5" dir="rtl">
       <div className="login-ambient" aria-hidden />
+      <div className="login-mobile-portrait" aria-hidden />
       <button onClick={toggle} className="absolute left-6 top-6 z-20 flex overflow-hidden rounded-full border border-[#bd8732]/50 bg-[#161613]/80 p-1 text-[#dfb35f] backdrop-blur" aria-label="تبديل الوضع الليلي">
         <span className={`grid h-9 w-9 place-items-center rounded-full transition ${theme === 'light' ? 'bg-[#c78d32] text-[#17130d]' : ''}`}><Sun size={18} /></span>
         <span className={`grid h-9 w-9 place-items-center rounded-full transition ${theme === 'dark' ? 'bg-[#c78d32] text-[#17130d]' : ''}`}><Moon size={18} /></span>
       </button>
 
-      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1500px] items-stretch gap-7 lg:grid-cols-[1.12fr_.88fr] lg:gap-12">
+      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-[1500px] items-stretch gap-7 md:grid-cols-[1.12fr_.88fr] md:gap-8 lg:gap-12">
         <motion.aside
           initial={{ opacity: 0, x: reduced ? 0 : 25 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.65 }}
-          className="login-showcase relative hidden min-h-[720px] overflow-hidden rounded-[1.6rem] border border-[#ba8433]/55 lg:block"
+          className="login-showcase relative hidden min-h-[720px] overflow-hidden rounded-[1.6rem] border border-[#ba8433]/55 md:block"
         >
-          <img src="/siam-hero-history.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-[42%_center]" />
+          <img src="/siam-platform-portrait.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-[45%_center]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,10,8,.92)_0%,rgba(9,10,8,.38)_47%,rgba(9,10,8,.12)_100%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,10,8,.75),transparent_45%)]" />
           <div className="absolute inset-y-12 right-10 w-px bg-gradient-to-b from-transparent via-[#c99236]/70 to-transparent" />
@@ -84,7 +85,7 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
           </div>
         </motion.aside>
 
-        <section className="relative flex min-h-[calc(100vh-1.5rem)] items-center justify-center py-16 lg:py-8">
+        <section className="relative flex min-h-[calc(100vh-1.5rem)] items-center justify-center py-16 md:py-8">
           <motion.div initial={{ opacity: 0, y: reduced ? 0 : 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6 }} className="w-full max-w-[620px] rounded-[1.6rem] border border-[#b98131]/55 bg-[#151512]/85 px-6 py-10 shadow-[0_24px_80px_rgba(0,0,0,.35)] backdrop-blur-xl sm:px-12 sm:py-14">
             <header className="text-center">
               <div className="flex items-center justify-center gap-3 text-[#d9a247]"><span className="h-px w-10 bg-current/40" /> <span className="text-2xl">♛</span> <span className="h-px w-10 bg-current/40" /></div>
