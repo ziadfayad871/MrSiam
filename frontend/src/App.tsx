@@ -12,7 +12,14 @@ import MistakesPage from './pages/student/MistakesPage';
 import PassportPage from './pages/student/PassportPage';
 import CertificatesPage from './pages/student/CertificatesPage';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import TeacherContentPage from './pages/teacher/TeacherContentPage';
+import TeacherClassPage from './pages/teacher/TeacherClassPage';
+import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
+import TeacherLivePage from './pages/teacher/TeacherLivePage';
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
+import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
+import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
+import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
 import TeacherProfile from './pages/TeacherProfile';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
@@ -139,7 +146,7 @@ export default function App() {
           <RequireTeacher>
             <DashboardLayout>
               <PageTransition>
-                <TeacherDashboard defaultTab="content" />
+                <TeacherContentPage />
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>
@@ -151,7 +158,7 @@ export default function App() {
           <RequireTeacher>
             <DashboardLayout>
               <PageTransition>
-                <TeacherDashboard defaultTab="analytics" />
+                <TeacherAnalyticsPage />
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>
@@ -163,7 +170,19 @@ export default function App() {
           <RequireTeacher>
             <DashboardLayout>
               <PageTransition>
-                <TeacherDashboard defaultTab="live" />
+                <TeacherLivePage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/class"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherClassPage />
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>
@@ -187,7 +206,7 @@ export default function App() {
           <RequireSecretary>
             <DashboardLayout>
               <PageTransition>
-                <SecretaryDashboard defaultTab="students" />
+                <SecretaryStudentsPage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>
@@ -199,7 +218,7 @@ export default function App() {
           <RequireSecretary>
             <DashboardLayout>
               <PageTransition>
-                <SecretaryDashboard defaultTab="billing" />
+                <SecretaryBillingPage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>
@@ -211,7 +230,7 @@ export default function App() {
           <RequireSecretary>
             <DashboardLayout>
               <PageTransition>
-                <SecretaryDashboard defaultTab="analytics" />
+                <SecretaryAnalyticsPage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>

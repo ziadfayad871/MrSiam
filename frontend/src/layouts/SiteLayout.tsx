@@ -24,7 +24,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-border-subtle bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="group flex items-center gap-2.5">
-          <BrandLogo size="sm" imageSrc="/mr-siam-logo.jpeg" />
+          <BrandLogo size="sm" />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -138,7 +138,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
         <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
           <div className="flex items-center gap-2.5">
-            <BrandLogo size="sm" imageSrc="/mr-siam-logo.jpeg" />
+            <BrandLogo size="sm" />
           </div>
 
           <p className="display-serif text-sm font-bold text-gold">

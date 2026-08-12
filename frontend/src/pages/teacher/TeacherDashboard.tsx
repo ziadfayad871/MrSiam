@@ -1,16 +1,11 @@
-import { BarChart3, Bell, BookOpen, CalendarDays, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, MessageCircle, Plus, Radio, Trash2, Upload, Users, Video, XCircle } from 'lucide-react';
+import { Bell, BookOpen, CalendarDays, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, MessageCircle, Plus, Trash2, Upload, Users, Video, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import AnalyticsTab from '../../components/AnalyticsTab';
-import ClassAnalyticsTab from '../../components/teacher/ClassAnalyticsTab';
-import ContentTab from '../../components/teacher/ContentTab';
-import LiveLessonsPanel from '../../components/teacher/LiveLessonsPanel';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Podium } from '../../design-system/components/Podium';
 import { Card } from '../../design-system/ui/Card';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Progress } from '../../design-system/ui/Progress';
-import { Tabs } from '../../design-system/ui/Tabs';
 import { api, resolveFileUrl } from '../../lib/api';
 import type { TeacherDashboardDto, TopStudentDto } from '../../lib/types';
 
@@ -52,11 +47,10 @@ function StatCard({ label, value, unit, icon, trend }: { label: string; value: s
   );
 }
 
-export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }) {
+export default function TeacherDashboard() {
   const [data, setData] = useState<TeacherDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState(defaultTab || 'overview');
 
   const [album, setAlbum] = useState<TopStudentDto[]>([]);
   const [form, setForm] = useState({ fullName: '', stageAr: STAGE_OPTIONS[5], achievement: '', score: '', year: '' });
@@ -158,28 +152,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
         </div>
       </div>
 
-      <Tabs
-        active={tab}
-        onChange={setTab}
-        items={[
-          { key: 'overview', label: 'نظرة عامة' },
-          { key: 'content', label: 'المحتوى', icon: <BookOpen size={15} /> },
-          { key: 'class', label: 'الفصل والإنذارات', icon: <Users size={15} /> },
-          { key: 'analytics', label: 'التحليلات', icon: <BarChart3 size={15} /> },
-          { key: 'live', label: 'البث المباشر', icon: <Radio size={15} /> },
-        ]}
-      />
-
-      {tab === 'content' ? (
-        <ContentTab />
-      ) : tab === 'class' ? (
-        <ClassAnalyticsTab />
-      ) : tab === 'analytics' ? (
-        <AnalyticsTab />
-      ) : tab === 'live' ? (
-        <LiveLessonsPanel />
-      ) : (
-        <>
+      <>
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         {data.stats.map((s) => (
@@ -408,8 +381,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
           <Link to="/teacher/content" className="mt-4 block rounded-lg border border-gold/30 py-2 text-center text-xs font-semibold text-gold hover:bg-gold/10">عرض كل المهام</Link>
         </Card>
       </div>
-        </>
-      )}
+      </>
     </div>
   );
 }

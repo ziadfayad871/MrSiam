@@ -67,6 +67,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         ? [
             { to: '/teacher', label: 'لوحة القيادة', icon: Home },
             { to: '/teacher/content', label: 'المحتوى', icon: FileText },
+            { to: '/teacher/class', label: 'الفصول والتنبيهات', icon: Users },
             { to: '/teacher/analytics', label: 'التحليلات', icon: Award },
             { to: '/teacher/live', label: 'البث المباشر', icon: Users },
             { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
@@ -90,18 +91,19 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <Link
-        to="/"
-        className={`flex items-center justify-between border-b border-border-subtle px-3 py-4 transition-all duration-300 ${
-          collapsed ? 'justify-center' : ''
-        }`}
-        aria-label="الذهاب للرئيسية"
-      >
-        <BrandLogo size={collapsed ? 'sm' : 'md'} imageSrc="/mr-siam-logo.jpeg" />
-        {!collapsed && (
-          <span className="text-xs font-bold text-text-secondary">القيصر الرقمي</span>
-        )}
-      </Link>
+      <div className={`flex items-center border-b border-border-subtle px-3 py-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+        <Link to="/" className="min-w-0" aria-label="الذهاب للرئيسية">
+          <BrandLogo size={collapsed ? 'sm' : 'md'} />
+        </Link>
+        <button
+          onClick={() => onCollapseChange(!collapsed)}
+          className={`grid h-9 w-9 place-items-center rounded-md border border-border-gold/45 text-gold transition hover:bg-gold/10 ${collapsed ? 'hidden' : ''}`}
+          aria-label="طي الشريط الجانبي"
+          aria-expanded={!collapsed}
+        >
+          <ChevronLeft size={18} />
+        </button>
+      </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3 overflow-y-auto" role="navigation" aria-label="القائمة الرئيسية">
         {nav.map((item) => (
@@ -218,16 +220,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         )}
       </div>
 
-      <button
-        onClick={() => onCollapseChange(!collapsed)}
-        className={`absolute -top-10 right-full z-10 hidden h-10 w-10 items-center justify-center rounded-s-lg border border-border-gold/50 bg-surface-elevated shadow-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/50 lg:flex ${
-          collapsed ? 'rotate-180' : ''
-        }`}
-        aria-label={collapsed ? 'توسيع الشريط الجانبي' : 'طي الشريط الجانبي'}
-        aria-expanded={!collapsed}
-      >
-        {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-      </button>
+      {collapsed && <button onClick={() => onCollapseChange(false)} className="absolute -end-11 top-3 z-20 grid h-10 w-10 place-items-center rounded-e-lg border border-border-gold/50 bg-surface-elevated text-gold shadow-lg transition hover:bg-gold/10 lg:grid" aria-label="توسيع الشريط الجانبي" aria-expanded="false"><ChevronRight size={18} /></button>}
     </aside>
   );
 

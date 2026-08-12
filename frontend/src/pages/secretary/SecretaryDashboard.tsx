@@ -1,8 +1,6 @@
 import QRCode from 'qrcode';
-import { AlertTriangle, Banknote, BarChart3, CalendarClock, CheckCircle2, CreditCard, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
-import AnalyticsTab from '../../components/AnalyticsTab';
-import BillingPanel from '../../components/secretary/BillingPanel';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
 import { Card } from '../../design-system/ui/Card';
@@ -10,7 +8,6 @@ import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Button } from '../../design-system/ui/Button';
 import Input from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
-import { Tabs } from '../../design-system/ui/Tabs';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
 import type { CreateStudentResult, SecretaryDashboardDto, StudentCredentialsDto, StudentListItemDto } from '../../lib/types';
@@ -185,7 +182,7 @@ function OverviewTab({ data }: { data: SecretaryDashboardDto }) {
   );
 }
 
-function StudentsTab() {
+export function StudentsTab() {
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -629,11 +626,10 @@ function StudentsTab() {
   );
 }
 
-export default function SecretaryDashboard({ defaultTab }: { defaultTab?: string }) {
+export default function SecretaryDashboard() {
   const [data, setData] = useState<SecretaryDashboardDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState(defaultTab || 'overview');
 
   useEffect(() => {
     api
@@ -653,26 +649,7 @@ export default function SecretaryDashboard({ defaultTab }: { defaultTab?: string
         <p className="mt-1 text-sm text-text-muted">الحضور والاشتراكات وتسجيل الطلبة — كل الورق في مكان واحد.</p>
       </div>
 
-      <Tabs
-        active={tab}
-        onChange={setTab}
-        items={[
-          { key: 'overview', label: 'نظرة عامة' },
-          { key: 'students', label: 'إدارة الطلبة', icon: <Users size={15} /> },
-          { key: 'billing', label: 'الفوترة والاشتراكات', icon: <CreditCard size={15} /> },
-          { key: 'analytics', label: 'التحليلات', icon: <BarChart3 size={15} /> },
-        ]}
-      />
-
-      {tab === 'overview' ? (
-        <OverviewTab data={data} />
-      ) : tab === 'students' ? (
-        <StudentsTab />
-      ) : tab === 'billing' ? (
-        <BillingPanel />
-      ) : (
-        <AnalyticsTab />
-      )}
+      <OverviewTab data={data} />
     </div>
   );
 }
