@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ChevronLeft, ChevronRight, Crown, Medal, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Crown, Medal } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { resolveFileUrl } from '../../lib/api';
 import type { TopStudentDto } from '../../lib/types';
@@ -73,7 +73,7 @@ export function HallOfFame({ entries, loading = false, className = '' }: HallOfF
 
         {/* Album stage */}
         <div className="relative mx-auto max-w-3xl">
-          <div className="relative min-h-[26rem] overflow-hidden rounded-xl border border-gold/30 bg-navy-950/60 sm:min-h-[24rem]">
+          <div className="relative min-h-[29rem] overflow-hidden rounded-2xl border border-gold/35 bg-navy-950/60 shadow-[0_22px_55px_rgba(0,0,0,.25)] sm:min-h-[32rem]">
             {loading ? (
               <div className="flex h-[26rem] flex-col items-center justify-center gap-4">
                 <motion.div
@@ -93,36 +93,30 @@ export function HallOfFame({ entries, loading = false, className = '' }: HallOfF
                     animate={{ opacity: 1, x: 0 }}
                     exit={reduced ? { opacity: 0 } : { opacity: 0, x: direction * -90 }}
                     transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex flex-col items-center gap-6 p-6 sm:flex-row sm:items-stretch sm:gap-8 sm:p-8"
+                    className="absolute inset-0"
                   >
-                    {/* Photo */}
-                    <div className="relative shrink-0">
-                      <div className="absolute -inset-1 rounded-full bg-gold/20 blur-lg" style={{ background: 'radial-gradient(50% 50% at 50% 50%, var(--gold-glow), transparent 70%)' }} />
-                      <div className="relative h-56 w-56 overflow-hidden rounded-full border-4 border-gold/50 shadow-2xl sm:h-64 sm:w-64">
-                        {photoUrl ? (
-                          <img src={photoUrl} alt={entry.fullName} className="h-full w-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-b from-navy-800 to-navy-950">
-                            <Medal size={44} strokeWidth={1.4} className="text-gold-bright/70" />
-                            <span className="text-[11px] text-white/40">الصورة في الطريق</span>
-                          </div>
-                        )}
+                    {photoUrl ? (
+                      <img src={photoUrl} alt="" className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(circle_at_72%_38%,rgba(201,162,39,.25),transparent_22%),linear-gradient(135deg,#18345e,#071321)]">
+                        <Medal size={70} strokeWidth={1.15} className="text-gold/60" />
                       </div>
-                      <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-full border border-gold/40 bg-gold px-4 py-1 text-xs font-black text-navy-deep shadow-lg">
-                        {entry.score != null ? `${Number(entry.score).toFixed(1)}%` : 'الأول'}
-                      </div>
-                    </div>
+                    )}
+                    <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,14,29,.96)_0%,rgba(6,20,38,.76)_43%,rgba(6,20,38,.22)_100%)]" />
+                    <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-navy-950/80 to-transparent" />
 
-                    {/* Info */}
-                    <div className="flex flex-1 flex-col items-center justify-center text-center sm:items-start sm:text-start">
-                      <p className="font-plex text-[9px] uppercase tracking-[0.3em] text-gold-bright" dir="ltr">
+                    <div className="relative z-10 flex h-full max-w-xl flex-col justify-end p-7 text-center sm:p-10 sm:text-right">
+                      <p className="font-plex text-[10px] font-bold uppercase tracking-[0.32em] text-gold-bright" dir="ltr">
                         Top Student {index + 1}
                       </p>
-                      <h3 className="display-serif mt-2 text-2xl font-bold text-white sm:text-3xl">{entry.fullName}</h3>
-                      <p className="mt-1 text-sm text-white/60">{entry.stageAr}{entry.year ? ` · ${entry.year}` : ''}</p>
-                      <span className="mt-4 inline-block rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-semibold text-gold-bright">
-                        ✦ {entry.achievement}
-                      </span>
+                      <h3 className="display-serif mt-3 text-3xl font-bold text-white sm:text-5xl">{entry.fullName}</h3>
+                      <p className="mt-2 text-base font-semibold text-white/75">{entry.stageAr}{entry.year ? ` · ${entry.year}` : ''}</p>
+                      <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                        <span className="rounded-full border border-gold/45 bg-navy-950/45 px-4 py-2 text-xs font-bold text-gold-bright backdrop-blur-sm">✦ {entry.achievement}</span>
+                        <span className="rounded-full bg-gold px-4 py-2 text-xs font-black text-navy-deep shadow-lg">
+                          {entry.score != null ? `${Number(entry.score).toFixed(1)}%` : 'من أوائل الدفعة'}
+                        </span>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -135,14 +129,14 @@ export function HallOfFame({ entries, loading = false, className = '' }: HallOfF
                 <button
                   onClick={() => go(-1)}
                   aria-label="السابق"
-                  className="absolute start-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-gold/40 bg-navy-950/70 p-2.5 text-gold-bright backdrop-blur transition-all hover:bg-gold hover:text-navy-deep"
+                  className="absolute start-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-gold/40 bg-navy-950/70 p-3 text-gold-bright backdrop-blur transition-all hover:bg-gold hover:text-navy-deep"
                 >
                   <ChevronRight size={20} />
                 </button>
                 <button
                   onClick={() => go(1)}
                   aria-label="التالي"
-                  className="absolute end-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-gold/40 bg-navy-950/70 p-2.5 text-gold-bright backdrop-blur transition-all hover:bg-gold hover:text-navy-deep"
+                  className="absolute end-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-gold/40 bg-navy-950/70 p-3 text-gold-bright backdrop-blur transition-all hover:bg-gold hover:text-navy-deep"
                 >
                   <ChevronLeft size={20} />
                 </button>
