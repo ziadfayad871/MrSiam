@@ -79,3 +79,44 @@ public record StudentAnalyticsDto
     public IReadOnlyList<AttemptSummaryDto> Attempts { get; init; } = [];
     public IReadOnlyList<SubjectAnalyticsDto> Subjects { get; init; } = [];
 }
+
+public record ClassStudentRowDto
+{
+    public int StudentId { get; init; }
+    public required string FullName { get; init; }
+    public required string StudentCode { get; init; }
+    public required string StageAr { get; init; }
+    public bool IsActive { get; init; }
+    public int AttemptCount { get; init; }
+    public int ExamsTaken { get; init; }
+    public int PassedExams { get; init; }
+    public decimal AvgPercentage { get; init; }
+    public decimal BestPercentage { get; init; }
+    public decimal PassRate { get; init; }
+    public int LessonsCompleted { get; init; }
+    public decimal AttendanceRate { get; init; }
+    public DateTime? LastActiveAt { get; init; }
+}
+
+public record ClassAnalyticsDto
+{
+    public int TotalStudents { get; init; }
+    public int ActiveStudents { get; init; }
+    public int AttemptCount { get; init; }
+    public decimal AvgPercentage { get; init; }
+    public decimal PassRate { get; init; }
+    public decimal AttendanceRate { get; init; }
+    public IReadOnlyList<ClassStudentRowDto> Students { get; init; } = [];
+}
+
+public record EarlyWarningDto
+{
+    public int StudentId { get; init; }
+    public required string FullName { get; init; }
+    public required string StudentCode { get; init; }
+    public required string StageAr { get; init; }
+    public required string Severity { get; init; }
+    public decimal AvgPercentage { get; init; }
+    public DateTime? LastActiveAt { get; init; }
+    public IReadOnlyList<string> Reasons { get; init; } = [];
+}

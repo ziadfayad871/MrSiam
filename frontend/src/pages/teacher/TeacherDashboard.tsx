@@ -2,6 +2,7 @@ import { BarChart3, BookOpen, CheckCircle2, Compass, FileText, GraduationCap, Im
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnalyticsTab from '../../components/AnalyticsTab';
+import ClassAnalyticsTab from '../../components/teacher/ClassAnalyticsTab';
 import ContentTab from '../../components/teacher/ContentTab';
 import LiveLessonsPanel from '../../components/teacher/LiveLessonsPanel';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
@@ -149,6 +150,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
         items={[
           { key: 'overview', label: 'نظرة عامة' },
           { key: 'content', label: 'المحتوى', icon: <BookOpen size={15} /> },
+          { key: 'class', label: 'الفصل والإنذارات', icon: <Users size={15} /> },
           { key: 'analytics', label: 'التحليلات', icon: <BarChart3 size={15} /> },
           { key: 'live', label: 'البث المباشر', icon: <Radio size={15} /> },
         ]}
@@ -156,6 +158,8 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
 
       {tab === 'content' ? (
         <ContentTab />
+      ) : tab === 'class' ? (
+        <ClassAnalyticsTab />
       ) : tab === 'analytics' ? (
         <AnalyticsTab />
       ) : tab === 'live' ? (

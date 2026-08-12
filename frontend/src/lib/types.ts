@@ -100,6 +100,44 @@ export interface StudentAnalyticsDto {
   subjects: { subject: string; subjectAr: string; attemptCount: number; avgPercentage: number }[];
 }
 
+export interface ClassStudentRowDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stageAr: string;
+  isActive: boolean;
+  attemptCount: number;
+  examsTaken: number;
+  passedExams: number;
+  avgPercentage: number;
+  bestPercentage: number;
+  passRate: number;
+  lessonsCompleted: number;
+  attendanceRate: number;
+  lastActiveAt?: string;
+}
+
+export interface ClassAnalyticsDto {
+  totalStudents: number;
+  activeStudents: number;
+  attemptCount: number;
+  avgPercentage: number;
+  passRate: number;
+  attendanceRate: number;
+  students: ClassStudentRowDto[];
+}
+
+export interface EarlyWarningDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stageAr: string;
+  severity: 'Critical' | 'Warning';
+  avgPercentage: number;
+  lastActiveAt?: string;
+  reasons: string[];
+}
+
 export interface ExamListItemDto {
   id: number;
   courseId: number;

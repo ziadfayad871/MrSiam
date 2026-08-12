@@ -83,9 +83,11 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
 
   const SidebarContent = () => (
     <aside
-      className={`flex flex-col transition-all duration-300 ease-in-out ${
+      className={`${
+        isOpen ? 'max-lg:!flex' : 'max-lg:!hidden'
+      } lg:flex fixed inset-y-0 start-0 z-50 flex-col transition-all duration-300 ease-in-out ${
         collapsed ? 'w-16' : 'w-64'
-      } border-e border-border-subtle bg-surface-elevated/80 backdrop-blur-md lg:flex`}
+      } border-e border-border-subtle bg-surface-elevated/80 backdrop-blur-md lg:relative lg:inset-auto lg:z-auto`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -219,7 +221,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
 
       <button
         onClick={() => onCollapseChange(!collapsed)}
-        className={`absolute -top-10 left-full z-10 flex h-10 w-10 items-center justify-center rounded-e-lg border border-border-subtle bg-surface-elevated shadow-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/50 ${
+        className={`absolute -top-10 left-full z-10 hidden h-10 w-10 items-center justify-center rounded-e-lg border border-border-subtle bg-surface-elevated shadow-lg transition-all duration-300 hover:bg-gold/10 hover:border-gold/50 lg:flex ${
           collapsed ? 'rotate-180' : ''
         }`}
         aria-label={collapsed ? 'توسيع الشريط الجانبي' : 'طي الشريط الجانبي'}
