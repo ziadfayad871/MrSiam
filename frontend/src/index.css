@@ -10,18 +10,18 @@
 
 /* ---------- Raw palette (never used directly in components) ---------- */
 :root {
-  --navy-950: #0a1120;
-  --navy-900: #101b33;
-  --navy-800: #15233f;
-  --navy-700: #1e3a5f;
-  --ocean-600: #2a5c8a;
-  --ocean-500: #3a74a6;
-  --gold-bright: #c9a227;
-  --gold: #b9922e;
-  --gold-deep: #8f7430;
-  --parchment: #f6f0e1;
-  --sand: #e4d8bc;
-  --charcoal: #232a38;
+  --navy-950: #3f0b0d;
+  --navy-900: #5b1010;
+  --navy-800: #76191a;
+  --navy-700: #8d2828;
+  --ocean-600: #7f1d1d;
+  --ocean-500: #9f2929;
+  --gold-bright: #d4ad58;
+  --gold: #c89b3c;
+  --gold-deep: #97702a;
+  --parchment: #faf8f5;
+  --sand: #f2e8d7;
+  --charcoal: #171717;
   --success: #2e7d5b;
   --warning: #c07f1d;
   --error: #b4483a;
@@ -31,37 +31,37 @@
 :root,
 .light {
   --background: var(--parchment);
-  --parchment-soft: #f1ead7;
-  --surface: #fffdf6;
+  --parchment-soft: #f7f0e6;
+  --surface: #ffffff;
   --surface-elevated: #ffffff;
   --surface-sunken: #efe7d2;
 
-  --primary: var(--navy-900);
+  --primary: #5b1010;
   --primary-dark: var(--navy-950);
   --primary-light: var(--navy-800);
-  --accent: var(--ocean-600);
+  --accent: var(--gold);
 
   --gold-accent: var(--gold);
   --gold-bright-accent: var(--gold-bright);
   --gold-muted: var(--gold-deep);
 
-  --text-primary: #1c2740;
-  --text-secondary: #4c5468;
-  --text-muted: #7a7f8f;
+  --text-primary: #171717;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
 
-  --border-subtle: rgba(16, 27, 51, 0.12);
-  --border-soft: rgba(16, 27, 51, 0.2);
-  --border-gold: rgba(185, 146, 46, 0.45);
+  --border-subtle: rgba(91, 16, 16, 0.11);
+  --border-soft: rgba(91, 16, 16, 0.18);
+  --border-gold: rgba(200, 155, 60, 0.52);
 
   --success-soft: rgba(46, 125, 91, 0.1);
   --warning-soft: rgba(192, 127, 29, 0.1);
   --error-soft: rgba(180, 72, 58, 0.1);
 
   --gold-glow: rgba(185, 146, 46, 0.25);
-  --navy-glow: rgba(16, 27, 51, 0.18);
+  --navy-glow: rgba(91, 16, 16, 0.14);
 
-  --map-line: rgba(16, 27, 51, 0.14);
-  --grid-line: rgba(16, 27, 51, 0.07);
+  --map-line: rgba(91, 16, 16, 0.14);
+  --grid-line: rgba(91, 16, 16, 0.06);
 
   --base-shadow-sm: 0 1px 2px rgba(16, 27, 51, 0.06), 0 1px 3px rgba(16, 27, 51, 0.05);
   --base-shadow-md: 0 2px 6px rgba(16, 27, 51, 0.07), 0 6px 18px rgba(16, 27, 51, 0.07);
@@ -73,24 +73,24 @@
 
   /* ---------- Semantic tokens — Dark: Midnight Caesar ---------- */
 .dark {
-  --background: var(--navy-950);
-  --parchment-soft: #151f36;
-  --surface: #101a30;
-  --surface-elevated: #16233c;
-  --surface-sunken: #0c1526;
+  --background: #0f1115;
+  --parchment-soft: #201617;
+  --surface: #17191f;
+  --surface-elevated: #1d2028;
+  --surface-sunken: #12141a;
 
-  --primary: var(--ocean-500);
-  --primary-dark: var(--navy-950);
-  --primary-light: var(--ocean-600);
-  --accent: var(--gold);
+  --primary: #8f2828;
+  --primary-dark: #4a0c0d;
+  --primary-light: #b13a3a;
+  --accent: #d4a94a;
 
-  --gold-accent: #c9a227;
-  --gold-bright-accent: #dfb63c;
+  --gold-accent: #d4a94a;
+  --gold-bright-accent: #e3bd69;
   --gold-muted: #a5822f;
 
-  --text-primary: #e9edf4;
-  --text-secondary: #aab4c6;
-  --text-muted: #67718a;
+  --text-primary: #f4f1ec;
+  --text-secondary: #c4c0bd;
+  --text-muted: #9a9694;
 
   --border-subtle: rgba(201, 162, 39, 0.14);
   --border-soft: rgba(201, 162, 39, 0.24);
@@ -218,10 +218,11 @@
 /* ---------- Al-Qaesar platform shell ---------- */
 .dashboard-shell {
   position: relative;
+  direction: rtl;
   background:
-    radial-gradient(circle at 82% 8%, rgba(201, 162, 39, 0.09), transparent 24rem),
-    radial-gradient(circle at 25% 80%, rgba(31, 83, 125, 0.13), transparent 30rem),
-    linear-gradient(135deg, #07111d 0%, #091827 48%, #06101a 100%);
+    radial-gradient(circle at 82% 8%, rgba(200, 155, 60, 0.12), transparent 24rem),
+    radial-gradient(circle at 25% 80%, rgba(91, 16, 16, 0.08), transparent 30rem),
+    linear-gradient(135deg, #fff 0%, #faf8f5 48%, #f7f0e6 100%);
 }
 .dashboard-shell::after {
   content: "";
@@ -264,7 +265,7 @@
 }
 .dashboard-shell .bg-surface,
 .dashboard-shell .bg-surface-elevated {
-  background-color: rgba(13, 29, 44, 0.9);
+  background-color: rgba(255, 255, 255, 0.93);
 }
 .dashboard-shell .rounded-md.border,
 .dashboard-shell .rounded-lg.border,
@@ -278,8 +279,8 @@
 }
 .dashboard-shell .bg-parchment-soft {
   background:
-    radial-gradient(circle at 85% 10%, rgba(201, 162, 39, 0.18), transparent 18rem),
-    linear-gradient(135deg, rgba(17, 37, 55, 0.96), rgba(7, 20, 32, 0.97));
+    radial-gradient(circle at 85% 10%, rgba(200, 155, 60, 0.15), transparent 18rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 240, 230, 0.98));
 }
 .platform-stat::after {
   content: "";
@@ -364,10 +365,11 @@
 
 @media (min-width: 1024px) {
   .dashboard-shell > aside {
-    order: 1;
+    order: initial;
+    flex: 0 0 auto;
   }
   .dashboard-shell > div {
-    order: 2;
+    order: initial;
   }
 }
 .dashboard-shell input,

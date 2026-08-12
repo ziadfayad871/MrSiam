@@ -8,7 +8,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
-    <div className="dashboard-shell flex min-h-screen" dir="rtl">
+    <div className="dashboard-shell flex min-h-screen flex-row-reverse" dir="rtl">
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen((o) => !o)}

@@ -87,7 +87,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         isOpen ? 'max-lg:!flex' : 'max-lg:!hidden'
       } lg:flex fixed inset-y-0 start-0 z-50 flex-col transition-all duration-300 ease-in-out ${
         collapsed ? 'w-16' : 'w-64'
-      } border-s border-border-gold/55 bg-[#091522]/95 shadow-[0_16px_45px_rgba(0,0,0,.26)] backdrop-blur-xl lg:relative lg:inset-auto lg:z-auto lg:my-3 lg:me-3 lg:rounded-2xl lg:border`}
+      } border-s border-border-gold/55 ${theme === 'dark' ? 'bg-[#17191f]/95' : 'bg-surface-elevated/95'} shadow-[0_16px_45px_rgba(64,20,14,.14)] backdrop-blur-xl lg:relative lg:inset-auto lg:z-auto lg:my-3 lg:me-3 lg:rounded-2xl lg:border`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
