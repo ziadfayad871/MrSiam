@@ -93,7 +93,37 @@ export default function StudentDashboard() {
   const { student, xp, streak, stats } = data;
 
   return (
-    <div className="platform-dashboard flex flex-col gap-5 p-2 sm:p-4">
+    <div className="student-command-center platform-dashboard flex flex-col gap-5 p-2 sm:p-4">
+      <div className="grid gap-5 xl:grid-cols-[.58fr_1.42fr]">
+        <Card className="student-continue-card relative overflow-hidden">
+          <div className="relative">
+            <p className="text-lg font-extrabold text-text-primary">استكمال التعلم</p>
+            {data.continueWatching ? (
+              <>
+                <p className="mt-4 text-sm font-bold text-gold">{data.continueWatching.courseTitle}</p>
+                <p className="mt-1 truncate text-xs text-text-secondary">{data.continueWatching.lessonTitle}</p>
+                <Progress value={data.continueWatching.percent} className="mt-5" />
+                <div className="mt-2 flex justify-between text-xs"><span className="font-bold text-gold">{data.continueWatching.percent}%</span><span className="text-text-muted">{formatDuration(data.continueWatching.positionSeconds)}</span></div>
+                <Link to={`/courses/${data.continueWatching.courseId}`} className="mt-5 flex items-center justify-center gap-2 rounded-lg border border-gold/45 px-3 py-2 text-xs font-bold text-gold transition hover:bg-gold/10"><Play size={15} /> متابعة الدرس</Link>
+              </>
+            ) : (
+              <div className="mt-8 text-center"><Play className="mx-auto text-gold" size={30} /><p className="mt-3 text-sm text-text-muted">ابدأ أول درس في رحلتك</p><Link to="/courses" className="mt-4 inline-flex rounded-lg bg-gold px-4 py-2 text-xs font-bold text-navy-deep">تصفح الدروس</Link></div>
+            )}
+          </div>
+        </Card>
+        <div className="student-welcome relative min-h-[230px] overflow-hidden rounded-2xl border border-gold/35 shadow-[0_14px_44px_rgba(0,0,0,.2)]">
+          <img src="/siam-hero-history.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-[42%_43%]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,13,11,.18),rgba(8,13,11,.78)_73%,rgba(8,13,11,.94))]" />
+          <div className="relative flex min-h-[230px] items-center justify-end p-7 text-right sm:p-10">
+            <div className="max-w-md">
+              <p className="text-xs font-bold tracking-[.16em] text-gold-bright">منصة القيصر التعليمية</p>
+              <h1 className="display-serif mt-3 text-3xl font-extrabold text-white sm:text-4xl">مرحباً بك يا {student.fullName} 👋</h1>
+              <p className="mt-3 text-sm leading-7 text-white/75">استمر في التعلّم، المستقبل يصنع الآن.</p>
+              <div className="mt-5 flex flex-wrap justify-end gap-2"><span className="rounded-lg border border-gold/40 bg-navy-deep/55 px-3 py-2 text-xs font-bold text-gold-bright">{student.stageAr}</span><span className="rounded-lg border border-white/15 bg-black/20 px-3 py-2 text-xs font-bold text-white/75">{xp.total} نقطة خبرة</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Hero: greeting + XP compass + streak + rank */}
       <div className="platform-dashboard-hero relative overflow-hidden rounded-2xl border border-gold/35 bg-parchment-soft p-6 shadow-soft">
         <CoordinateLabel
