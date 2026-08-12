@@ -25,7 +25,7 @@ export function Card({ variant = 'plain', children, className = '', onClick, hov
   return (
     <div
       onClick={onClick}
-      className={`relative overflow-hidden rounded-lg border border-border-subtle bg-surface p-5 shadow-sm transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-xl border border-border-gold/55 bg-surface/90 p-5 shadow-sm backdrop-blur-sm transition-all duration-300 ${
         hoverable
           ? 'hover:-translate-y-1.5 hover:border-gold/50 hover:shadow-md'
           : ''
