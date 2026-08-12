@@ -73,7 +73,7 @@ export function HallOfFame({ entries, loading = false, className = '' }: HallOfF
 
         {/* Album stage */}
         <div className="relative mx-auto max-w-3xl">
-          <div className="relative min-h-[29rem] overflow-hidden rounded-2xl border border-gold/35 bg-navy-950/60 shadow-[0_22px_55px_rgba(0,0,0,.25)] sm:min-h-[32rem]">
+          <div className="group relative min-h-[29rem] overflow-hidden rounded-2xl border border-gold/35 bg-navy-950/60 shadow-[0_22px_55px_rgba(0,0,0,.25)] sm:min-h-[32rem]">
             {loading ? (
               <div className="flex h-[26rem] flex-col items-center justify-center gap-4">
                 <motion.div
@@ -102,10 +102,9 @@ export function HallOfFame({ entries, loading = false, className = '' }: HallOfF
                         <Medal size={70} strokeWidth={1.15} className="text-gold/60" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,14,29,.96)_0%,rgba(6,20,38,.76)_43%,rgba(6,20,38,.22)_100%)]" />
-                    <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-navy-950/80 to-transparent" />
+                    <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(4,14,29,.78)_0%,rgba(4,14,29,.38)_35%,rgba(4,14,29,.06)_72%)] transition-opacity duration-500 group-hover:opacity-15" />
 
-                    <div className="relative z-10 flex h-full max-w-xl flex-col justify-end p-7 text-center sm:p-10 sm:text-right">
+                    <div className="relative z-10 flex h-full max-w-xl flex-col justify-end p-7 text-center sm:p-10 sm:text-right [text-shadow:0_2px_12px_rgba(0,0,0,.85)]">
                       <p className="font-plex text-[10px] font-bold uppercase tracking-[0.32em] text-gold-bright" dir="ltr">
                         Top Student {index + 1}
                       </p>
