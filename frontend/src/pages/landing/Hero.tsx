@@ -100,12 +100,10 @@ export function Hero() {
           </motion.div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-x-7 gap-y-2 rounded-2xl border border-[#c99b4b]/20 bg-black/25 px-5 py-3 text-sm font-semibold text-[#f4e5cb]/85 backdrop-blur-sm lg:justify-end" dir="rtl">
-          <span>تاريخ يحيي الماضي</span>
-          <span className="text-[#d9a74e]">✦</span>
-          <span>جغرافيا تفسر الحاضر</span>
-          <span className="text-[#d9a74e]">✦</span>
-          <span>فهم يصنع المستقبل</span>
+        <div className="rounded-2xl border border-[#c99b4b]/20 bg-black/25 px-5 py-3 text-center backdrop-blur-sm lg:text-right" dir="rtl">
+          <p className="text-sm font-bold leading-7 text-[#f4e5cb]/90 sm:text-base">
+            هدفي أصنع طالب واثق من نفسه، مؤمن بإمكانياته، وشخص ناجح في حياته.
+          </p>
         </div>
       </div>
     </section>

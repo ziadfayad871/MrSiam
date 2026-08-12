@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from 'react';
+import { useAuth } from '../lib/auth';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 
 export function DashboardLayout({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   // The reference UI uses a compact icon rail; users can expand it from the gold toggle.
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(() => user?.role !== 'Teacher');
 
   return (
     <div className="dashboard-shell flex min-h-screen flex-row-reverse" dir="rtl">

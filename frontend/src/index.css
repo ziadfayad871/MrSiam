@@ -645,6 +645,84 @@
 .landing-stage-card {
   box-shadow: 0 10px 28px rgba(11, 30, 54, 0.07);
 }
+
+/* Student login — Caesar dark gold portal */
+.login-page {
+  position: relative;
+  isolation: isolate;
+  font-family: var(--font-plex), sans-serif;
+}
+.login-ambient {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 77% 42%, rgba(190, 132, 38, 0.09), transparent 23%),
+    radial-gradient(circle at 18% 82%, rgba(190, 132, 38, 0.06), transparent 27%),
+    linear-gradient(135deg, #080907, #15140f 52%, #0a0b09);
+}
+.login-input {
+  width: 100%;
+  border: 1px solid rgba(194, 148, 74, 0.42);
+  border-radius: 0.85rem;
+  background: rgba(8, 9, 7, 0.55);
+  padding: 0.95rem 1rem;
+  color: #f7ead7;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+.login-input::placeholder { color: rgba(221, 199, 162, 0.42); }
+.login-input:focus {
+  border-color: #dca444;
+  background: rgba(8, 9, 7, 0.82);
+  box-shadow: 0 0 0 3px rgba(220, 164, 68, 0.12);
+}
+.login-check {
+  appearance: none;
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-content: center;
+  border: 1px solid rgba(194, 148, 74, 0.58);
+  border-radius: 0.32rem;
+  background: rgba(8, 9, 7, 0.65);
+}
+.login-check:checked::after { content: "✓"; color: #17130d; font-size: 0.85rem; font-weight: 900; }
+.login-check:checked { border-color: #dca444; background: #dca444; }
+.login-submit {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(105deg, #bd7c20, #e4af4d, #bf7e21);
+  padding: 1rem;
+  color: #17130d;
+  font-size: 1.1rem;
+  font-weight: 900;
+  box-shadow: 0 10px 28px rgba(190, 126, 33, 0.18);
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.login-submit:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); }
+.login-submit:disabled { cursor: wait; opacity: 0.7; }
+
+/* Teacher command center */
+.teacher-command-center .platform-stat,
+.teacher-command-center > div > .rounded-lg {
+  border-color: rgba(201, 162, 39, 0.27);
+}
+.teacher-command-center .platform-stat {
+  min-height: 126px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(201, 162, 39, 0.1), transparent 40%),
+    var(--surface-color, rgba(13, 29, 44, 0.92));
+}
+.teacher-command-center .platform-stat:hover {
+  border-color: rgba(201, 162, 39, 0.6);
+  transform: translateY(-2px);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
 .dark .landing-stage-card {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
 }

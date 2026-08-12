@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, Radio, Trash2, Upload, Users, XCircle } from 'lucide-react';
+import { BarChart3, Bell, BookOpen, CalendarDays, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, MessageCircle, Plus, Radio, Trash2, Upload, Users, Video, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AnalyticsTab from '../../components/AnalyticsTab';
@@ -10,7 +10,6 @@ import { Podium } from '../../design-system/components/Podium';
 import { Card } from '../../design-system/ui/Card';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Progress } from '../../design-system/ui/Progress';
-import { Stat } from '../../design-system/ui/Stat';
 import { Tabs } from '../../design-system/ui/Tabs';
 import { api, resolveFileUrl } from '../../lib/api';
 import type { TeacherDashboardDto, TopStudentDto } from '../../lib/types';
@@ -138,10 +137,25 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
   const maxAttempts = Math.max(...data.performanceTrend.map((p) => p.attempts), 1);
 
   return (
-    <div className="flex flex-col gap-6 p-4 sm:p-6">
-      <div>
-        <h1 className="display-serif text-2xl font-bold text-text-primary">غرفة قيادة الرحلة</h1>
-        <p className="mt-1 text-sm text-text-muted">ملخص أداء طلابك عبر المحطات — بمنظور مدرّس القافلة.</p>
+    <div className="teacher-command-center flex flex-col gap-5 p-1 sm:p-2">
+      <div className="teacher-welcome relative overflow-hidden rounded-2xl border border-border-gold/40 bg-[#101411] text-white shadow-[0_14px_44px_rgba(0,0,0,.2)]">
+        <img src="/siam-hero-history.jpeg" alt="مستر محمد صيام" className="absolute inset-0 h-full w-full object-cover object-[45%_43%] opacity-75" />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(9,14,11,.9)_0%,rgba(9,14,11,.68)_42%,rgba(9,14,11,.12)_100%)]" />
+        <div className="relative flex min-h-[205px] items-center justify-between gap-5 px-6 py-7 sm:px-9">
+          <div className="max-w-xl">
+            <p className="text-xs font-bold tracking-[.18em] text-[#e1ab4c]">لوحة قيادة القيصر</p>
+            <h1 className="display-serif mt-3 text-3xl font-extrabold sm:text-4xl">مرحباً بك في منصتك التعليمية</h1>
+            <p className="mt-3 text-sm leading-7 text-white/75 sm:text-base">تابع إنجازات طلابك، دروسك، وتفاعلهم من مكان واحد.</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link to="/teacher/live" className="inline-flex items-center gap-2 rounded-lg bg-gold px-4 py-2 text-sm font-bold text-navy-deep transition hover:bg-gold-bright"><Video size={16} /> بدء بث مباشر</Link>
+              <Link to="/teacher/content" className="inline-flex items-center gap-2 rounded-lg border border-gold/45 bg-black/20 px-4 py-2 text-sm font-bold text-gold-bright transition hover:bg-gold/15"><Plus size={16} /> إضافة محتوى</Link>
+            </div>
+          </div>
+          <div className="hidden rounded-xl border border-gold/30 bg-navy-deep/65 px-5 py-4 text-center backdrop-blur md:block">
+            <CalendarDays className="mx-auto text-gold" size={23} />
+            <p className="mt-2 text-xs text-white/60">أقرب متابعة</p><p className="mt-1 font-bold text-gold-bright">اليوم · ٨:٠٠ م</p>
+          </div>
+        </div>
       </div>
 
       <Tabs
@@ -180,10 +194,10 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 xl:grid-cols-[1.05fr_.85fr_.85fr]">
         {/* Trend */}
-        <Card className="lg:col-span-2">
-          <h2 className="mb-5 text-lg font-bold text-text-primary">منحنى الأداء الشهري</h2>
+        <Card>
+          <div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-bold text-text-primary">إحصائيات المشاهدات</h2><span className="rounded-lg border border-gold/25 bg-gold/5 px-2 py-1 text-[10px] font-bold text-gold">آخر ٣٠ يوم</span></div>
           <div className="flex h-48 items-end gap-2 sm:gap-4">
             {data.performanceTrend.map((p) => (
               <div key={p.period} className="group flex flex-1 flex-col items-center gap-2">
@@ -209,6 +223,19 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
         <Card>
           <h2 className="mb-4 text-lg font-bold text-text-primary">أوائل الرحلة</h2>
           <Podium entries={data.podium.map((p) => ({ rank: p.rank, name: p.fullName, score: p.average, stage: p.stageAr }))} />
+        </Card>
+        <Card>
+          <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-bold text-text-primary">آخر التفاعل</h2><MessageCircle size={18} className="text-gold" /></div>
+          <div className="space-y-3">
+            {data.recentAttempts.slice(0, 3).map((item) => (
+              <div key={item.id} className="rounded-xl border border-border-soft bg-surface-sunken/45 p-3">
+                <div className="flex items-center justify-between gap-2"><p className="truncate text-sm font-bold text-text-primary">{item.studentName}</p><Bell size={14} className="shrink-0 text-gold" /></div>
+                <p className="mt-1 truncate text-xs text-text-muted">أنهى اختبار: {item.examTitle}</p>
+                <p className="mt-1 text-[11px] font-bold text-gold">النتيجة {item.percentage}%</p>
+              </div>
+            ))}
+          </div>
+          <Link to="/teacher/analytics" className="mt-4 block rounded-lg border border-gold/30 py-2 text-center text-xs font-bold text-gold transition hover:bg-gold/10">عرض كل التفاعل</Link>
         </Card>
       </div>
 
@@ -340,10 +367,10 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
         </div>
       </Card>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
         {/* Course performance */}
-        <Card className="lg:col-span-2">
-          <h2 className="mb-5 text-lg font-bold text-text-primary">أداء المواد</h2>
+        <Card>
+          <div className="mb-5 flex items-center justify-between"><h2 className="text-lg font-bold text-text-primary">الدورات الخاصة بك</h2><Link to="/teacher/content" className="text-xs font-bold text-gold hover:underline">عرض جميع الدورات</Link></div>
           <div className="flex flex-col gap-4">
             {data.coursePerformance.map((c) => (
               <div key={c.courseId} className="rounded-md border border-border-soft p-3">
@@ -363,7 +390,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
 
         {/* Recent attempts */}
         <Card>
-          <h2 className="mb-4 text-lg font-bold text-text-primary">آخر المحاولات</h2>
+          <div className="mb-4 flex items-center justify-between"><h2 className="text-lg font-bold text-text-primary">المهام القادمة</h2><CalendarDays size={18} className="text-gold" /></div>
           <div className="flex flex-col gap-2">
             {data.recentAttempts.map((a) => (
               <div key={a.id} className="flex items-center justify-between rounded-md border border-border-soft px-3 py-2">
@@ -378,9 +405,7 @@ export default function TeacherDashboard({ defaultTab }: { defaultTab?: string }
               </div>
             ))}
           </div>
-          <Link to="/courses" className="mt-4 block text-center text-xs font-semibold text-gold hover:underline">
-            إدارة الامتحانات والمواد
-          </Link>
+          <Link to="/teacher/content" className="mt-4 block rounded-lg border border-gold/30 py-2 text-center text-xs font-semibold text-gold hover:bg-gold/10">عرض كل المهام</Link>
         </Card>
       </div>
         </>
