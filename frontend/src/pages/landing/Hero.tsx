@@ -48,12 +48,12 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end py-12 lg:py-8" dir="rtl">
+        <div className="flex flex-1 items-center justify-start py-12 lg:py-8" dir="rtl">
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
-            className="history-hero-copy w-full max-w-xl text-center lg:me-[3%] lg:text-right"
+            className="history-hero-copy w-full max-w-xl text-center lg:me-[8%] lg:text-right"
           >
             <div className="mb-5 flex items-center justify-center gap-3 text-[#e2ae55] lg:justify-start">
               <Compass className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={1.3} />
@@ -85,15 +85,15 @@ export function Hero() {
 
             <div className="mt-10 grid grid-cols-3 divide-x divide-x-reverse divide-[#d6a54d]/35 border-y border-[#d6a54d]/30 py-5 text-center lg:text-right">
               <div className="px-2">
-                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.studentsCount ?? '50K'}+</p>
+                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.studentsCount || '50K'}+</p>
                 <p className="mt-1 text-xs font-semibold text-[#f4e5cb]/75 sm:text-sm">طالب وثقوا بنا</p>
               </div>
               <div className="px-2">
-                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.coursesCount ?? '1000'}+</p>
+                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.coursesCount || '1000'}+</p>
                 <p className="mt-1 text-xs font-semibold text-[#f4e5cb]/75 sm:text-sm">درس ومراجعة</p>
               </div>
               <div className="px-2">
-                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.successRate ?? 98}%</p>
+                <p className="text-2xl font-extrabold text-[#e6af54] sm:text-3xl">{stats?.successRate || 98}%</p>
                 <p className="mt-1 text-xs font-semibold text-[#f4e5cb]/75 sm:text-sm">نسبة رضا الطلاب</p>
               </div>
             </div>
