@@ -20,6 +20,7 @@ public interface IApplicationDbContext
     DbSet<Payment> Payments { get; }
     DbSet<AttendanceRecord> AttendanceRecords { get; }
     DbSet<TopStudent> TopStudents { get; }
+    DbSet<StudentTestimonial> StudentTestimonials { get; }
     DbSet<Assignment> Assignments { get; }
     DbSet<StudentNote> StudentNotes { get; }
     DbSet<Bookmark> Bookmarks { get; }

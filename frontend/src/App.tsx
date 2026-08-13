@@ -16,6 +16,7 @@ import TeacherContentPage from './pages/teacher/TeacherContentPage';
 import TeacherClassPage from './pages/teacher/TeacherClassPage';
 import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
 import TeacherLivePage from './pages/teacher/TeacherLivePage';
+import TeacherTestimonialsPage from './pages/teacher/TeacherTestimonialsPage';
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
@@ -180,6 +181,7 @@ export default function App() {
           </RequireTeacher>
         }
       />
+      <Route path="/teacher/testimonials" element={<RequireTeacher><DashboardLayout><PageTransition><TeacherTestimonialsPage /></PageTransition></DashboardLayout></RequireTeacher>} />
       <Route
         path="/teacher/class"
         element={

@@ -108,6 +108,9 @@ try
         FileProvider = new PhysicalFileProvider(uploadsDir),
         RequestPath = "/uploads/top-students"
     });
+    var testimonialUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "testimonials");
+    Directory.CreateDirectory(testimonialUploadsDir);
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(testimonialUploadsDir), RequestPath = "/uploads/testimonials" });
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

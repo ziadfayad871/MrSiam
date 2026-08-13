@@ -559,6 +559,14 @@ export interface TopStudentDto {
   createdAt: string;
 }
 
+export interface StudentTestimonialDto {
+  id: number;
+  fullName: string;
+  quote: string;
+  stageAr?: string;
+  photoUrl?: string;
+}
+
 export interface StudySummaryResultDto {
   title: string;
   bullets: string[];

@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
     public DbSet<TopStudent> TopStudents => Set<TopStudent>();
+    public DbSet<StudentTestimonial> StudentTestimonials => Set<StudentTestimonial>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
     public DbSet<StudentNote> StudentNotes => Set<StudentNote>();
     public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
@@ -134,6 +135,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(t => t.StageAr).HasMaxLength(40);
             e.Property(t => t.Achievement).HasMaxLength(120);
             e.Property(t => t.Year).HasMaxLength(16);
+            e.Property(t => t.PhotoUrl).HasMaxLength(300);
+        });
+        builder.Entity<StudentTestimonial>(e =>
+        {
+            e.Property(t => t.FullName).HasMaxLength(120);
+            e.Property(t => t.Quote).HasMaxLength(1000);
+            e.Property(t => t.StageAr).HasMaxLength(60);
             e.Property(t => t.PhotoUrl).HasMaxLength(300);
         });
 

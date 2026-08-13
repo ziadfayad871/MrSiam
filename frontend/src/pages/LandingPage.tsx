@@ -18,9 +18,10 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HallOfFame } from '../design-system/components/HallOfFame';
+import { StudentTestimonials } from '../design-system/components/StudentTestimonials';
 import { Reveal } from '../design-system/motion/Reveal';
 import { api } from '../lib/api';
-import type { TopStudentDto } from '../lib/types';
+import type { StudentTestimonialDto, TopStudentDto } from '../lib/types';
 import Hero from './landing/Hero';
 
 const stages = [
@@ -70,6 +71,7 @@ const platformFeatures = [
 export default function LandingPage() {
   const [topStudents, setTopStudents] = useState<TopStudentDto[]>([]);
   const [albumLoading, setAlbumLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<StudentTestimonialDto[]>([]);
 
   useEffect(() => {
     api
@@ -77,6 +79,7 @@ export default function LandingPage() {
       .then(setTopStudents)
       .catch(() => setTopStudents([]))
       .finally(() => setAlbumLoading(false));
+    api.get<StudentTestimonialDto[]>('/testimonials').then(setTestimonials).catch(() => setTestimonials([]));
   }, []);
 
   return (
@@ -201,6 +204,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <StudentTestimonials entries={testimonials} />
 
       <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:pb-28">
         <Reveal>
