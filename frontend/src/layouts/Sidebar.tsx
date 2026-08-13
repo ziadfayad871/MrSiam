@@ -28,7 +28,7 @@ import { useTheme } from '../lib/theme';
 import { Avatar } from '../design-system/ui/Avatar';
 import { Button } from '../design-system/ui/Button';
 import { BrandLogo } from '../design-system/components/BrandLogo';
-import { ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { usePrefersReducedMotion } from '../design-system/motion/hooks';
 
@@ -104,18 +104,40 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className={`flex items-center border-b border-border-subtle px-3 py-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-        <Link to="/" className="min-w-0" aria-label="الذهاب للرئيسية">
-          <BrandLogo size={collapsed ? 'sm' : 'md'} />
-        </Link>
-        <button
-          onClick={() => onCollapseChange(!collapsed)}
-          className={`grid h-9 w-9 place-items-center rounded-md border border-border-gold/45 text-gold transition hover:bg-gold/10 ${collapsed ? 'hidden' : ''}`}
-          aria-label="طي الشريط الجانبي"
-          aria-expanded={!collapsed}
-        >
-          <ChevronLeft size={18} />
-        </button>
+      <div className={`flex items-center border-b border-border-subtle px-3 py-3 ${collapsed ? 'flex-col gap-2.5 justify-center' : 'justify-between'}`}>
+        {collapsed ? (
+          <>
+            <Link to="/" className="grid shrink-0 place-items-center" aria-label="الذهاب للرئيسية">
+              <img src="/caesar-logo.webp" alt="شعار القيصر" className="h-9 w-9 rounded-full border border-gold/40 bg-black object-contain" draggable={false} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => onCollapseChange(false)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border-gold/55 bg-gold/10 text-gold shadow-sm transition hover:bg-gold/25 active:scale-95"
+              aria-label="توسيع الشريط الجانبي"
+              aria-expanded="false"
+              title="توسيع الشريط الجانبي"
+            >
+              <PanelLeftOpen size={17} strokeWidth={1.9} />
+            </button>
+          </>
+        ) : (
+          <>
+            <Link to="/" className="min-w-0" aria-label="الذهاب للرئيسية">
+              <BrandLogo size="md" />
+            </Link>
+            <button
+              type="button"
+              onClick={() => onCollapseChange(true)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border-gold/55 text-gold shadow-sm transition hover:bg-gold/10 active:scale-95"
+              aria-label="طي الشريط الجانبي"
+              aria-expanded="true"
+              title="طي الشريط الجانبي"
+            >
+              <PanelLeftClose size={17} strokeWidth={1.9} />
+            </button>
+          </>
+        )}
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3 overflow-y-auto" role="navigation" aria-label="القائمة الرئيسية">
@@ -235,8 +257,6 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
           </div>
         )}
       </div>
-
-      {collapsed && <button onClick={() => onCollapseChange(false)} className="absolute -end-11 top-3 z-20 grid h-10 w-10 place-items-center rounded-e-lg border border-border-gold/50 bg-surface-elevated text-gold shadow-lg transition hover:bg-gold/10 lg:grid" aria-label="توسيع الشريط الجانبي" aria-expanded="false"><ChevronRight size={18} /></button>}
     </aside>
   );
 
