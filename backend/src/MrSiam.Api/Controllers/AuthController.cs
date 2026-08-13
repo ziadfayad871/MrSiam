@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MrSiam.Application.Features.Auth;
 
@@ -11,6 +12,14 @@ public class AuthController(MediatR.IMediator mediator) : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginCommand command)
     {
         var result = await mediator.Send(command);
+        return result.Success ? Ok(result) : Unauthorized(result);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> Me(CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetCurrentUserQuery(), ct);
         return result.Success ? Ok(result) : Unauthorized(result);
     }
 }

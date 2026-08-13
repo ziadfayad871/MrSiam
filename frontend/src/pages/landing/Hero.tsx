@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
 import type { TeacherProfileDto } from '../../lib/types';
 import { useTheme } from '../../lib/theme';
+import { Typewriter } from '../../design-system/components/Typewriter';
 
 export function Hero() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export function Hero() {
             </div>
 
             <h1 className="history-hero-title text-4xl font-extrabold leading-[1.22] text-[#fff8e9] sm:text-5xl xl:text-6xl">
-              رحلة التفوق <span className="block text-[#e6af54]">تبدأ من هنا</span>
+              <Typewriter phrases={['رحلة التفوق تبدأ من هنا']} className="block min-h-[1.22em]" />
             </h1>
             <p className="mt-5 text-base leading-8 text-[#f1e1c5]/88 sm:text-lg">
               شرح مبسّط وممتع للدراسات الاجتماعية، التاريخ والجغرافيا لطلاب المرحلة الإعدادية والثانوية مع مستر محمد صيام.
@@ -97,7 +98,10 @@ export function Hero() {
 
         <div className="rounded-2xl border border-[#c99b4b]/20 bg-black/25 px-5 py-3 text-center backdrop-blur-sm lg:text-right" dir="rtl">
           <p className="text-sm font-bold leading-7 text-[#f4e5cb]/90 sm:text-base">
-            هدفي أصنع طالب واثق من نفسه، مؤمن بإمكانياته، وشخص ناجح في حياته.
+            <Typewriter
+              phrases={['هدفي أصنع طالب واثق من نفسه، مؤمن بإمكانياته، وشخص ناجح في حياته.']}
+              className="block min-h-[1.22em]"
+            />
           </p>
         </div>
       </div>

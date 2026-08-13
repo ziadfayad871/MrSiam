@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Menu, Moon, Sun } from 'lucide-react';
+import { Facebook, Instagram, Menu, MessageCircle, Moon, Sun } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
@@ -6,6 +6,7 @@ import { useTheme } from '../lib/theme';
 import { Drawer } from '../design-system/ui/Drawer';
 import { Button } from '../design-system/ui/Button';
 import { BrandLogo } from '../design-system/components/BrandLogo';
+import { Typewriter } from '../design-system/components/Typewriter';
 
 const NAV = [
   { to: '/', label: 'الرئيسية' },
@@ -69,9 +70,6 @@ export function SiteHeader() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/staff-login')}>
-                بوابة المستر
-              </Button>
               <Button variant="gold" size="sm" onClick={() => navigate('/login')}>
                 دخول الطلاب
               </Button>
@@ -120,9 +118,6 @@ export function SiteHeader() {
                 <Button variant="gold" className="w-full" onClick={() => { setMenuOpen(false); navigate('/login'); }}>
                   دخول الطلاب
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => { setMenuOpen(false); navigate('/staff-login'); }}>
-                  بوابة المستر
-                </Button>
               </div>
             )}
           </div>
@@ -155,9 +150,6 @@ export function SiteFooter() {
             <Link to="/login" className="transition-colors hover:text-gold">
               دخول الطلاب
             </Link>
-            <Link to="/staff-login" className="transition-colors hover:text-gold">
-              بوابة المستر
-            </Link>
           </div>
 
           <div className="flex items-center gap-2" aria-label="حسابات التواصل الاجتماعي">
@@ -175,6 +167,23 @@ export function SiteFooter() {
             31°15′N / 32°18′E
           </span>
           <span>© {new Date().getFullYear()} مستر محمد صيام — القيصر الرقمي للتعليم</span>
+        </div>
+
+        <div className="mt-7 flex justify-center">
+          <a
+            href="https://wa.me/201206539610"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="تواصل مع المطور — واتساب"
+            className="group relative inline-flex items-center gap-3 overflow-hidden rounded-2xl border border-gold/40 bg-gradient-to-b from-[#0d1522] to-[#111b2e] px-7 py-3.5 shadow-[0_8px_30px_rgba(212,164,68,.18)] transition-all duration-300 hover:border-gold/90 hover:shadow-[0_10px_44px_rgba(212,164,68,.4)]"
+          >
+            <span className="absolute inset-0 bg-gradient-to-t from-gold/15 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <MessageCircle size={20} className="shrink-0 text-gold-bright transition-transform duration-300 group-hover:scale-110" />
+            <Typewriter
+              phrases={['برمجة وتطوير', 'Dev / Ziad Youssef']}
+              className="font-mono text-lg font-bold tracking-wide text-gold-bright"
+            />
+          </a>
         </div>
       </div>
     </footer>

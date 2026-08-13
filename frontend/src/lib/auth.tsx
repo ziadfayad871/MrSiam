@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { api, clearToken, getToken, setToken } from './api';
 import type { AuthResult, UserDto } from './types';
 
@@ -15,11 +15,34 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserDto | null>(null);
   const [token, setTokenState] = useState<string | null>(getToken());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const initialToken = useRef(getToken());
 
   useEffect(() => {
-    // On reload, the token persists — the dashboard resolves the user from it on first call.
-    setLoading(false);
+    // On reload/direct link the token persists — restore the user from it so protected routes don't bounce to login.
+    if (!initialToken.current) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    api
+      .get<UserDto>('/auth/me')
+      .then((u) => {
+        if (!cancelled) setUser(u);
+      })
+      .catch(() => {
+        // Token منتهي أو غير صالح — امسحه وخلّي الوجين يشتغل.
+        if (!cancelled) {
+          clearToken();
+          setTokenState(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (username: string, password: string) => {

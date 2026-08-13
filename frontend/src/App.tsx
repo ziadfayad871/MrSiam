@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { CompassLoader } from './design-system/components/CompassLoader';
 import { PageTransition } from './design-system/motion/PageTransition';
 import { ParchmentTransition } from './design-system/motion/ParchmentTransition';
 import { useAuth } from './lib/auth';
@@ -14,6 +15,11 @@ import CertificatesPage from './pages/student/CertificatesPage';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherContentPage from './pages/teacher/TeacherContentPage';
 import TeacherCourseNewPage from './pages/teacher/TeacherCourseNewPage';
+import TeacherCourseEditPage from './pages/teacher/TeacherCourseEditPage';
+import TeacherCourseDetailPage from './pages/teacher/TeacherCourseDetailPage';
+import TeacherLessonFormPage from './pages/teacher/TeacherLessonFormPage';
+import TeacherExamFormPage from './pages/teacher/TeacherExamFormPage';
+import TeacherAssignmentFormPage from './pages/teacher/TeacherAssignmentFormPage';
 import TeacherClassPage from './pages/teacher/TeacherClassPage';
 import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
 import TeacherLivePage from './pages/teacher/TeacherLivePage';
@@ -44,7 +50,14 @@ function homeForRole(role: Role): string {
 }
 
 function RequireAuth({ children, roles }: { children: React.ReactNode; roles?: Role[] }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <CompassLoader text="بنرجع الجلسة..." />
+      </div>
+    );
+  }
   if (!user) return <Navigate to={roles?.includes('Student') ? '/login' : '/staff-login'} replace />;
   if (roles && !roles.includes(user.role)) return <Navigate to={homeForRole(user.role)} replace />;
   return <>{children}</>;
@@ -165,6 +178,102 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <TeacherCourseNewPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherCourseDetailPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/edit"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherCourseEditPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/lessons/new"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherLessonFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/lessons/:lessonId/edit"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherLessonFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/exams/new"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherExamFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/exams/:examId/edit"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherExamFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/assignments/new"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherAssignmentFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/:courseId/assignments/:assignmentId/edit"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherAssignmentFormPage />
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>
