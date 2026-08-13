@@ -121,9 +121,13 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
 
             {meta.demoNote && <div className="mt-7 border-t border-[#b98131]/20 pt-5"><p className="mb-3 text-center text-xs text-[#d7c0a0]">{meta.demoNote}</p><div className="grid grid-cols-2 gap-3">{meta.demo.map((account) => <button key={account.username} onClick={() => { setUsername(account.username); setPassword('123456'); }} className="rounded-xl border border-[#b98131]/30 px-3 py-2 text-xs text-[#efd8b2] hover:bg-[#c78d32]/10">{account.label}</button>)}</div></div>}
             <p className="mt-8 text-center text-sm text-[#d7c0a0]">ليس لديك حساب؟ {portal === 'student' ? <a href="https://wa.me/201207275688" target="_blank" rel="noreferrer" className="font-bold text-[#dca444] transition hover:text-[#f5c567]">تواصل مع إدارة المنصة</a> : <span className="font-bold text-[#dca444]">تواصل مع إدارة المنصة</span>}</p>
-            <Link to={meta.path} className="mt-5 flex items-center justify-center gap-2 text-xs text-[#cbb995] hover:text-[#dca444]">{meta.pathLabel} <ArrowRight size={14} /></Link>
+            {portal === 'student' ? (
+              <Link to="/" className="mt-5 flex items-center justify-center gap-2 text-xs text-[#cbb995] hover:text-[#dca444]">العودة للرئيسية <ArrowRight size={14} /></Link>
+            ) : (
+              <Link to={meta.path} className="mt-5 flex items-center justify-center gap-2 text-xs text-[#cbb995] hover:text-[#dca444]">{meta.pathLabel} <ArrowRight size={14} /></Link>
+            )}
           </motion.div>
-          <button onClick={() => navigate('/')} className="absolute bottom-5 text-sm text-[#cbb995] transition hover:text-[#dca444]">العودة للرئيسية</button>
+          {portal === 'staff' && <button onClick={() => navigate('/')} className="absolute bottom-5 text-sm text-[#cbb995] transition hover:text-[#dca444]">العودة للرئيسية</button>}
         </section>
       </div>
     </main>

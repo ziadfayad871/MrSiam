@@ -17,10 +17,11 @@ public class TestimonialsController(IApplicationDbContext db, IWebHostEnvironmen
     [HttpPost, Authorize(Roles = nameof(Role.Teacher) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Create([FromForm] CreateTestimonialRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.FullName) || string.IsNullOrWhiteSpace(request.Quote)) return BadRequest(new { success = false, message = "الاسم والرأي مطلوبان" });
+        var hasText = !string.IsNullOrWhiteSpace(request.FullName) && !string.IsNullOrWhiteSpace(request.Quote);
+        if (!hasText && request.Photo is null) return BadRequest(new { success = false, message = "اكتب اسم الطالب ورأيه أو أضف صورة" });
         string? photoUrl = null;
         if (request.Photo is not null) { var ext = Path.GetExtension(request.Photo.FileName).ToLowerInvariant(); if (ext is not ".jpg" and not ".jpeg" and not ".png" and not ".webp") return BadRequest(new { success = false, message = "صيغة الصورة غير مدعومة" }); var name = $"{Guid.NewGuid():N}{ext}"; var dir = Path.Combine(env.ContentRootPath, "app_data", "testimonials"); Directory.CreateDirectory(dir); await using var stream = System.IO.File.Create(Path.Combine(dir, name)); await request.Photo.CopyToAsync(stream); photoUrl = $"/uploads/testimonials/{name}"; }
-        var item = new StudentTestimonial { FullName = request.FullName.Trim(), Quote = request.Quote.Trim(), StageAr = string.IsNullOrWhiteSpace(request.StageAr) ? null : request.StageAr.Trim(), PhotoUrl = photoUrl };
+        var item = new StudentTestimonial { FullName = (request.FullName ?? string.Empty).Trim(), Quote = (request.Quote ?? string.Empty).Trim(), StageAr = string.IsNullOrWhiteSpace(request.StageAr) ? null : request.StageAr.Trim(), PhotoUrl = photoUrl };
         db.StudentTestimonials.Add(item); await db.SaveChangesAsync(); return Ok(new { success = true, data = item.Id });
     }
 
