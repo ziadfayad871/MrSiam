@@ -6,12 +6,15 @@ import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Button } from '../../design-system/ui/Button';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { api } from '../../lib/api';
+import { useUnsavedGuard } from '../../lib/useUnsavedGuard';
 import type { CourseDto, LessonDto } from '../../lib/types';
 
 export default function TeacherLessonFormPage() {
   const navigate = useNavigate();
   const { courseId, lessonId } = useParams();
-  const back = () => navigate('/teacher/content');
+  const [dirty, setDirty] = useState(false);
+  const { disarm, navigateGuarded } = useUnsavedGuard(dirty);
+  const back = () => navigateGuarded('/teacher/content');
   const editing = lessonId != null;
 
   const [course, setCourse] = useState<CourseDto | null>(null);
@@ -71,7 +74,7 @@ export default function TeacherLessonFormPage() {
       </header>
 
       <div className="rounded-xl border border-border-soft bg-surface p-5 sm:p-8">
-        <LessonForm courseId={course.id} editing={editing ? lesson : null} onDone={back} onCancel={back} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
+        <LessonForm courseId={course.id} editing={editing ? lesson : null} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
       </div>
     </div>
   );

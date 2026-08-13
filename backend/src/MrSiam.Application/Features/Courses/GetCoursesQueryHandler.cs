@@ -31,7 +31,8 @@ public class GetCoursesQueryHandler(IApplicationDbContext db) : IRequestHandler<
                 StageAr = c.Stage.ToArabic(),
                 LessonCount = c.Lessons.Count,
                 ExamCount = c.Exams.Count,
-                Order = c.Order
+                Order = c.Order,
+                ImageUrl = c.ImageUrl
             })
             .ToListAsync(ct);
 

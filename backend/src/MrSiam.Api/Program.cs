@@ -111,6 +111,15 @@ try
     var testimonialUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "testimonials");
     Directory.CreateDirectory(testimonialUploadsDir);
     app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(testimonialUploadsDir), RequestPath = "/uploads/testimonials" });
+    var resourcesUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "resources");
+    Directory.CreateDirectory(resourcesUploadsDir);
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(resourcesUploadsDir), RequestPath = "/uploads/resources" });
+    var courseUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "courses");
+    Directory.CreateDirectory(courseUploadsDir);
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(courseUploadsDir), RequestPath = "/uploads/courses" });
+    var lessonUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "lessons");
+    Directory.CreateDirectory(lessonUploadsDir);
+    app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(lessonUploadsDir), RequestPath = "/uploads/lessons" });
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

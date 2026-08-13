@@ -6,12 +6,15 @@ import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Button } from '../../design-system/ui/Button';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { api } from '../../lib/api';
+import { useUnsavedGuard } from '../../lib/useUnsavedGuard';
 import type { CourseDto } from '../../lib/types';
 
 export default function TeacherCourseEditPage() {
   const navigate = useNavigate();
   const { courseId } = useParams();
-  const back = () => navigate('/teacher/content');
+  const [dirty, setDirty] = useState(false);
+  const { disarm, navigateGuarded } = useUnsavedGuard(dirty);
+  const back = () => navigateGuarded('/teacher/content');
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +51,7 @@ export default function TeacherCourseEditPage() {
       </header>
 
       <div className="rounded-xl border border-border-soft bg-surface p-5 sm:p-8">
-        <CourseForm editing={course} onDone={back} onCancel={back} submitLabel="حفظ التعديلات" />
+        <CourseForm editing={course} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel="حفظ التعديلات" />
       </div>
     </div>
   );

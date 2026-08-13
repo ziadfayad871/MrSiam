@@ -21,7 +21,8 @@ public record UpdateCourseCommand(
     Subject? Subject,
     Stage? Stage,
     int? Order,
-    bool? IsActive) : IRequest<ApiResponse<bool>>;
+    bool? IsActive,
+    string? ImageUrl) : IRequest<ApiResponse<bool>>;
 
 public record DeleteCourseCommand(int Id) : IRequest<ApiResponse<bool>>;
 
@@ -78,6 +79,8 @@ public class UpdateCourseCommandHandler(IApplicationDbContext db)
             course.Order = request.Order.Value;
         if (request.IsActive is not null)
             course.IsActive = request.IsActive.Value;
+        if (request.ImageUrl is not null)
+            course.ImageUrl = request.ImageUrl;
 
         await db.SaveChangesAsync(ct);
         return ApiResponse<bool>.Ok(true, "تم تعديل الكورس");

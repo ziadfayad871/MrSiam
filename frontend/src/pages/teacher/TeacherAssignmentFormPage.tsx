@@ -1,17 +1,22 @@
 import { ArrowRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AssignmentForm } from '../../components/teacher/AssignmentForm';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Button } from '../../design-system/ui/Button';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { api } from '../../lib/api';
+import { useUnsavedGuard } from '../../lib/useUnsavedGuard';
 import type { AssignmentDto, CourseDto } from '../../lib/types';
 
 export default function TeacherAssignmentFormPage() {
   const navigate = useNavigate();
   const { courseId, assignmentId } = useParams();
-  const back = () => navigate('/teacher/content');
+  const [searchParams] = useSearchParams();
+  const defaultLessonId = searchParams.get('lesson') ? Number(searchParams.get('lesson')) : undefined;
+  const [dirty, setDirty] = useState(false);
+  const { disarm, navigateGuarded } = useUnsavedGuard(dirty);
+  const back = () => navigateGuarded('/teacher/content');
   const editing = assignmentId != null;
 
   const [course, setCourse] = useState<CourseDto | null>(null);
@@ -71,7 +76,7 @@ export default function TeacherAssignmentFormPage() {
       </header>
 
       <div className="rounded-xl border border-border-soft bg-surface p-5 sm:p-8">
-        <AssignmentForm courseId={course.id} editing={editing ? assignment : null} onDone={back} onCancel={back} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
+        <AssignmentForm courseId={course.id} editing={editing ? assignment : null} defaultLessonId={defaultLessonId} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
       </div>
     </div>
   );

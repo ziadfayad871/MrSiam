@@ -30,4 +30,11 @@ public class CoursesController(MediatR.IMediator mediator) : ControllerBase
         var result = await mediator.Send(new GetCourseAssignmentsQuery(courseId));
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("{courseId:int}/resources")]
+    public async Task<IActionResult> GetResources(int courseId, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetCourseResourcesQuery(courseId), ct);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
 }

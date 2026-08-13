@@ -31,6 +31,16 @@ public record ExamAnalyticsDto
     public decimal BestPercentage { get; init; }
 }
 
+public record CourseExamStatsDto
+{
+    public int ExamId { get; init; }
+    public int AttemptCount { get; init; }
+    public int StudentsCount { get; init; }
+    public decimal AvgPercentage { get; init; }
+    public decimal BestPercentage { get; init; }
+    public decimal PassRate { get; init; }
+}
+
 public record AnalyticsOverviewDto
 {
     public int TotalStudents { get; init; }

@@ -1,11 +1,15 @@
 import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CourseForm } from '../../components/teacher/CourseForm';
 import { Button } from '../../design-system/ui/Button';
+import { useUnsavedGuard } from '../../lib/useUnsavedGuard';
 
 export default function TeacherCourseNewPage() {
   const navigate = useNavigate();
-  const back = () => navigate('/teacher/content');
+  const [dirty, setDirty] = useState(false);
+  const { disarm, navigateGuarded } = useUnsavedGuard(dirty);
+  const back = () => navigateGuarded('/teacher/content');
 
   return (
     <div className="teacher-workspace flex flex-col gap-6 p-2 sm:p-4">
@@ -21,7 +25,7 @@ export default function TeacherCourseNewPage() {
       </header>
 
       <div className="rounded-xl border border-border-soft bg-surface p-5 sm:p-8">
-        <CourseForm editing={null} onDone={back} onCancel={back} submitLabel="حفظ" />
+        <CourseForm editing={null} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel="حفظ" />
       </div>
     </div>
   );

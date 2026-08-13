@@ -1,10 +1,10 @@
 import { Plus, Trash2 } from 'lucide-react';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button } from '../../design-system/ui/Button';
 import Input from '../../design-system/ui/Field';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
-import type { ExamListItemDto, ExamType } from '../../lib/types';
+import type { ExamListItemDto, ExamType, LessonDto } from '../../lib/types';
 
 const EXAM_TYPES = [
   { key: 'Practice', ar: 'تدريبي' },
@@ -32,43 +32,75 @@ export function ExamForm({
   onDone,
   onCancel,
   submitLabel,
+  onDirtyChange,
+  defaultLessonId,
 }: {
   courseId: number;
   editing: ExamListItemDto | null;
   onDone: () => void;
   onCancel?: () => void;
   submitLabel?: string;
+  onDirtyChange?: (dirty: boolean) => void;
+  defaultLessonId?: number;
 }) {
   const { toast } = useToast();
-  const [form, setForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean }>({
+  const [form, setForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean; lessonId: string }>({
     title: editing?.title ?? '',
     type: editing?.type ?? 'Lesson',
     durationMinutes: editing?.durationMinutes ?? 10,
     attemptsAllowed: 3,
     isPublished: editing ? editing.isPublished : true,
+    lessonId: editing?.lessonId ? String(editing.lessonId) : defaultLessonId ? String(defaultLessonId) : '',
   });
+  const [lessons, setLessons] = useState<LessonDto[]>([]);
   const [questions, setQuestions] = useState<QuestionForm[]>([emptyQuestion()]);
   const [saving, setSaving] = useState(false);
+  const initialFormRef = useRef(form);
+  const initialQuestionsRef = useRef<QuestionForm[]>([emptyQuestion()]);
+
+  useEffect(() => {
+    api
+      .get<LessonDto[]>(`/courses/${courseId}/lessons`)
+      .then(setLessons)
+      .catch(() => setLessons([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
 
   useEffect(() => {
     if (editing) {
       api
         .get<{ questions: { text: string; type: 'SingleChoice' | 'TrueFalse'; marks: number; options: { text: string }[] }[] }>(`/exams/${editing.id}`)
-        .then((d) =>
-          setQuestions(
-            d.questions.map((q) => ({
-              text: q.text,
-              type: q.type,
-              marks: q.marks,
-              options: q.type === 'TrueFalse' ? ['صواب', 'خطأ'] : q.options.map((o) => o.text),
-              correctIndex: 0,
-            })),
-          ),
-        )
-        .catch(() => setQuestions([emptyQuestion()]));
+        .then((d) => {
+          const loaded = d.questions.map((q) => ({
+            text: q.text,
+            type: q.type,
+            marks: q.marks,
+            options: q.type === 'TrueFalse' ? ['صواب', 'خطأ'] : q.options.map((o) => o.text),
+            correctIndex: 0,
+          }));
+          initialQuestionsRef.current = loaded;
+          setQuestions(loaded);
+        })
+        .catch(() => {
+          initialQuestionsRef.current = [emptyQuestion()];
+          setQuestions([emptyQuestion()]);
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editing]);
+
+  const isDirty =
+    form.title !== initialFormRef.current.title ||
+    form.type !== initialFormRef.current.type ||
+    form.durationMinutes !== initialFormRef.current.durationMinutes ||
+    form.attemptsAllowed !== initialFormRef.current.attemptsAllowed ||
+    form.isPublished !== initialFormRef.current.isPublished ||
+    form.lessonId !== initialFormRef.current.lessonId ||
+    JSON.stringify(questions) !== JSON.stringify(initialQuestionsRef.current);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   function setQ(i: number, patch: Partial<QuestionForm>) {
     setQuestions((qs) => qs.map((q, idx) => (idx === i ? { ...q, ...patch } : q)));
@@ -95,7 +127,15 @@ export function ExamForm({
     }
     setSaving(true);
     try {
-      const payload = { ...form, durationMinutes: Number(form.durationMinutes) || 10, attemptsAllowed: Number(form.attemptsAllowed) || 3, questions: clean };
+      const payload = {
+        title: form.title,
+        type: form.type,
+        durationMinutes: Number(form.durationMinutes) || 10,
+        attemptsAllowed: Number(form.attemptsAllowed) || 3,
+        isPublished: form.isPublished,
+        lessonId: form.lessonId ? Number(form.lessonId) : null,
+        questions: clean,
+      };
       if (editing) {
         await api.put(`/teacher-content/exams/${editing.id}`, payload);
         toast('تم التعديل', '', 'success');
@@ -115,6 +155,15 @@ export function ExamForm({
     <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
       <div className="sm:col-span-2">
         <Input label="اسم الاختبار" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: اختبار الوحدة الأولى" />
+      </div>
+      <div className="sm:col-span-2">
+        <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">الحصة (اختياري)</label>
+        <select value={form.lessonId} onChange={(e) => setForm({ ...form, lessonId: e.target.value })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none focus:border-gold/60">
+          <option value="">من غير حصة (عام)</option>
+          {lessons.map((l) => (
+            <option key={l.id} value={l.id}>{l.order}. {l.title}</option>
+          ))}
+        </select>
       </div>
       <div>
         <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">النوع</label>

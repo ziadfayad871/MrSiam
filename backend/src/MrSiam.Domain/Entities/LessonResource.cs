@@ -9,4 +9,6 @@ public class LessonResource : Entity
     public required string Kind { get; set; }
     public required string FileUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public Lesson? Lesson { get; set; }
 }

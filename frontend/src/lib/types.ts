@@ -47,6 +47,7 @@ export interface CourseDto {
   lessonCount: number;
   examCount: number;
   order: number;
+  imageUrl?: string;
 }
 
 export interface LessonDto {
@@ -58,6 +59,7 @@ export interface LessonDto {
   durationMinutes: number;
   contentType: string;
   videoUrl?: string;
+  imageUrl?: string;
   isCompleted: boolean;
   bestPercentage?: number;
 }
@@ -65,9 +67,19 @@ export interface LessonDto {
 export interface AssignmentDto {
   id: number;
   courseId: number;
+  lessonId?: number;
   title: string;
   description: string;
   dueDate?: string;
+  createdAt: string;
+}
+
+export interface LessonResourceDto {
+  id: number;
+  lessonId: number;
+  title: string;
+  kind: string;
+  fileUrl: string;
   createdAt: string;
 }
 
@@ -136,6 +148,15 @@ export interface EarlyWarningDto {
   avgPercentage: number;
   lastActiveAt?: string;
   reasons: string[];
+}
+
+export interface CourseExamStatsDto {
+  examId: number;
+  attemptCount: number;
+  studentsCount: number;
+  avgPercentage: number;
+  bestPercentage: number;
+  passRate: number;
 }
 
 export interface ExamListItemDto {

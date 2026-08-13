@@ -27,4 +27,8 @@ public class AnalyticsController(IMediator mediator) : ControllerBase
     [HttpGet("students/{studentId:int}")]
     public async Task<ActionResult<ApiResponse<StudentAnalyticsDto>>> Student(int studentId, CancellationToken ct)
         => Ok(await mediator.Send(new GetStudentAnalyticsQuery(studentId), ct));
+
+    [HttpGet("courses/{courseId:int}/exam-stats")]
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<CourseExamStatsDto>>>> CourseExamStats(int courseId, CancellationToken ct)
+        => Ok(await mediator.Send(new GetCourseExamStatsQuery(courseId), ct));
 }

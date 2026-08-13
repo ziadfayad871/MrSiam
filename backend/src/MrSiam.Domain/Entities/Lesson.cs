@@ -11,6 +11,7 @@ public class Lesson : Entity
     public int DurationMinutes { get; set; }
     public required string ContentType { get; set; }
     public string? VideoUrl { get; set; }
+    public string? ImageUrl { get; set; }
 
     public Course? Course { get; set; }
 }

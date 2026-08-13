@@ -12,6 +12,7 @@ public class Course : Entity
     public int TeacherId { get; set; }
     public bool IsActive { get; set; } = true;
     public int Order { get; set; }
+    public string? ImageUrl { get; set; }
 
     public Teacher? Teacher { get; set; }
     public ICollection<Lesson> Lessons { get; set; } = new List<Lesson>();

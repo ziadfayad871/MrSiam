@@ -8,7 +8,7 @@ import { Card } from '../design-system/ui/Card';
 import { EmptyState } from '../design-system/ui/EmptyState';
 import { ErrorState } from '../design-system/ui/ErrorState';
 import { Pagination } from '../design-system/ui/Pagination';
-import { api } from '../lib/api';
+import { api, resolveFileUrl } from '../lib/api';
 import { useAuth } from '../lib/auth';
 import type { CourseDto, Stage, StudentDashboardV2Dto } from '../lib/types';
 
@@ -60,14 +60,23 @@ export default function CoursesPage() {
       ) : (
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {current.map((c) => (
-            <Link to={`/courses/${c.id}`} key={c.id}>
-              <Card variant="course" hoverable className="group h-full">
-                <div className="mb-4 flex items-start justify-between">
-                  <Map size={26} className="text-gold transition-transform duration-500 group-hover:scale-110" strokeWidth={1.5} />
-                <Badge variant={c.subject === 'History' ? 'gold' : c.subject === 'Geography' ? 'success' : 'warning'}>
-                  {c.subjectAr}
-                </Badge>
-                </div>
+            <Link to={`/courses/${c.id}`} key={c.id} className="group block h-full">
+              <Card variant="course" hoverable className="group h-full overflow-hidden">
+                {c.imageUrl ? (
+                  <div className="relative -mx-5 -mt-5 mb-4 h-36 overflow-hidden">
+                    <img src={resolveFileUrl(c.imageUrl)} alt={c.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <Badge variant={c.subject === 'History' ? 'gold' : c.subject === 'Geography' ? 'success' : 'warning'} className="absolute start-2 top-2 shadow-sm">
+                      {c.subjectAr}
+                    </Badge>
+                  </div>
+                ) : (
+                  <div className="mb-4 flex items-start justify-between">
+                    <Map size={26} className="text-gold transition-transform duration-500 group-hover:scale-110" strokeWidth={1.5} />
+                    <Badge variant={c.subject === 'History' ? 'gold' : c.subject === 'Geography' ? 'success' : 'warning'}>
+                      {c.subjectAr}
+                    </Badge>
+                  </div>
+                )}
                 <h3 className="text-lg font-bold text-text-primary">{c.title}</h3>
                 <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-text-secondary">{c.description}</p>
                 <div className="mt-5 flex items-center gap-4 border-t border-border-soft pt-4 text-xs text-text-muted">

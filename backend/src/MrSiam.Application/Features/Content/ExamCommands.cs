@@ -27,6 +27,7 @@ public record CreateExamCommand(
 
 public record UpdateExamCommand(
     int Id,
+    int? LessonId,
     string? Title,
     ExamType? Type,
     int? DurationMinutes,
@@ -150,6 +151,12 @@ public class UpdateExamCommandHandler(IApplicationDbContext db)
             .FirstOrDefaultAsync(e => e.Id == request.Id, ct);
         if (exam is null)
             return ApiResponse<bool>.Fail("الاختبار غير موجود");
+
+        // LessonId null = فك الارتباط بالحصة (يظهر في "عام")
+        if (request.LessonId is not null &&
+            !await db.Lessons.AnyAsync(l => l.Id == request.LessonId && l.CourseId == exam.CourseId, ct))
+            return ApiResponse<bool>.Fail("الحصة المختارة مش في الكورس ده");
+        exam.LessonId = request.LessonId;
 
         if (!string.IsNullOrWhiteSpace(request.Title))
             exam.Title = request.Title.Trim();

@@ -14,6 +14,7 @@ public record CourseDto
     public int LessonCount { get; init; }
     public int ExamCount { get; init; }
     public int Order { get; init; }
+    public string? ImageUrl { get; init; }
 }
 
 public record LessonDto
@@ -26,6 +27,7 @@ public record LessonDto
     public int DurationMinutes { get; init; }
     public required string ContentType { get; init; }
     public string? VideoUrl { get; init; }
+    public string? ImageUrl { get; init; }
     public bool IsCompleted { get; set; }
     public decimal? BestPercentage { get; set; }
 }

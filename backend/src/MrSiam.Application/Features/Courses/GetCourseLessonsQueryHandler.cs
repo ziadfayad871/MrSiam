@@ -29,7 +29,8 @@ public class GetCourseLessonsQueryHandler(IApplicationDbContext db)
                 Order = l.Order,
                 DurationMinutes = l.DurationMinutes,
                 ContentType = l.ContentType,
-                VideoUrl = l.VideoUrl
+                VideoUrl = l.VideoUrl,
+                ImageUrl = l.ImageUrl
             })
             .ToListAsync(ct);
 

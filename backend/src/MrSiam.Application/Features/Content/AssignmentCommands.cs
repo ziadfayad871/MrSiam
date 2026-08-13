@@ -10,6 +10,7 @@ public record AssignmentDto
 {
     public int Id { get; init; }
     public int CourseId { get; init; }
+    public int? LessonId { get; init; }
     public required string Title { get; init; }
     public required string Description { get; init; }
     public DateTime? DueDate { get; init; }
@@ -31,6 +32,7 @@ public class GetCourseAssignmentsQueryHandler(IApplicationDbContext db)
             {
                 Id = a.Id,
                 CourseId = a.CourseId,
+                LessonId = a.LessonId,
                 Title = a.Title,
                 Description = a.Description,
                 DueDate = a.DueDate,
@@ -44,12 +46,14 @@ public class GetCourseAssignmentsQueryHandler(IApplicationDbContext db)
 
 public record CreateAssignmentCommand(
     int CourseId,
+    int? LessonId,
     string Title,
     string Description,
     DateTime? DueDate) : IRequest<ApiResponse<int>>;
 
 public record UpdateAssignmentCommand(
     int Id,
+    int? LessonId,
     string? Title,
     string? Description,
     DateTime? DueDate) : IRequest<ApiResponse<bool>>;
@@ -67,9 +71,14 @@ public class CreateAssignmentCommandHandler(IApplicationDbContext db)
         if (!await db.Courses.AnyAsync(c => c.Id == request.CourseId, ct))
             return ApiResponse<int>.Fail("الكورس غير موجود");
 
+        if (request.LessonId is not null &&
+            !await db.Lessons.AnyAsync(l => l.Id == request.LessonId && l.CourseId == request.CourseId, ct))
+            return ApiResponse<int>.Fail("الحصة المختارة مش في الكورس ده");
+
         var assignment = new Assignment
         {
             CourseId = request.CourseId,
+            LessonId = request.LessonId,
             Title = request.Title.Trim(),
             Description = (request.Description ?? string.Empty).Trim(),
             DueDate = request.DueDate,
@@ -90,6 +99,12 @@ public class UpdateAssignmentCommandHandler(IApplicationDbContext db)
         var assignment = await db.Assignments.FirstOrDefaultAsync(a => a.Id == request.Id, ct);
         if (assignment is null)
             return ApiResponse<bool>.Fail("الواجب غير موجود");
+
+        // LessonId null = فك الارتباط بالحصة (يظهر في "عام")
+        if (request.LessonId is not null &&
+            !await db.Lessons.AnyAsync(l => l.Id == request.LessonId && l.CourseId == assignment.CourseId, ct))
+            return ApiResponse<bool>.Fail("الحصة المختارة مش في الكورس ده");
+        assignment.LessonId = request.LessonId;
 
         if (!string.IsNullOrWhiteSpace(request.Title))
             assignment.Title = request.Title.Trim();

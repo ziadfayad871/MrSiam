@@ -9,8 +9,8 @@ import { ErrorState } from '../design-system/ui/ErrorState';
 import LessonStudyPanel from '../components/student/LessonStudyPanel';
 import { Modal } from '../design-system/ui/Modal';
 import { Progress } from '../design-system/ui/Progress';
-import { api } from '../lib/api';
-import type { AssignmentDto, CourseDto, ExamListItemDto, LessonDto, NoteDto } from '../lib/types';
+import { api, resolveFileUrl } from '../lib/api';
+import type { AssignmentDto, CourseDto, ExamListItemDto, LessonDto, LessonResourceDto, NoteDto } from '../lib/types';
 
 function embedUrl(url: string): string | null {
   if (!url) return null;
@@ -94,6 +94,7 @@ export default function CourseDetailPage() {
   const [lessons, setLessons] = useState<LessonDto[]>([]);
   const [exams, setExams] = useState<ExamListItemDto[]>([]);
   const [assignments, setAssignments] = useState<AssignmentDto[]>([]);
+  const [resources, setResources] = useState<LessonResourceDto[]>([]);
   const [playing, setPlaying] = useState<LessonDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,17 +108,19 @@ export default function CourseDetailPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [courses, lessonsList, examsList, assignmentsList, bookmarks] = await Promise.all([
+        const [courses, lessonsList, examsList, assignmentsList, bookmarks, resourcesList] = await Promise.all([
           api.get<CourseDto[]>('/courses'),
           api.get<LessonDto[]>(`/courses/${courseId}/lessons`),
           api.get<ExamListItemDto[]>(`/exams/course/${courseId}`),
           api.get<AssignmentDto[]>(`/courses/${courseId}/assignments`),
           api.get<{ lessonId: number }[]>(`/student/bookmarks?kind=lesson&courseId=${courseId}`).catch(() => []),
+          api.get<LessonResourceDto[]>(`/courses/${courseId}/resources`).catch(() => []),
         ]);
         setCourse(courses.find((c) => String(c.id) === courseId) ?? null);
         setLessons(lessonsList);
         setExams(examsList);
         setAssignments(assignmentsList);
+        setResources(resourcesList);
         setBookmarked(new Set(bookmarks.filter((b) => b.lessonId).map((b) => b.lessonId as number)));
       } catch (e) {
         setError(e instanceof Error ? e.message : 'فشل تحميل المادة');
@@ -196,15 +199,20 @@ export default function CourseDetailPage() {
       {/* Header */}
       <div className="relative overflow-hidden rounded-lg border border-gold/20 bg-parchment-soft p-6 shadow-soft sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <Badge variant={course.subject === 'History' ? 'gold' : course.subject === 'Geography' ? 'success' : 'warning'}>
-                {course.subjectAr}
-              </Badge>
-              <span className="text-xs text-text-muted">{course.stageAr}</span>
+          <div className="flex min-w-0 items-start gap-4">
+            {course.imageUrl && (
+              <img src={resolveFileUrl(course.imageUrl)} alt={course.title} className="h-24 w-36 shrink-0 rounded-lg border border-gold/20 object-cover" />
+            )}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Badge variant={course.subject === 'History' ? 'gold' : course.subject === 'Geography' ? 'success' : 'warning'}>
+                  {course.subjectAr}
+                </Badge>
+                <span className="text-xs text-text-muted">{course.stageAr}</span>
+              </div>
+              <h1 className="display-serif mt-3 text-2xl font-bold text-text-primary sm:text-3xl">{course.title}</h1>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary">{course.description}</p>
             </div>
-            <h1 className="display-serif mt-3 text-2xl font-bold text-text-primary sm:text-3xl">{course.title}</h1>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary">{course.description}</p>
           </div>
           <div className="text-center">
             <p className="text-3xl font-bold text-gold">{lessons.length > 0 ? Math.round((completedLessons / lessons.length) * 100) : 0}%</p>
@@ -261,17 +269,26 @@ export default function CourseDetailPage() {
               </div>
 
               <div className="flex flex-col gap-2.5">
-              {lessons.map((l) => (
+              {lessons.map((l) => {
+                const lessonFiles = resources.filter((r) => r.lessonId === l.id);
+                return (
                 <div
                   key={l.id}
-                  className={`flex items-center gap-3 rounded-md border border-border-soft bg-surface px-4 py-3 ${l.contentType === 'video' && l.videoUrl ? 'cursor-pointer transition-colors hover:border-gold/50 hover:bg-gold/5' : ''}`}
+                  className={`rounded-md border border-border-soft bg-surface ${l.contentType === 'video' && l.videoUrl ? 'cursor-pointer transition-colors hover:border-gold/50 hover:bg-gold/5' : ''}`}
+                >
+                <div
+                  className={`flex items-center gap-3 px-4 py-3 ${lessonFiles.length > 0 ? 'border-b border-border-soft/50' : ''}`}
                   onClick={() => {
                     if (l.contentType === 'video' && l.videoUrl) void openLesson(l);
                   }}
                 >
-                  <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${l.isCompleted ? 'bg-success/15 text-success' : l.contentType === 'video' ? 'bg-gold/10 text-gold' : 'bg-border-soft text-text-muted'}`}>
-                    {l.isCompleted ? <PlayCircle size={16} /> : l.contentType === 'video' ? <PlayCircle size={16} /> : <span className="text-xs font-bold">{l.order}</span>}
-                  </span>
+                  {l.imageUrl ? (
+                    <img src={resolveFileUrl(l.imageUrl)} alt={l.title} className={`h-9 w-9 shrink-0 rounded-full border object-cover ${l.isCompleted ? 'border-success/50' : 'border-border-soft'}`} />
+                  ) : (
+                    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${l.isCompleted ? 'bg-success/15 text-success' : l.contentType === 'video' ? 'bg-gold/10 text-gold' : 'bg-border-soft text-text-muted'}`}>
+                      {l.isCompleted ? <PlayCircle size={16} /> : l.contentType === 'video' ? <PlayCircle size={16} /> : <span className="text-xs font-bold">{l.order}</span>}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-text-primary">{l.title}</p>
                     <p className="truncate text-[11px] text-text-muted">
@@ -292,7 +309,26 @@ export default function CourseDetailPage() {
                   {l.isCompleted && <Badge variant="success">خلصت</Badge>}
                   {l.contentType === 'video' && l.videoUrl && <span className="text-[10px] font-bold text-gold">شاهد ▶</span>}
                 </div>
-              ))}
+                {lessonFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 px-4 py-2.5">
+                    <span className="text-[10px] font-bold text-text-muted">ملفات:</span>
+                    {lessonFiles.map((r) => (
+                      <a
+                        key={r.id}
+                        href={resolveFileUrl(r.fileUrl)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex max-w-full items-center gap-1 truncate rounded-full border border-gold/30 bg-gold/5 px-2.5 py-1 text-[10px] font-semibold text-gold transition-colors hover:bg-gold/10"
+                      >
+                        <FileText size={11} className="shrink-0" />
+                        <span className="truncate">{r.title}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
+                </div>
+              );
+              })}
               </div>
             </>
           )}

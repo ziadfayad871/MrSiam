@@ -6,7 +6,7 @@ import { Badge } from '../../design-system/ui/Badge';
 import { Button } from '../../design-system/ui/Button';
 import AiToolsPanel from './AiToolsPanel';
 import { useToast } from '../../design-system/ui/Toast';
-import { api } from '../../lib/api';
+import { api, resolveFileUrl } from '../../lib/api';
 import type { CourseDto } from '../../lib/types';
 
 function CourseSection({ course, onChanged }: { course: CourseDto; onChanged: () => void }) {
@@ -33,15 +33,20 @@ function CourseSection({ course, onChanged }: { course: CourseDto; onChanged: ()
       onClick={() => navigate(`/teacher/content/courses/${course.id}`)}
       className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-border-soft bg-surface px-4 py-3 transition-colors hover:border-gold/40 hover:bg-gold/5"
     >
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate text-sm font-bold text-text-primary">{course.title}</p>
-          <Badge variant={course.subject === 'History' ? 'gold' : course.subject === 'Geography' ? 'success' : 'warning'}>{course.subjectAr}</Badge>
-          <span className="text-[10px] text-text-muted">{course.stageAr}</span>
+      <div className="flex min-w-0 items-center gap-3">
+        {course.imageUrl && (
+          <img src={resolveFileUrl(course.imageUrl)} alt={course.title} className="h-14 w-20 shrink-0 rounded-md border border-border-soft object-cover" />
+        )}
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate text-sm font-bold text-text-primary">{course.title}</p>
+            <Badge variant={course.subject === 'History' ? 'gold' : course.subject === 'Geography' ? 'success' : 'warning'}>{course.subjectAr}</Badge>
+            <span className="text-[10px] text-text-muted">{course.stageAr}</span>
+          </div>
+          <p className="mt-0.5 text-[11px] text-text-muted">
+            {course.lessonCount} درس · {course.examCount} اختبار
+          </p>
         </div>
-        <p className="mt-0.5 text-[11px] text-text-muted">
-          {course.lessonCount} درس · {course.examCount} اختبار
-        </p>
       </div>
       <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => navigate(`/teacher/content/courses/${course.id}/edit`)} title="تعديل الكورس" className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold">
