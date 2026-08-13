@@ -30,6 +30,7 @@ import AdminUserFormPage from './pages/admin/AdminUserFormPage';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
 import MasterCoursesPage from './pages/admin/MasterCoursesPage';
 import MasterCourseNewPage from './pages/admin/MasterCourseNewPage';
+import MasterTopStudentsPage from './pages/admin/MasterTopStudentsPage';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
@@ -393,6 +394,30 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <MasterCourseNewPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/top-students"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <MasterTopStudentsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/testimonials"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherTestimonialsPage />
               </PageTransition>
             </DashboardLayout>
           </RequireAdmin>
