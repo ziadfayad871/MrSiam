@@ -32,7 +32,9 @@ public class GetCoursesQueryHandler(IApplicationDbContext db) : IRequestHandler<
                 LessonCount = c.Lessons.Count,
                 ExamCount = c.Exams.Count,
                 Order = c.Order,
-                ImageUrl = c.ImageUrl
+                ImageUrl = c.ImageUrl,
+                Month = c.Month,
+                MonthAr = MonthNames.ToArabic(c.Month)
             })
             .ToListAsync(ct);
 

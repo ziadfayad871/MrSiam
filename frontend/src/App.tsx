@@ -28,6 +28,8 @@ import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminUserFormPage from './pages/admin/AdminUserFormPage';
 import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
+import MasterCoursesPage from './pages/admin/MasterCoursesPage';
+import MasterCourseNewPage from './pages/admin/MasterCourseNewPage';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
@@ -367,6 +369,30 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <AdminAuditLogsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/courses"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <MasterCoursesPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/courses/new"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <MasterCourseNewPage />
               </PageTransition>
             </DashboardLayout>
           </RequireAdmin>

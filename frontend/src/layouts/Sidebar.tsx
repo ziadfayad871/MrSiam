@@ -5,9 +5,12 @@ import {
   FileText,
   GraduationCap,
   Home,
+  LayoutGrid,
+  Library,
   LogOut,
   Map,
   Moon,
+  Plus,
   ScrollText,
   Settings2,
   Sun,
@@ -114,6 +117,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
 
       <nav className="flex flex-1 flex-col gap-1 p-3 overflow-y-auto" role="navigation" aria-label="القائمة الرئيسية">
         {isAdmin && <AdminUsersDropdown collapsed={collapsed} onNavigate={() => onToggle()} />}
+        {isAdmin && <CoursesManagementDropdown collapsed={collapsed} onNavigate={() => onToggle()} />}
         {nav.map((item) => (
           <NavLink
             key={item.to}
@@ -301,6 +305,93 @@ function AdminUsersDropdown({ collapsed, onNavigate }: { collapsed: boolean; onN
           <Settings2 size={18} strokeWidth={1.8} />
         </span>
         <span className="flex-1 text-start">إدارة المستخدمين</span>
+        <ChevronRight size={14} className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-col gap-0.5 py-1 ps-4">
+              {items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={onNavigate}
+                  className={({ isActive: active }) => `
+                    relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-200
+                    ${active ? 'bg-gold/15 font-semibold text-gold' : 'text-text-secondary hover:bg-white/[.045] hover:text-gold-bright'}
+                  `}
+                  aria-current={location.pathname.startsWith(item.to) ? 'page' : undefined}
+                >
+                  <item.icon size={15} strokeWidth={1.8} />
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CoursesManagementDropdown({ collapsed, onNavigate }: { collapsed: boolean; onNavigate: () => void }) {
+  const location = useLocation();
+  const [open, setOpen] = useState(true);
+  const items = [
+    { to: '/admin/courses/new', label: 'إضافة كورس', icon: Plus },
+    { to: '/admin/courses', label: 'الكورسات', icon: LayoutGrid },
+  ];
+  const anyActive = items.some((i) => location.pathname.startsWith(i.to));
+
+  if (collapsed) {
+    return (
+      <div className="mb-1 border-b border-border-subtle pb-2">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="mx-auto grid h-9 w-9 place-items-center rounded-md text-text-secondary transition hover:bg-white/[.045] hover:text-gold-bright"
+          title="إدارة الكورسات"
+          aria-label="إدارة الكورسات"
+        >
+          <Library size={18} strokeWidth={1.8} />
+        </button>
+        {open && (
+          <div className="mt-1 flex flex-col items-center gap-1">
+            {items.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                title={item.label}
+                className={`grid h-9 w-9 place-items-center rounded-md transition ${location.pathname.startsWith(item.to) ? 'bg-gold/20 text-gold' : 'text-text-secondary hover:bg-white/[.045] hover:text-gold-bright'}`}
+              >
+                <item.icon size={16} strokeWidth={1.8} />
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-1 border-b border-border-subtle pb-2">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all duration-200 ${anyActive ? 'bg-gradient-to-l from-gold/25 to-gold/5 font-semibold text-gold border-s-2 border-gold shadow-[inset_0_0_22px_rgba(201,162,39,.08)]' : 'text-text-secondary hover:bg-white/[.045] hover:text-gold-bright'}`}
+        aria-expanded={open}
+      >
+        <span className="flex-shrink-0" aria-hidden="true">
+          <Library size={18} strokeWidth={1.8} />
+        </span>
+        <span className="flex-1 text-start">إدارة الكورسات</span>
         <ChevronRight size={14} className={`transition-transform duration-200 ${open ? 'rotate-90' : ''}`} />
       </button>
       <AnimatePresence initial={false}>

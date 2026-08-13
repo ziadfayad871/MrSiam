@@ -17,6 +17,7 @@ public static class SchemaBootstrap
         await EnsureTableAsync(db, "LessonResources", isSqlServer, LessonResourcesSql);
         await EnsureColumnAsync(db, "Assignments", "LessonId", isSqlServer);
         await EnsureColumnAsync(db, "Courses", "ImageUrl", isSqlServer, "nvarchar(400)");
+        await EnsureColumnAsync(db, "Courses", "Month", isSqlServer, "int");
         await EnsureColumnAsync(db, "Lessons", "ImageUrl", isSqlServer, "nvarchar(400)");
     }
 

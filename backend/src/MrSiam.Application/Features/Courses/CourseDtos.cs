@@ -15,6 +15,28 @@ public record CourseDto
     public int ExamCount { get; init; }
     public int Order { get; init; }
     public string? ImageUrl { get; init; }
+    public int? Month { get; init; }
+    public string? MonthAr { get; init; }
+}
+
+public static class MonthNames
+{
+    public static string ToArabic(int? month) => month switch
+    {
+        1 => "يناير",
+        2 => "فبراير",
+        3 => "مارس",
+        4 => "أبريل",
+        5 => "مايو",
+        6 => "يونيو",
+        7 => "يوليو",
+        8 => "أغسطس",
+        9 => "سبتمبر",
+        10 => "أكتوبر",
+        11 => "نوفمبر",
+        12 => "ديسمبر",
+        _ => string.Empty
+    };
 }
 
 public record LessonDto

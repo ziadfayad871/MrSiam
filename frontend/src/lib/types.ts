@@ -48,6 +48,8 @@ export interface CourseDto {
   examCount: number;
   order: number;
   imageUrl?: string;
+  month?: number;
+  monthAr?: string;
 }
 
 export interface LessonDto {

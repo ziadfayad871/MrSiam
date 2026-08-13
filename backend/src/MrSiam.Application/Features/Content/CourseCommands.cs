@@ -12,7 +12,8 @@ public record CreateCourseCommand(
     string Description,
     Subject Subject,
     Stage Stage,
-    int Order) : IRequest<ApiResponse<int>>;
+    int Order,
+    int? Month = null) : IRequest<ApiResponse<int>>;
 
 public record UpdateCourseCommand(
     int Id,
@@ -22,7 +23,8 @@ public record UpdateCourseCommand(
     Stage? Stage,
     int? Order,
     bool? IsActive,
-    string? ImageUrl) : IRequest<ApiResponse<bool>>;
+    string? ImageUrl,
+    int? Month = null) : IRequest<ApiResponse<bool>>;
 
 public record DeleteCourseCommand(int Id) : IRequest<ApiResponse<bool>>;
 
@@ -49,6 +51,7 @@ public class CreateCourseCommandHandler(IApplicationDbContext db, ICurrentUserSe
             Stage = request.Stage,
             TeacherId = teacher.Id,
             Order = request.Order,
+            Month = request.Month is > 0 and <= 12 ? request.Month : null,
             IsActive = true
         };
 
@@ -81,6 +84,8 @@ public class UpdateCourseCommandHandler(IApplicationDbContext db)
             course.IsActive = request.IsActive.Value;
         if (request.ImageUrl is not null)
             course.ImageUrl = request.ImageUrl;
+        if (request.Month.HasValue)
+            course.Month = request.Month.Value is > 0 and <= 12 ? request.Month.Value : null;
 
         await db.SaveChangesAsync(ct);
         return ApiResponse<bool>.Ok(true, "تم تعديل الكورس");

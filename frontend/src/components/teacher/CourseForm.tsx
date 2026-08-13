@@ -23,6 +23,22 @@ export const SUBJECTS = [
   { key: 'Geography', ar: 'جغرافيا' },
 ] as const;
 
+export const MONTHS = [
+  { value: 0, ar: 'بدون شهر' },
+  { value: 1, ar: 'يناير' },
+  { value: 2, ar: 'فبراير' },
+  { value: 3, ar: 'مارس' },
+  { value: 4, ar: 'أبريل' },
+  { value: 5, ar: 'مايو' },
+  { value: 6, ar: 'يونيو' },
+  { value: 7, ar: 'يوليو' },
+  { value: 8, ar: 'أغسطس' },
+  { value: 9, ar: 'سبتمبر' },
+  { value: 10, ar: 'أكتوبر' },
+  { value: 11, ar: 'نوفمبر' },
+  { value: 12, ar: 'ديسمبر' },
+] as const;
+
 export function CourseForm({
   editing,
   onDone,
@@ -37,12 +53,13 @@ export function CourseForm({
   onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { toast } = useToast();
-  const [form, setForm] = useState<{ title: string; description: string; subject: Subject; stage: Stage; order: number }>({
+  const [form, setForm] = useState<{ title: string; description: string; subject: Subject; stage: Stage; order: number; month: number }>({
     title: editing?.title ?? '',
     description: editing?.description ?? '',
     subject: editing?.subject ?? 'SocialStudies',
     stage: editing?.stage ?? 'PrepOne',
     order: editing?.order ?? 0,
+    month: editing?.month ?? 0,
   });
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<Blob | null>(null);
@@ -87,6 +104,7 @@ export function CourseForm({
     form.subject !== initialRef.current.subject ||
     form.stage !== initialRef.current.stage ||
     form.order !== initialRef.current.order ||
+    form.month !== initialRef.current.month ||
     imageFile !== null;
 
   useEffect(() => {
@@ -103,11 +121,11 @@ export function CourseForm({
     try {
       let courseId = editing?.id;
       if (editing) {
-        await api.put(`/teacher-content/courses/${editing.id}`, { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0 });
+        await api.put(`/teacher-content/courses/${editing.id}`, { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0, month: form.month || null });
         courseId = editing.id;
         toast('تم التعديل', 'اتحدثت بيانات الكورس', 'success');
       } else {
-        courseId = await api.post<number>('/teacher-content/courses', { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0 });
+        courseId = await api.post<number>('/teacher-content/courses', { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0, month: form.month || null });
         toast('تم إنشاء الكورس', 'ظاهر دلوقتي للطلبة', 'success');
       }
       if (imageFile && courseId) {
@@ -177,6 +195,14 @@ export function CourseForm({
         <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value as Stage })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none focus:border-gold/60">
           {STAGES.map((s) => (
             <option key={s.key} value={s.key}>{s.ar}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">الشهر</label>
+        <select value={form.month} onChange={(e) => setForm({ ...form, month: Number(e.target.value) })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none focus:border-gold/60">
+          {MONTHS.map((m) => (
+            <option key={m.value} value={m.value}>{m.ar}</option>
           ))}
         </select>
       </div>
