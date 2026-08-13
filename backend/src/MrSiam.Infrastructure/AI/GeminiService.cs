@@ -21,15 +21,20 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
 
     public async Task<string?> GenerateAsync(string systemInstruction, string userPrompt, CancellationToken ct)
     {
-        return await CallAsync(systemInstruction, userPrompt, null, 900, ct);
+        return await CallAsync(systemInstruction, userPrompt, null, 900, null, ct);
     }
 
     public async Task<string?> GenerateJsonAsync(string systemInstruction, string userPrompt, CancellationToken ct)
     {
-        return await CallAsync(systemInstruction, userPrompt, "application/json", 4096, ct);
+        return await CallAsync(systemInstruction, userPrompt, "application/json", 4096, null, ct);
     }
 
-    private async Task<string?> CallAsync(string systemInstruction, string userPrompt, string? responseMimeType, int maxOutputTokens, CancellationToken ct)
+    public async Task<string?> GenerateJsonFromPdfAsync(string systemInstruction, string userPrompt, byte[] pdfBytes, CancellationToken ct)
+    {
+        return await CallAsync(systemInstruction, userPrompt, "application/json", 4096, pdfBytes, ct);
+    }
+
+    private async Task<string?> CallAsync(string systemInstruction, string userPrompt, string? responseMimeType, int maxOutputTokens, byte[]? pdfBytes, CancellationToken ct)
     {
         var apiKey = configuration["AI:ApiKey"];
         var model = configuration["AI:Model"] ?? "gemini-2.5-flash";
@@ -47,10 +52,24 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
             var client = httpClientFactory.CreateClient("gemini");
             client.Timeout = TimeSpan.FromSeconds(120);
 
+            var requestParts = new List<object>();
+            if (pdfBytes is { Length: > 0 })
+            {
+                requestParts.Add(new
+                {
+                    inlineData = new
+                    {
+                        mimeType = "application/pdf",
+                        data = Convert.ToBase64String(pdfBytes)
+                    }
+                });
+            }
+            requestParts.Add(new { text = userPrompt });
+
             var payload = new
             {
                 systemInstruction = new { parts = new object[] { new { text = systemInstruction } } },
-                contents = new object[] { new { role = "user", parts = new object[] { new { text = userPrompt } } } },
+                contents = new object[] { new { role = "user", parts = requestParts } },
                 generationConfig = new { temperature = 0.3, maxOutputTokens, responseMimeType }
             };
 

@@ -1,4 +1,4 @@
-import { Bell, BookOpen, CalendarDays, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, MessageCircle, Plus, Trash2, Upload, Users, Video, XCircle } from 'lucide-react';
+import { Bell, BookOpen, CalendarDays, CheckCircle2, Compass, FileText, GraduationCap, ImagePlus, Loader2, MessageCircle, Pencil, Plus, Trash2, Upload, Users, Video, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
@@ -59,6 +59,7 @@ export default function TeacherDashboard() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const loadAlbum = () =>
@@ -83,6 +84,23 @@ export default function TeacherDashboard() {
     setPhotoPreview(URL.createObjectURL(file));
   }
 
+  function startEdit(t: TopStudentDto) {
+    setEditingId(t.id);
+    setForm({ fullName: t.fullName, stageAr: t.stageAr, achievement: t.achievement, score: t.score != null ? String(t.score) : '', year: t.year ?? '' });
+    setPhoto(null);
+    setPhotoPreview(t.photoUrl ? resolveFileUrl(t.photoUrl) ?? null : null);
+    setFormError(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setForm({ fullName: '', stageAr: STAGE_OPTIONS[5], achievement: '', score: '', year: '' });
+    setPhoto(null);
+    setPhotoPreview(null);
+    if (fileRef.current) fileRef.current.value = '';
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
@@ -102,14 +120,15 @@ export default function TeacherDashboard() {
       if (form.year.trim()) fd.append('year', form.year.trim());
       if (photo) fd.append('photo', photo);
 
-      await api.upload<number>('/top-students', fd);
-      setForm({ fullName: '', stageAr: STAGE_OPTIONS[5], achievement: '', score: '', year: '' });
-      setPhoto(null);
-      setPhotoPreview(null);
-      if (fileRef.current) fileRef.current.value = '';
+      if (editingId != null) {
+        await api.uploadForm<boolean>('PUT', `/top-students/${editingId}`, fd);
+      } else {
+        await api.upload<number>('/top-students', fd);
+      }
+      cancelEdit();
       await loadAlbum();
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'فشل الإضافة');
+      setFormError(err instanceof Error ? err.message : 'فشل العملية');
     } finally {
       setSaving(false);
     }
@@ -294,16 +313,24 @@ export default function TeacherDashboard() {
               className="flex items-center justify-center gap-2 rounded-md bg-gold px-3 py-2 text-xs font-bold text-navy-deep transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {saving ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-              {saving ? 'بيتضاف...' : 'ضيف للألبوم'}
+              {saving ? (editingId != null ? 'بيتعدل...' : 'بيتضاف...') : (editingId != null ? 'حفظ التعديل' : 'ضيف للألبوم')}
             </button>
             {formError && <p className="text-[11px] font-semibold text-error">{formError}</p>}
           </div>
         </form>
 
+        {editingId != null && (
+          <div className="mt-3 flex items-center gap-2 rounded-md border border-gold/30 bg-gold/5 px-3 py-2 text-xs text-text-secondary">
+            <Pencil size={13} className="text-gold" />
+            جاري تعديل العضو المحدد — بعد الحفظ هيتحدث مكانه.
+            <button onClick={cancelEdit} className="ms-auto font-bold text-text-muted transition-colors hover:text-error">إلغاء</button>
+          </div>
+        )}
+
         {photoPreview && (
           <div className="mt-4 flex items-center gap-3">
             <img src={photoPreview} alt="معاينة" className="h-16 w-16 rounded-full border-2 border-gold/50 object-cover" />
-            <p className="text-xs text-text-muted">معاينة الصورة اللي هتظهر في الألبوم.</p>
+            <p className="text-xs text-text-muted">{editingId != null ? 'معاينة الصورة الجديدة — اتركها كما هي إن مش هتغيرها.' : 'معاينة الصورة اللي هتظهر في الألبوم.'}</p>
           </div>
         )}
 
@@ -327,6 +354,13 @@ export default function TeacherDashboard() {
                 <p className="truncate text-[10px] text-text-muted">{t.stageAr}{t.year ? ` · ${t.year}` : ''}</p>
               </div>
               {t.score != null && <span className="text-sm font-bold text-gold">{Number(t.score).toFixed(1)}%</span>}
+              <button
+                onClick={() => startEdit(t)}
+                aria-label={`تعديل ${t.fullName}`}
+                className="ms-1 rounded-full p-1.5 text-text-muted transition-colors hover:bg-gold/10 hover:text-gold"
+              >
+                <Pencil size={14} />
+              </button>
               <button
                 onClick={() => onDelete(t.id)}
                 disabled={deletingId === t.id}

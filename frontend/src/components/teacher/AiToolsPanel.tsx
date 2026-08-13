@@ -1,5 +1,5 @@
-import { BrainCircuit, Check, Database, Loader2, Plus, RefreshCw, Search, Sparkles, Trash2, Wand2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { BrainCircuit, Check, Database, FileUp, Loader2, Plus, RefreshCw, Search, Sparkles, Trash2, Wand2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { useToast } from '../../design-system/ui/Toast';
 import { Badge } from '../../design-system/ui/Badge';
 import { Modal } from '../../design-system/ui/Modal';
@@ -26,14 +26,19 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
 
+  // PDF upload state
+  const [pdf, setPdf] = useState<File | null>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+
   // Save-as-exam state
   const [saveModal, setSaveModal] = useState(false);
-  const [saveForm, setSaveForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean }>({
+  const [saveForm, setSaveForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean; lessonId: number }>({
     title: '',
     type: 'Lesson',
     durationMinutes: 10,
     attemptsAllowed: 3,
     isPublished: false,
+    lessonId: 0,
   });
   const [saving, setSaving] = useState(false);
 
@@ -78,16 +83,30 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
     setGenerating(true);
     setGenError(null);
     try {
-      const d = await api.post<AiExamDraftDto>('/teacher-content/ai/exams/generate', {
-        courseId,
-        lessonIds,
-        topic: topic.trim(),
-        questionCount: count,
-        difficulty,
-      });
-      setDraft(d);
-      setSaveForm((f) => ({ ...f, title: d.title }));
-      toast(`اتولّد ${d.questions.length} سؤال من المنهج`, '', 'success');
+      if (pdf) {
+        const fd = new FormData();
+        fd.append('courseId', String(courseId));
+        lessonIds.forEach((id) => fd.append('lessonIds', String(id)));
+        fd.append('topic', topic.trim());
+        fd.append('questionCount', String(count));
+        fd.append('difficulty', difficulty);
+        fd.append('pdf', pdf);
+        const d = await api.upload<AiExamDraftDto>('/teacher-content/ai/exams/generate-from-pdf', fd);
+        setDraft(d);
+        setSaveForm((f) => ({ ...f, title: d.title }));
+        toast(`اتولّد ${d.questions.length} سؤال من الملف`, '', 'success');
+      } else {
+        const d = await api.post<AiExamDraftDto>('/teacher-content/ai/exams/generate', {
+          courseId,
+          lessonIds,
+          topic: topic.trim(),
+          questionCount: count,
+          difficulty,
+        });
+        setDraft(d);
+        setSaveForm((f) => ({ ...f, title: d.title }));
+        toast(`اتولّد ${d.questions.length} سؤال من المنهج`, '', 'success');
+      }
     } catch (err) {
       setDraft(null);
       setGenError(err instanceof Error ? err.message : 'فشل التوليد');
@@ -103,7 +122,7 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
     try {
       const examId = await api.post<number>('/teacher-content/ai/exams/save', {
         courseId,
-        lessonId: draft.questions.find((q) => q.lessonId)?.lessonId ?? null,
+        lessonId: saveForm.lessonId || (draft.questions.find((q) => q.lessonId)?.lessonId ?? null),
         title: saveForm.title,
         type: saveForm.type,
         durationMinutes: Number(saveForm.durationMinutes) || 10,
@@ -288,6 +307,32 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
               <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="مثال: توحيد القطرين وعصر الأسرات" />
             </div>
 
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-text-secondary">ملف المحاضرة PDF (اختياري)</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => pdfRef.current?.click()}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md border border-dashed border-gold/40 bg-gold/5 px-3 py-2 text-xs font-semibold text-gold transition-colors hover:bg-gold/10"
+                >
+                  <FileUp size={14} />
+                  {pdf ? pdf.name : 'ارفع الشريحة PDF وخلّي الذكاء الاصطناعي يقراها'}
+                </button>
+                {pdf && (
+                  <button
+                    type="button"
+                    onClick={() => { setPdf(null); if (pdfRef.current) pdfRef.current.value = ''; }}
+                    className="rounded-md p-1.5 text-text-muted transition-colors hover:bg-error/10 hover:text-error"
+                    aria-label="حذف الملف"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+              <input ref={pdfRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={(e) => setPdf(e.target.files?.[0] ?? null)} />
+              <p className="mt-1 text-[10px] text-text-muted">ارفع ملف المحاضرة — الذكاء الاصطناعي هيقراه هيولّد الأسئلة منه مباشرة.</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-[11px] font-bold text-text-secondary">عدد الأسئلة</label>
@@ -445,6 +490,16 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
             <label className="mb-1 block text-[11px] font-bold text-text-secondary">اسم الامتحان</label>
             <Input value={saveForm.title} onChange={(e) => setSaveForm({ ...saveForm, title: e.target.value })} />
           </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-[11px] font-bold text-text-secondary">المحاضرة اللي هتروح ليها الأسئلة</label>
+            <select value={saveForm.lessonId} onChange={(e) => setSaveForm({ ...saveForm, lessonId: Number(e.target.value) })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-gold/60">
+              <option value={0}>— من غير ما أحطها لمحاضرة محددة —</option>
+              {lessons.map((l) => (
+                <option key={l.id} value={l.id}>{l.order}. {l.title}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-[10px] text-text-muted">اختر المحاضرة ثم اضغط موافق — الأسئلة هتتسجل على المحاضرة دي.</p>
+          </div>
           <div>
             <label className="mb-1 block text-[11px] font-bold text-text-secondary">النوع</label>
             <select value={saveForm.type} onChange={(e) => setSaveForm({ ...saveForm, type: e.target.value as ExamType })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-gold/60">
@@ -471,7 +526,7 @@ export default function AiToolsPanel({ courses, onContentChanged }: Props) {
         <div className="mt-4 flex justify-end gap-2">
           <button onClick={() => setSaveModal(false)} className="rounded-md border border-border-soft px-4 py-2 text-xs font-bold text-text-secondary hover:bg-surface-sunken">إلغاء</button>
           <button onClick={() => void saveDraft()} disabled={saving} className="flex items-center gap-1.5 rounded-md bg-gold px-4 py-2 text-xs font-bold text-navy-deep transition-colors hover:bg-gold/90 disabled:opacity-50">
-            {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} احفظ
+            {saving ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} موافق
           </button>
         </div>
       </Modal>

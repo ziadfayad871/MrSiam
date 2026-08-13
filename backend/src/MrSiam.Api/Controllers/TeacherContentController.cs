@@ -65,7 +65,42 @@ public class TeacherContentController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<AiExamDraftDto>>> GenerateAiExam(GenerateAiExamCommand command, CancellationToken ct)
         => Ok(await mediator.Send(command, ct));
 
+    [HttpPost("ai/exams/generate-from-pdf")]
+    [RequestSizeLimit(30 * 1024 * 1024)]
+    public async Task<ActionResult<ApiResponse<AiExamDraftDto>>> GenerateAiExamFromPdf([FromForm] GenerateAiExamFromPdfRequest request, CancellationToken ct)
+    {
+        if (request.Pdf is null || request.Pdf.Length == 0)
+            return BadRequest(ApiResponse<AiExamDraftDto>.Fail("ارفع ملف PDF الأول"));
+
+        if (request.Pdf.Length > 20 * 1024 * 1024)
+            return BadRequest(ApiResponse<AiExamDraftDto>.Fail("حجم ملف الـ PDF أكبر من 20 ميجابايت"));
+
+        if (Path.GetExtension(request.Pdf.FileName).ToLowerInvariant() != ".pdf")
+            return BadRequest(ApiResponse<AiExamDraftDto>.Fail("صيغة الملف لازم تكون PDF"));
+
+        using var ms = new MemoryStream();
+        await request.Pdf.CopyToAsync(ms, ct);
+
+        var command = new GenerateAiExamFromPdfCommand(
+            request.CourseId,
+            request.LessonIds ?? [],
+            request.Topic ?? "",
+            request.QuestionCount,
+            request.Difficulty ?? "متوسط",
+            ms.ToArray());
+
+        return Ok(await mediator.Send(command, ct));
+    }
+
     [HttpPost("ai/exams/save")]
     public async Task<ActionResult<ApiResponse<int>>> SaveAiExam(SaveAiExamCommand command, CancellationToken ct)
         => Ok(await mediator.Send(command, ct));
+
+    public record GenerateAiExamFromPdfRequest(
+        int CourseId,
+        List<int>? LessonIds,
+        string? Topic,
+        int QuestionCount,
+        string? Difficulty,
+        IFormFile? Pdf);
 }

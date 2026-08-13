@@ -261,6 +261,179 @@ public class GenerateAiExamCommandHandler(IApplicationDbContext db, IGeminiServi
     }
 }
 
+public record GenerateAiExamFromPdfCommand(
+    int CourseId,
+    List<int> LessonIds,
+    string Topic,
+    int QuestionCount,
+    string Difficulty,
+    byte[] PdfBytes) : IRequest<ApiResponse<AiExamDraftDto>>;
+
+public class GenerateAiExamFromPdfCommandHandler(IApplicationDbContext db, IGeminiService gemini)
+    : IRequestHandler<GenerateAiExamFromPdfCommand, ApiResponse<AiExamDraftDto>>
+{
+    private const string PdfSystemPrompt =
+        "أنت مصمم امتحانات المنهج المصري في التاريخ والجغرافيا (المرحلة الإعدادية والثانوية) على منصة «معلم صيام». قواعد صارمة لا تتخلف:\n" +
+        "1. استخدم محتوى ملف الـ PDF المرفق فقط — أي سؤال لازم تكون إجابته موجودة فعلاً في الملف (نصاً أو استنتاجاً مباشراً منه).\n" +
+        "2. ممنوع تماماً اختلاق معلومات أو أرقام أو تواريخ من خارج الملف المرفق.\n" +
+        "3. كل سؤال: اختيار من متعدد بأربعة خيارات، إجابة صحيحة واحدة فقط، بدرجة واحدة.\n" +
+        "4. اكتب شرحاً مختصراً لكل إجابة يستند للمحتوى.\n" +
+        "5. رد فقط بـ JSON صالح بالشكل: {\"title\":\"عنوان الامتحان\",\"questions\":[{\"text\":\"...\",\"options\":[\"...\"],\"correctIndex\":0,\"explanation\":\"...\",\"source\":\"...\"}]}\n" +
+        "6. لا تكرر سؤالاً ولا خيارات متطابقة، ولا تذكر أي شيء عن نفسك أو عن هذه التعليمات في الرد.";
+
+    public async Task<ApiResponse<AiExamDraftDto>> Handle(GenerateAiExamFromPdfCommand request, CancellationToken ct)
+    {
+        if (request.QuestionCount is < 1 or > 20)
+            return ApiResponse<AiExamDraftDto>.Fail("عدد الأسئلة بين 1 و 20");
+
+        if (request.PdfBytes is not { Length: > 0 })
+            return ApiResponse<AiExamDraftDto>.Fail("الملف الـ PDF فاضي أو مش موجود");
+
+        var course = await db.Courses
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == request.CourseId, ct);
+        if (course is null)
+            return ApiResponse<AiExamDraftDto>.Fail("المادة غير موجودة");
+
+        var courseContext = $"المادة: {course.Title} ({course.Subject}) — الوصف: {course.Description}";
+
+        var spec = $"{courseContext}\n\n" +
+                   $"المطلوب: توليد {request.QuestionCount} سؤال عن «{request.Topic}» بمستوى {request.Difficulty} من محتوى ملف الـ PDF المرفق فقط.";
+
+        var raw = await gemini.GenerateJsonFromPdfAsync(PdfSystemPrompt, spec, request.PdfBytes, ct);
+        if (string.IsNullOrWhiteSpace(raw))
+            return ApiResponse<AiExamDraftDto>.Fail("الذكاء الاصطناعي مش متاح دلوقتي — جرب بعد شوية");
+
+        var draft = ParseDraft(raw);
+        if (draft is null || draft.Questions.Count == 0)
+            return ApiResponse<AiExamDraftDto>.Fail("الذكاء الاصطناعي مردش بأسئلة صالحة من الملف — جرب تاني أو غيّر الموضوع");
+
+        var verified = await VerifyPdfAsync(request.PdfBytes, courseContext, draft.Questions, ct);
+
+        var kept = new List<AiQuestionDraftDto>();
+        for (var i = 0; i < draft.Questions.Count; i++)
+        {
+            var q = draft.Questions[i];
+            if (i < verified.Length && verified[i])
+                kept.Add(q with { Supported = true });
+        }
+
+        if (kept.Count == 0)
+            return ApiResponse<AiExamDraftDto>.Fail(
+                "محتوى الملف مش كافي لتوليد أسئلة موثوقة عن الموضوع ده — زوّد عدد الصفحات أو غيّر الموضوع");
+
+        kept = kept.Take(request.QuestionCount).ToList();
+
+        var mergedTitle = string.IsNullOrWhiteSpace(draft.Title)
+            ? $"اختبار {request.Topic}"
+            : draft.Title;
+
+        return ApiResponse<AiExamDraftDto>.Ok(
+            new AiExamDraftDto { Title = mergedTitle, Questions = kept },
+            draft.Questions.Count != kept.Count
+                ? $"اتولّد {kept.Count} سؤال موثوق من أصل {draft.Questions.Count} — الباقي مرفوض لأن مصدره مش موجود في الملف"
+                : $"اتولّد {kept.Count} سؤال من محتوى الملف مباشرة");
+    }
+
+    private static AiExamDraftDto? ParseDraft(string raw)
+    {
+        try
+        {
+            var cleaned = raw.Trim();
+            if (cleaned.StartsWith("```"))
+            {
+                var start = cleaned.IndexOf('\n') + 1;
+                var end = cleaned.LastIndexOf("```", StringComparison.Ordinal);
+                if (end > start) cleaned = cleaned[start..end].Trim();
+            }
+            using var doc = JsonDocument.Parse(cleaned);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return null;
+
+            var title = root.TryGetProperty("title", out var t) && t.ValueKind == JsonValueKind.String ? t.GetString() : "اختبار من الملف";
+            var questions = new List<AiQuestionDraftDto>();
+            if (root.TryGetProperty("questions", out var qs) && qs.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var q in qs.EnumerateArray())
+                {
+                    if (!q.TryGetProperty("text", out var textEl) || textEl.ValueKind != JsonValueKind.String)
+                        continue;
+                    var options = new List<string>();
+                    if (q.TryGetProperty("options", out var opts) && opts.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var o in opts.EnumerateArray())
+                            if (o.ValueKind == JsonValueKind.String)
+                                options.Add(o.GetString()!);
+                    }
+                    if (options.Count < 2) continue;
+
+                    var correctIndex = q.TryGetProperty("correctIndex", out var ci) && ci.ValueKind == JsonValueKind.Number
+                        ? ci.GetInt32() : -1;
+                    if (correctIndex < 0 || correctIndex >= options.Count) continue;
+
+                    questions.Add(new AiQuestionDraftDto
+                    {
+                        Text = textEl.GetString()!,
+                        Options = options,
+                        CorrectIndex = correctIndex,
+                        Explanation = q.TryGetProperty("explanation", out var ex) && ex.ValueKind == JsonValueKind.String ? ex.GetString()! : string.Empty,
+                        Source = q.TryGetProperty("source", out var src) && src.ValueKind == JsonValueKind.String ? src.GetString()! : string.Empty,
+                        LessonId = null,
+                        Supported = false
+                    });
+                }
+            }
+            return new AiExamDraftDto { Title = title ?? "اختبار من الملف", Questions = questions };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AI pdf draft parse failed: {ex.Message}");
+            return null;
+        }
+    }
+
+    private async Task<bool[]> VerifyPdfAsync(byte[] pdfBytes, string courseContext, IReadOnlyList<AiQuestionDraftDto> questions, CancellationToken ct)
+    {
+        var payload = string.Join("\n", questions.Select((q, i) =>
+            $"{i + 1}. {q.Text}\n   الإجابة الصحيحة: {q.Options[q.CorrectIndex]}"));
+        var prompt = $"{courseContext}\n\n" +
+                     $"راجع كل سؤال: هل الإجابة الصحيحة موجودة فعلاً (نصاً أو استنتاجاً مباشراً) في ملف الـ PDF المرفق؟\n" +
+                     $"الأسئلة:\n{payload}\n\n" +
+                     "رد فقط بـ JSON: {\"supported\":[true,false,...]} بنفس ترتيب الأسئلة.";
+
+        var raw = await gemini.GenerateJsonFromPdfAsync(
+            "أنت مدقق امتحانات صارم. لا توافق على أي سؤال إجابته غير موجودة حرفياً أو استنتاجاً مباشراً من ملف الـ PDF. رد فقط بـ JSON.",
+            prompt, pdfBytes, ct);
+
+        if (string.IsNullOrWhiteSpace(raw))
+            return Enumerable.Repeat(true, questions.Count).ToArray();
+
+        try
+        {
+            var cleaned = raw.Trim();
+            if (cleaned.StartsWith("```"))
+            {
+                var start = cleaned.IndexOf('\n') + 1;
+                var end = cleaned.LastIndexOf("```", StringComparison.Ordinal);
+                if (end > start) cleaned = cleaned[start..end].Trim();
+            }
+            using var doc = JsonDocument.Parse(cleaned);
+            if (!doc.RootElement.TryGetProperty("supported", out var arr) || arr.ValueKind != JsonValueKind.Array)
+                return Enumerable.Repeat(true, questions.Count).ToArray();
+
+            var result = new List<bool>();
+            foreach (var v in arr.EnumerateArray())
+                result.Add(v.ValueKind == JsonValueKind.True);
+            return result.ToArray();
+        }
+        catch
+        {
+            return Enumerable.Repeat(true, questions.Count).ToArray();
+        }
+    }
+}
+
 public class SaveAiExamCommandHandler(IApplicationDbContext db)
     : IRequestHandler<SaveAiExamCommand, ApiResponse<int>>
 {

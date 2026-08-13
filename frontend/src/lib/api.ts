@@ -70,6 +70,17 @@ export const api = {
       return (body?.data ?? body) as T;
     });
   },
+  uploadForm: <T>(method: 'POST' | 'PUT' | 'PATCH', path: string, formData: FormData) => {
+    const token = getToken();
+    const headers: Record<string, string> = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return fetch(`${API_BASE}/api${path}`, { method, body: formData, headers }).then(async (res) => {
+      const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
+      if (!res.ok) throw new ApiError(body?.message ?? 'فشل رفع البيانات', res.status);
+      if (body && !body.success) throw new ApiError(body.message ?? 'فشلت العملية', res.status);
+      return (body?.data ?? body) as T;
+    });
+  },
 };
 
 export function resolveFileUrl(photoUrl?: string | null): string | undefined {

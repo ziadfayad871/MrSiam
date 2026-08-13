@@ -95,6 +95,58 @@ public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment
         return Ok(new { success = true, data = entry.Id });
     }
 
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = nameof(Role.Teacher) + "," + nameof(Role.Admin))]
+    [RequestSizeLimit(MaxFileSize + 1024 * 1024)]
+    public async Task<IActionResult> Update(int id, [FromForm] UpdateTopStudentRequest request)
+    {
+        var entry = await db.TopStudents.FirstOrDefaultAsync(t => t.Id == id);
+        if (entry is null)
+            return NotFound(new { success = false, message = "الطالب غير موجود" });
+
+        if (!string.IsNullOrWhiteSpace(request.FullName))
+            entry.FullName = request.FullName.Trim();
+        if (!string.IsNullOrWhiteSpace(request.StageAr))
+            entry.StageAr = request.StageAr.Trim();
+        if (!string.IsNullOrWhiteSpace(request.Achievement))
+            entry.Achievement = request.Achievement.Trim();
+        entry.Score = request.Score;
+        entry.Year = string.IsNullOrWhiteSpace(request.Year) ? null : request.Year.Trim();
+
+        if (request.Photo is not null)
+        {
+            var ext = Path.GetExtension(request.Photo.FileName).ToLowerInvariant();
+            if (!AllowedExtensions.Contains(ext))
+                return BadRequest(new { success = false, message = "صيغة الصورة غير مدعومة (jpg / png / webp)" });
+
+            if (request.Photo.Length > MaxFileSize)
+                return BadRequest(new { success = false, message = "حجم الصورة أكبر من 5 ميجابايت" });
+
+            var uploadsDir = Path.Combine(env.ContentRootPath, UploadsRoot);
+            Directory.CreateDirectory(uploadsDir);
+
+            if (!string.IsNullOrWhiteSpace(entry.PhotoUrl))
+            {
+                var oldPath = Path.Combine(env.ContentRootPath, UploadsRoot, Path.GetFileName(entry.PhotoUrl));
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            var fileName = $"{Guid.NewGuid():N}{ext}";
+            var filePath = Path.Combine(uploadsDir, fileName);
+            await using (var stream = System.IO.File.Create(filePath))
+            {
+                await request.Photo.CopyToAsync(stream);
+            }
+
+            entry.PhotoUrl = $"/uploads/top-students/{fileName}";
+        }
+
+        await db.SaveChangesAsync();
+
+        return Ok(new { success = true, data = true });
+    }
+
     [HttpDelete("{id:int}")]
     [Authorize(Roles = nameof(Role.Teacher) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Delete(int id)
@@ -117,6 +169,14 @@ public class TopStudentsController(IApplicationDbContext db, IWebHostEnvironment
     }
 
     public record CreateTopStudentRequest(
+        string? FullName,
+        string? StageAr,
+        string? Achievement,
+        decimal? Score,
+        string? Year,
+        IFormFile? Photo);
+
+    public record UpdateTopStudentRequest(
         string? FullName,
         string? StageAr,
         string? Achievement,
