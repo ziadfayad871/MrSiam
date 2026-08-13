@@ -219,7 +219,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(r => r.Title).HasMaxLength(200);
             e.Property(r => r.Kind).HasMaxLength(30);
             e.Property(r => r.FileUrl).HasMaxLength(400);
-            e.HasOne<Lesson>().WithMany().HasForeignKey(r => r.LessonId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(r => r.Lesson).WithMany().HasForeignKey(r => r.LessonId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Certificate>(e =>
