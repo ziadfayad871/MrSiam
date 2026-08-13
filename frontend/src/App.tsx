@@ -13,6 +13,7 @@ import PassportPage from './pages/student/PassportPage';
 import CertificatesPage from './pages/student/CertificatesPage';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherContentPage from './pages/teacher/TeacherContentPage';
+import TeacherCourseNewPage from './pages/teacher/TeacherCourseNewPage';
 import TeacherClassPage from './pages/teacher/TeacherClassPage';
 import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
 import TeacherLivePage from './pages/teacher/TeacherLivePage';
@@ -152,6 +153,18 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <TeacherContentPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/content/courses/new"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherCourseNewPage />
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>

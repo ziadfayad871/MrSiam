@@ -217,7 +217,7 @@ export default function LandingPage() {
               <h2 className="display-serif mt-4 text-3xl font-extrabold sm:text-4xl">يلا نبدأ أول خطوة</h2>
               <p className="mt-3 leading-7 text-white/75">مستقبل كبير بيبدأ بقرار صغير. انضم لمنصة القيصر وخلي مذاكرتك ليها معنى.</p>
               <Link to="/login" className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gold px-7 py-3.5 font-extrabold text-navy-deep transition hover:bg-gold-bright">
-                إنشاء حساب جديد <ArrowLeft size={18} />
+                تسجيل الدخول <ArrowLeft size={18} />
               </Link>
             </div>
           </div>

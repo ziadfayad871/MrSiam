@@ -13,32 +13,18 @@ import {
   Video,
 } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Badge } from '../../design-system/ui/Badge';
 import { Button } from '../../design-system/ui/Button';
-import { Card } from '../../design-system/ui/Card';
 import Input from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
 import { Tabs } from '../../design-system/ui/Tabs';
 import AiToolsPanel from './AiToolsPanel';
+import { CourseForm, STAGES, SUBJECTS } from './CourseForm';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
-import type { AssignmentDto, CourseDto, ExamListItemDto, ExamType, LessonDto, Stage, Subject } from '../../lib/types';
-
-const STAGES = [
-  { key: 'PrepOne', ar: 'أولى إعدادي' },
-  { key: 'PrepTwo', ar: 'تانية إعدادي' },
-  { key: 'PrepThree', ar: 'تالتة إعدادي' },
-  { key: 'SecOne', ar: 'أولى ثانوي' },
-  { key: 'SecTwo', ar: 'تانية ثانوي' },
-  { key: 'SecThree', ar: 'تالتة ثانوي' },
-] as const;
-
-const SUBJECTS = [
-  { key: 'SocialStudies', ar: 'دراسات اجتماعية' },
-  { key: 'History', ar: 'تاريخ' },
-  { key: 'Geography', ar: 'جغرافيا' },
-] as const;
+import type { AssignmentDto, CourseDto, ExamListItemDto, ExamType, LessonDto } from '../../lib/types';
 
 const EXAM_TYPES = [
   { key: 'Practice', ar: 'تدريبي' },
@@ -61,74 +47,6 @@ type QuestionForm = {
 
 function emptyQuestion(): QuestionForm {
   return { text: '', type: 'SingleChoice', marks: 1, options: ['', '', '', ''], correctIndex: 0 };
-}
-
-function CourseForm({ editing, onDone }: { editing: CourseDto | null; onDone: () => void }) {
-  const { toast } = useToast();
-  const [form, setForm] = useState<{ title: string; description: string; subject: Subject; stage: Stage; order: number }>({
-    title: editing?.title ?? '',
-    description: editing?.description ?? '',
-    subject: editing?.subject ?? 'SocialStudies',
-    stage: editing?.stage ?? 'PrepOne',
-    order: editing?.order ?? 0,
-  });
-  const [saving, setSaving] = useState(false);
-
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    if (!form.title.trim()) {
-      toast('اسم الكورس مطلوب', '', 'error');
-      return;
-    }
-    setSaving(true);
-    try {
-      if (editing) {
-        await api.put(`/teacher-content/courses/${editing.id}`, { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0 });
-        toast('تم التعديل', 'اتحدثت بيانات الكورس', 'success');
-      } else {
-        await api.post<number>('/teacher-content/courses', { title: form.title, description: form.description, subject: form.subject, stage: form.stage, order: Number(form.order) || 0 });
-        toast('تم إنشاء الكورس', 'ظاهر دلوقتي للطلبة', 'success');
-      }
-      onDone();
-    } catch (err) {
-      toast('فشل الحفظ', err instanceof Error ? err.message : 'خطأ', 'error');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
-      <div className="sm:col-span-2">
-        <Input label="اسم الكورس" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="مثال: الدراسات الاجتماعية - أولى إعدادي" />
-      </div>
-      <div className="sm:col-span-2">
-        <Input label="الوصف" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="وصف مختصر للكورس" />
-      </div>
-      <div>
-        <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المادة</label>
-        <select value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value as Subject })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none focus:border-gold/60">
-          {SUBJECTS.map((s) => (
-            <option key={s.key} value={s.key}>{s.ar}</option>
-          ))}
-        </select>
-      </div>
-      <div>
-        <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المرحلة</label>
-        <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value as Stage })} className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none focus:border-gold/60">
-          {STAGES.map((s) => (
-            <option key={s.key} value={s.key}>{s.ar}</option>
-          ))}
-        </select>
-      </div>
-      <div className="sm:col-span-2">
-        <Input label="الترتيب" type="number" value={String(form.order)} onChange={(e) => setForm({ ...form, order: Number(e.target.value) || 0 })} />
-      </div>
-      <div className="flex justify-end gap-3 sm:col-span-2">
-        <Button type="submit" variant="gold" loading={saving}>{editing ? 'حفظ التعديلات' : 'أنشئ الكورس'}</Button>
-      </div>
-    </form>
-  );
 }
 
 function LessonForm({ courseId, editing, onDone }: { courseId: number; editing: LessonDto | null; onDone: () => void }) {
@@ -701,7 +619,7 @@ function CourseSection({ course, onChanged }: { course: CourseDto; onChanged: ()
       )}
 
       <Modal open={courseModal !== false} onClose={() => setCourseModal(false)} title={courseModal ? `تعديل — ${courseModal.title}` : ''}>
-        {courseModal && <CourseForm editing={courseModal} onDone={() => { setCourseModal(false); onChanged(); }} />}
+        {courseModal && <CourseForm editing={courseModal} onDone={() => { setCourseModal(false); onChanged(); }} onCancel={() => setCourseModal(false)} />}
       </Modal>
 
       <Modal open={lessonModal !== 'none'} onClose={() => setLessonModal('none')} title={lessonModal === 'create' ? 'أضف درس/فيديو' : `تعديل — ${typeof lessonModal === 'object' ? lessonModal.title : ''}`}>
@@ -720,9 +638,9 @@ function CourseSection({ course, onChanged }: { course: CourseDto; onChanged: ()
 }
 
 export default function ContentTab() {
+  const navigate = useNavigate();
   const [courses, setCourses] = useState<CourseDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCreate, setShowCreate] = useState(false);
 
   function load() {
     api
@@ -744,7 +662,7 @@ export default function ContentTab() {
           <h2 className="text-lg font-bold text-text-primary">إدارة المحتوى التعليمي</h2>
           <p className="text-xs text-text-muted">الكورسات والدروس والفيديوهات والامتحانات والواجبات — كل حاجة بقت في إيدك.</p>
         </div>
-        <Button variant="gold" icon={<Plus size={15} />} onClick={() => setShowCreate(true)}>
+        <Button variant="gold" icon={<Plus size={15} />} onClick={() => navigate('/teacher/content/courses/new')}>
           كورس جديد
         </Button>
       </div>
@@ -757,7 +675,7 @@ export default function ContentTab() {
         <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border-soft py-12 text-center">
           <BookOpen size={28} className="text-text-muted" />
           <p className="text-sm text-text-muted">مفيش كورسات — أنشئ أول كورس من الزرار فوق.</p>
-          <Button variant="gold" icon={<Plus size={15} />} onClick={() => setShowCreate(true)}>
+          <Button variant="gold" icon={<Plus size={15} />} onClick={() => navigate('/teacher/content/courses/new')}>
             أنشئ كورس
           </Button>
         </div>
@@ -769,9 +687,6 @@ export default function ContentTab() {
         </div>
       )}
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="كورس جديد">
-        <CourseForm editing={null} onDone={() => { setShowCreate(false); load(); }} />
-      </Modal>
     </div>
   );
 }

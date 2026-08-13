@@ -37,10 +37,11 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
     private async Task<string?> CallAsync(string systemInstruction, string userPrompt, string? responseMimeType, int maxOutputTokens, byte[]? pdfBytes, CancellationToken ct)
     {
         var apiKey = configuration["AI:ApiKey"];
-        var model = configuration["AI:Model"] ?? "gemini-2.5-flash";
+        var jsonRequest = responseMimeType == "application/json";
+        var model = configuration[jsonRequest ? "AI:JsonModel" : "AI:Model"] ?? "gemini-2.5-flash";
         var endpoint = configuration["AI:Endpoint"] ?? "https://generativelanguage.googleapis.com/v1beta";
         var thinkingEnabled = configuration.GetValue("AI:ThinkingEnabled", true);
-        var thinkingBudget = configuration.GetValue("AI:ThinkingBudget", 32768);
+        var thinkingBudget = Math.Clamp(configuration.GetValue("AI:ThinkingBudget", 24576), 0, 24576);
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {

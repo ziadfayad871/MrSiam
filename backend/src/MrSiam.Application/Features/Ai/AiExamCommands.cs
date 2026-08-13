@@ -170,6 +170,9 @@ public class GenerateAiExamCommandHandler(IApplicationDbContext db, IGeminiServi
                 var end = cleaned.LastIndexOf("```", StringComparison.Ordinal);
                 if (end > start) cleaned = cleaned[start..end].Trim();
             }
+            var open = cleaned.IndexOf('{');
+            var close = cleaned.LastIndexOf('}');
+            if (open >= 0 && close > open) cleaned = cleaned[open..(close + 1)];
             using var doc = JsonDocument.Parse(cleaned);
             var root = doc.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
@@ -346,6 +349,9 @@ public class GenerateAiExamFromPdfCommandHandler(IApplicationDbContext db, IGemi
                 var end = cleaned.LastIndexOf("```", StringComparison.Ordinal);
                 if (end > start) cleaned = cleaned[start..end].Trim();
             }
+            var open = cleaned.IndexOf('{');
+            var close = cleaned.LastIndexOf('}');
+            if (open >= 0 && close > open) cleaned = cleaned[open..(close + 1)];
             using var doc = JsonDocument.Parse(cleaned);
             var root = doc.RootElement;
             if (root.ValueKind != JsonValueKind.Object)
