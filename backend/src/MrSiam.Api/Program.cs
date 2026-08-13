@@ -34,7 +34,7 @@ try
 
     builder.Services.AddHttpClient("gemini", client =>
     {
-        client.Timeout = TimeSpan.FromSeconds(90);
+        client.Timeout = TimeSpan.FromSeconds(180);
     });
     builder.Services.AddScoped<MrSiam.Application.Abstractions.IGeminiService, MrSiam.Infrastructure.AI.GeminiService>();
 
@@ -120,6 +120,7 @@ try
         var db = scope.ServiceProvider.GetRequiredService<MrSiam.Infrastructure.Persistence.AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<MrSiam.Application.Abstractions.IPasswordHasher>();
         db.Database.EnsureCreated();
+        await MrSiam.Infrastructure.Persistence.SchemaBootstrap.EnsureCenterSchemaAsync(db);
         await MrSiam.Infrastructure.Persistence.SeedData.SeedAsync(db, hasher);
     }
 

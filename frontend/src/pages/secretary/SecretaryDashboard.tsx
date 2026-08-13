@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
 import { Card } from '../../design-system/ui/Card';
@@ -642,11 +643,32 @@ export default function SecretaryDashboard() {
   if (loading) return <CompassLoader text="بنجهز سجلات الأمين..." />;
   if (error || !data) return <ErrorState title={error ?? 'مفيش بيانات'} onRetry={() => window.location.reload()} />;
 
+  const quickLinks = [
+    { to: '/secretary/attendance', label: 'تسجيل الحضور', icon: '📋' },
+    { to: '/secretary/payments', label: 'التحصيل', icon: '💰' },
+    { to: '/secretary/groups', label: 'المجموعات', icon: '👥' },
+    { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: '📅' },
+    { to: '/secretary/students', label: 'تسجيل طالب', icon: '🎓' },
+  ];
+
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div>
         <h1 className="display-serif text-2xl font-bold text-text-primary">سجل الأمين</h1>
         <p className="mt-1 text-sm text-text-muted">الحضور والاشتراكات وتسجيل الطلبة — كل الورق في مكان واحد.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {quickLinks.map((link) => (
+          <Link
+            key={link.to}
+            to={link.to}
+            className="flex flex-col items-center gap-1.5 rounded-lg border border-border-gold/40 bg-surface/80 px-3 py-4 text-center text-xs font-semibold text-text-secondary transition-all hover:-translate-y-0.5 hover:border-gold/60 hover:text-gold"
+          >
+            <span className="text-xl">{link.icon}</span>
+            {link.label}
+          </Link>
+        ))}
       </div>
 
       <OverviewTab data={data} />

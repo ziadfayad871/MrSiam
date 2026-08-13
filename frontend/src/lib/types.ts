@@ -673,3 +673,69 @@ export interface ParentDashboardDto {
   phone?: string;
   children: ParentChildDto[];
 }
+
+export type AttendanceStatusType = 'Present' | 'Absent' | 'Late' | 'Excused';
+
+export interface DailyAttendanceStudentDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stage: Stage;
+  stageAr: string;
+  status?: AttendanceStatusType | null;
+  notes?: string | null;
+}
+
+export interface PaymentDto {
+  id: number;
+  studentId: number;
+  studentName: string;
+  amount: number;
+  month: string;
+  status: 'Pending' | 'Paid' | 'Overdue';
+  paidAt?: string | null;
+  method?: string | null;
+}
+
+export interface StudyGroupListItemDto {
+  id: number;
+  name: string;
+  stage: Stage;
+  stageAr: string;
+  academicYear: string;
+  isActive: boolean;
+  memberCount: number;
+  createdAt: string;
+}
+
+export interface StudyGroupMemberDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stageAr: string;
+  addedAt: string;
+}
+
+export interface StudyGroupDetailDto {
+  id: number;
+  name: string;
+  stage: Stage;
+  stageAr: string;
+  academicYear: string;
+  isActive: boolean;
+  createdAt: string;
+  members: StudyGroupMemberDto[];
+}
+
+export interface ScheduleSlotDto {
+  id: number;
+  groupId: number;
+  groupName: string;
+  stage: Stage;
+  stageAr: string;
+  day: number;
+  startTime: string;
+  endTime: string;
+  subject?: string | null;
+  room?: string | null;
+}

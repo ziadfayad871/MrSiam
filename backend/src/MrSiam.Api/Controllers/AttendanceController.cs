@@ -23,4 +23,18 @@ public class AttendanceController(MediatR.IMediator mediator) : ControllerBase
         var result = await mediator.Send(command);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    [HttpGet("daily")]
+    public async Task<IActionResult> GetDaily([FromQuery] DateOnly date)
+    {
+        var result = await mediator.Send(new GetDailyAttendanceQuery(date));
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> MarkBulk([FromBody] BulkMarkAttendanceCommand command)
+    {
+        var result = await mediator.Send(command);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
 }

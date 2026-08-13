@@ -35,6 +35,9 @@ public interface IApplicationDbContext
     DbSet<Subscription> Subscriptions { get; }
     DbSet<Parent> Parents { get; }
     DbSet<LiveLesson> LiveLessons { get; }
+    DbSet<StudyGroup> StudyGroups { get; }
+    DbSet<StudyGroupMember> StudyGroupMembers { get; }
+    DbSet<ScheduleSlot> ScheduleSlots { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -39,6 +39,8 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
         var apiKey = configuration["AI:ApiKey"];
         var model = configuration["AI:Model"] ?? "gemini-2.5-flash";
         var endpoint = configuration["AI:Endpoint"] ?? "https://generativelanguage.googleapis.com/v1beta";
+        var thinkingEnabled = configuration.GetValue("AI:ThinkingEnabled", true);
+        var thinkingBudget = configuration.GetValue("AI:ThinkingBudget", 32768);
 
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -46,11 +48,20 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
             return null;
         }
 
+        var isGemini = model.StartsWith("gemini", StringComparison.OrdinalIgnoreCase);
+        var isGemini3 = isGemini && model.StartsWith("gemini-3", StringComparison.OrdinalIgnoreCase);
+        var isGemma = model.StartsWith("gemma", StringComparison.OrdinalIgnoreCase);
+
+        if (isGemma && thinkingEnabled && systemInstruction != null && !systemInstruction.StartsWith("<|think|>", StringComparison.Ordinal))
+        {
+            systemInstruction = "<|think|>\n" + systemInstruction;
+        }
+
         await Limiter.WaitAsync(ct);
         try
         {
             var client = httpClientFactory.CreateClient("gemini");
-            client.Timeout = TimeSpan.FromSeconds(120);
+            client.Timeout = TimeSpan.FromSeconds(180);
 
             var requestParts = new List<object>();
             if (pdfBytes is { Length: > 0 })
@@ -66,11 +77,64 @@ public class GeminiService(IHttpClientFactory httpClientFactory, IConfiguration 
             }
             requestParts.Add(new { text = userPrompt });
 
+            object generationConfig;
+            if (isGemma)
+            {
+                generationConfig = new
+                {
+                    temperature = 1.0,
+                    topP = 0.95,
+                    topK = 64,
+                    maxOutputTokens
+                };
+            }
+            else if (isGemini3)
+            {
+                generationConfig = thinkingEnabled
+                    ? new
+                    {
+                        thinkingConfig = new { thinkingLevel = "high" },
+                        maxOutputTokens,
+                        responseMimeType
+                    }
+                    : new
+                    {
+                        temperature = 0.3,
+                        maxOutputTokens,
+                        responseMimeType
+                    };
+            }
+            else if (isGemini)
+            {
+                generationConfig = thinkingEnabled
+                    ? new
+                    {
+                        thinkingConfig = new { thinkingBudget },
+                        maxOutputTokens,
+                        responseMimeType
+                    }
+                    : new
+                    {
+                        temperature = 0.3,
+                        maxOutputTokens,
+                        responseMimeType
+                    };
+            }
+            else
+            {
+                generationConfig = new
+                {
+                    temperature = 0.3,
+                    maxOutputTokens,
+                    responseMimeType
+                };
+            }
+
             var payload = new
             {
                 systemInstruction = new { parts = new object[] { new { text = systemInstruction } } },
                 contents = new object[] { new { role = "user", parts = requestParts } },
-                generationConfig = new { temperature = 0.3, maxOutputTokens, responseMimeType }
+                generationConfig
             };
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{endpoint}/models/{model}:generateContent?key={Uri.EscapeDataString(apiKey)}")

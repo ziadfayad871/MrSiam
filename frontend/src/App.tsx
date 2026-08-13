@@ -20,6 +20,10 @@ import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
+import SecretaryAttendancePage from './pages/secretary/SecretaryAttendancePage';
+import SecretaryPaymentsPage from './pages/secretary/SecretaryPaymentsPage';
+import SecretaryGroupsPage from './pages/secretary/SecretaryGroupsPage';
+import SecretarySchedulePage from './pages/secretary/SecretarySchedulePage';
 import TeacherProfile from './pages/TeacherProfile';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
@@ -231,6 +235,54 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <SecretaryAnalyticsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/attendance"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryAttendancePage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/payments"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryPaymentsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/groups"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryGroupsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/schedule"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretarySchedulePage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>

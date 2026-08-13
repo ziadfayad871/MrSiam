@@ -36,6 +36,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<Parent> Parents => Set<Parent>();
     public DbSet<LiveLesson> LiveLessons => Set<LiveLesson>();
+    public DbSet<StudyGroup> StudyGroups => Set<StudyGroup>();
+    public DbSet<StudyGroupMember> StudyGroupMembers => Set<StudyGroupMember>();
+    public DbSet<ScheduleSlot> ScheduleSlots => Set<ScheduleSlot>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -260,6 +263,28 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(l => l.Description).HasMaxLength(600);
             e.Property(l => l.MeetUrl).HasMaxLength(400);
             e.HasOne(l => l.Course).WithMany().HasForeignKey(l => l.CourseId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StudyGroup>(e =>
+        {
+            e.HasIndex(g => new { g.Stage, g.AcademicYear });
+            e.Property(g => g.Name).HasMaxLength(120);
+            e.Property(g => g.AcademicYear).HasMaxLength(16);
+        });
+
+        builder.Entity<StudyGroupMember>(e =>
+        {
+            e.HasIndex(m => new { m.GroupId, m.StudentId }).IsUnique();
+            e.HasOne(m => m.Group).WithMany(g => g.Members).HasForeignKey(m => m.GroupId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(m => m.Student).WithMany().HasForeignKey(m => m.StudentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ScheduleSlot>(e =>
+        {
+            e.HasIndex(s => new { s.GroupId, s.Day });
+            e.Property(s => s.Subject).HasMaxLength(80);
+            e.Property(s => s.Room).HasMaxLength(60);
+            e.HasOne(s => s.Group).WithMany(g => g.Slots).HasForeignKey(s => s.GroupId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

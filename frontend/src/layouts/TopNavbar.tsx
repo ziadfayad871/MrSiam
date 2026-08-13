@@ -38,6 +38,10 @@ const ROUTE_LABELS: Record<string, string> = {
   '/teacher/analytics': 'التحليلات',
   '/teacher/live': 'البث المباشر',
   '/secretary/students': 'إدارة الطلبة',
+  '/secretary/attendance': 'الحضور والغياب',
+  '/secretary/payments': 'التحصيل والمدفوعات',
+  '/secretary/groups': 'المجموعات والشعب',
+  '/secretary/schedule': 'الجدول الدراسي',
   '/secretary/billing': 'الفوترة',
   '/secretary/analytics': 'التحليلات',
 };
