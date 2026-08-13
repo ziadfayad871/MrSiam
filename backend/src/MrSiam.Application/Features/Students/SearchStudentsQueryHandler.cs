@@ -32,6 +32,12 @@ public class SearchStudentsQueryHandler(IApplicationDbContext db)
             .Select(g => new { StudentId = g.Key, Avg = g.Average(a => a.Percentage), Count = g.Count() })
             .ToListAsync(ct);
 
+        var memberships = await db.StudyGroupMembers
+            .AsNoTracking()
+            .Where(m => m.Group != null)
+            .Select(m => new { m.StudentId, GroupId = m.GroupId, GroupName = m.Group != null ? m.Group.Name : null })
+            .ToListAsync(ct);
+
         var projected = query
             .OrderBy(s => s.FullName)
             .Select(s => new StudentListItemDto
@@ -55,6 +61,10 @@ public class SearchStudentsQueryHandler(IApplicationDbContext db)
             var a = attempts.FirstOrDefault(x => x.StudentId == item.Id);
             item.Average = a is null ? 0 : Math.Round(a.Avg, 1);
             item.ExamsTaken = a?.Count ?? 0;
+
+            var m = memberships.FirstOrDefault(x => x.StudentId == item.Id);
+            item.GroupId = m?.GroupId;
+            item.GroupName = m?.GroupName;
         }
 
         return ApiResponse<PagedResult<StudentListItemDto>>.Ok(paged);

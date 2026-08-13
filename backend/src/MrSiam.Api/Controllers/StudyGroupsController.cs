@@ -7,7 +7,7 @@ namespace MrSiam.Api.Controllers;
 
 [ApiController]
 [Route("api/study-groups")]
-[Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
+[Authorize(Roles = nameof(Role.Teacher) + "," + nameof(Role.Secretary) + "," + nameof(Role.Admin))]
 public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
 {
     [HttpGet]
@@ -25,6 +25,7 @@ public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Create([FromBody] CreateStudyGroupCommand command)
     {
         var result = await mediator.Send(command);
@@ -32,6 +33,7 @@ public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{groupId:int}")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Update(int groupId, [FromBody] UpdateStudyGroupCommand command)
     {
         var result = await mediator.Send(command with { GroupId = groupId });
@@ -39,6 +41,7 @@ public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{groupId:int}")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Delete(int groupId)
     {
         var result = await mediator.Send(new DeleteStudyGroupCommand(groupId));
@@ -46,6 +49,7 @@ public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpPost("{groupId:int}/members/{studentId:int}")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> AddMember(int groupId, int studentId)
     {
         var result = await mediator.Send(new AddMemberCommand(groupId, studentId));
@@ -53,6 +57,7 @@ public class StudyGroupsController(MediatR.IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{groupId:int}/members/{studentId:int}")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> RemoveMember(int groupId, int studentId)
     {
         var result = await mediator.Send(new RemoveMemberCommand(groupId, studentId));

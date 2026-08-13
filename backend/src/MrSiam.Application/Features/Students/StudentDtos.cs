@@ -18,6 +18,8 @@ public record StudentListItemDto
     public bool IsActive { get; init; }
     public decimal Average { get; set; }
     public int ExamsTaken { get; set; }
+    public int? GroupId { get; set; }
+    public string? GroupName { get; set; }
 }
 
 public record StudentDetailDto

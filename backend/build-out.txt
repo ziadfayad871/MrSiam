@@ -1,0 +1,29 @@
+  Determining projects to restore...
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Identity.Core will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj]
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q [D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj]
+  All projects are up-to-date for restore.
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Identity.Core will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+  MrSiam.Domain -> D:\mr.mohamedsiam\backend\src\MrSiam.Domain\bin\Debug\net10.0\MrSiam.Domain.dll
+  MrSiam.Application -> D:\mr.mohamedsiam\backend\src\MrSiam.Application\bin\Debug\net10.0\MrSiam.Application.dll
+  MrSiam.Infrastructure -> D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\bin\Debug\net10.0\MrSiam.Infrastructure.dll
+  MrSiam.Api -> D:\mr.mohamedsiam\backend\src\MrSiam.Api\bin\Debug\net10.0\MrSiam.Api.dll
+
+Build succeeded.
+
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Identity.Core will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary. [D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj]
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q [D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj]
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'Microsoft.OpenApi' 2.0.0 has a known high severity vulnerability, https://github.com/advisories/GHSA-v5pm-xwqc-g5wc
+D:\mr.mohamedsiam\backend\src\MrSiam.Api\MrSiam.Api.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1510: PackageReference Microsoft.Extensions.Identity.Core will not be pruned. Consider removing this package from your dependencies, as it is likely unnecessary.
+D:\mr.mohamedsiam\backend\src\MrSiam.Infrastructure\MrSiam.Infrastructure.csproj : warning NU1903: Package 'SQLitePCLRaw.lib.e_sqlite3' 2.1.11 has a known high severity vulnerability, https://github.com/advisories/GHSA-2m69-gcr7-jv3q
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.72

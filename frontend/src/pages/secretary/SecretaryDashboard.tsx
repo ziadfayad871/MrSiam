@@ -11,7 +11,7 @@ import Input from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
 import { useToast } from '../../design-system/ui/Toast';
 import { api } from '../../lib/api';
-import type { CreateStudentResult, SecretaryDashboardDto, StudentCredentialsDto, StudentListItemDto } from '../../lib/types';
+import type { CreateStudentResult, SecretaryDashboardDto, StudentCredentialsDto, StudentListItemDto, StudyGroupListItemDto } from '../../lib/types';
 
 const ICONS: Record<string, React.ReactNode> = {
   students: <Users size={16} />,
@@ -186,14 +186,15 @@ function OverviewTab({ data }: { data: SecretaryDashboardDto }) {
 export function StudentsTab() {
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentListItemDto[]>([]);
+  const [groups, setGroups] = useState<StudyGroupListItemDto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '2025/2026', password: '' });
+  const [form, setForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '2025/2026', password: '', groupId: '' });
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [lastCreated, setLastCreated] = useState<(CreateStudentResult & { password: string; fullName: string }) | null>(null);
 
   const [editing, setEditing] = useState<StudentListItemDto | null>(null);
-  const [editForm, setEditForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '', newPassword: '' });
+  const [editForm, setEditForm] = useState({ fullName: '', guardianPhone: '', stage: 'PrepOne' as string, academicYear: '', newPassword: '', groupId: '' });
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [printing, setPrinting] = useState<StudentListItemDto | null>(null);
@@ -216,11 +217,21 @@ export function StudentsTab() {
 
   useEffect(() => {
     load();
+    api
+      .get<StudyGroupListItemDto[]>('/study-groups?includeInactive=false')
+      .then((res) => setGroups(Array.isArray(res) ? res : []))
+      .catch(() => setGroups([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const stageGroups = groups.filter((g) => g.stage === form.stage);
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (!form.groupId) {
+      toast('اختار مجموعة للطالب', 'الطالب لازم يكون مقيد بمجموعة من مجموعات المرحلة دي', 'error');
+      return;
+    }
     setSaving(true);
     setLastCreated(null);
     try {
@@ -232,10 +243,15 @@ export function StudentsTab() {
         password: form.password,
       });
       if (res) {
+        try {
+          await api.post<boolean>(`/study-groups/${Number(form.groupId)}/members/${res.studentId}`);
+        } catch (e) {
+          toast('تنبيه: الطالب اتسجل بس مفضلش مقيد', e instanceof Error ? e.message : 'خطأ', 'error');
+        }
         const created = { ...res, password: form.password, fullName: form.fullName.trim() };
         setLastCreated(created);
         toast('تم تسجيل الطالب', `يوزر نيم: ${res.username}`, 'success');
-        setForm((f) => ({ ...f, fullName: '', guardianPhone: '', password: '' }));
+        setForm((f) => ({ ...f, fullName: '', guardianPhone: '', password: '', groupId: '' }));
         load();
       }
     } catch (err) {
@@ -253,6 +269,7 @@ export function StudentsTab() {
       stage: student.stage,
       academicYear: student.academicYear,
       newPassword: '',
+      groupId: student.groupId ? String(student.groupId) : '',
     });
   }
 
@@ -269,6 +286,21 @@ export function StudentsTab() {
         academicYear: editForm.academicYear.trim(),
         newPassword: editForm.newPassword.trim() || null,
       });
+      if (editForm.groupId) {
+        const newGroupId = Number(editForm.groupId);
+        try {
+          if (editing.groupId && editing.groupId !== newGroupId) {
+            await api.del(`/study-groups/${editing.groupId}/members/${editing.id}`).catch(() => {});
+          }
+          if (editing.groupId !== newGroupId) {
+            await api.post(`/study-groups/${newGroupId}/members/${editing.id}`);
+          }
+        } catch (err) {
+          toast('تنبيه: المجموعة اتملت بأمان', 'البيانات اتحفظت بس المجموعة محتاجة مراجعة', 'warning');
+        }
+      } else if (editing.groupId) {
+        await api.del(`/study-groups/${editing.groupId}/members/${editing.id}`).catch(() => {});
+      }
       toast('تم التعديل', 'اتحدثت بيانات الطالب', 'success');
       setEditing(null);
       load();
@@ -363,7 +395,7 @@ export function StudentsTab() {
             <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المرحلة</label>
             <select
               value={form.stage}
-              onChange={(e) => setForm({ ...form, stage: e.target.value })}
+              onChange={(e) => setForm({ ...form, stage: e.target.value, groupId: '' })}
               className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
             >
               {STAGES.map((s) => (
@@ -372,6 +404,28 @@ export function StudentsTab() {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">
+              المجموعة <span className="text-gold">*</span>
+            </label>
+            <select
+              value={form.groupId}
+              onChange={(e) => setForm({ ...form, groupId: e.target.value })}
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
+            >
+              <option value="">اختار المجموعة...</option>
+              {stageGroups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+            {stageGroups.length === 0 && (
+              <p className="mt-1 text-center text-[11px] text-error">
+                مفيش مجموعات للمرحلة دي — أنشئ مجموعة في «المجموعات والشعب» الأول
+              </p>
+            )}
           </div>
           <Input
             label="العام الدراسي"
@@ -458,6 +512,7 @@ export function StudentsTab() {
                   <th className={TH}>الطالب</th>
                   <th className={TH}>اليوزر نيم</th>
                   <th className={TH}>المرحلة</th>
+                  <th className={TH}>المجموعة</th>
                   <th className={TH}>العام</th>
                   <th className={TH}>ولي الأمر</th>
                   <th className={TH}>التحكم</th>
@@ -469,6 +524,15 @@ export function StudentsTab() {
                     <td className={`${TD} font-semibold text-text-primary`}>{s.fullName}</td>
                     <td className={`${TD} font-plex text-xs text-gold`} dir="ltr">{s.username}</td>
                     <td className={`${TD} text-text-secondary`}>{s.stageAr}</td>
+                    <td className={`${TD} text-text-secondary`}>
+                      {s.groupName ? (
+                        <span className={`inline-flex rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-bold text-gold ${!s.groupId ? 'opacity-60' : ''}`}>
+                          {s.groupName}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-error">مش مقيد</span>
+                      )}
+                    </td>
                     <td className={`${TD} text-text-secondary`}>{s.academicYear}</td>
                     <td className={`${TD} font-plex text-xs text-text-muted`} dir="ltr">{s.guardianPhone || '—'}</td>
                     <td className={TD}>
@@ -518,12 +582,27 @@ export function StudentsTab() {
             <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المرحلة</label>
             <select
               value={editForm.stage}
-              onChange={(e) => setEditForm({ ...editForm, stage: e.target.value })}
+              onChange={(e) => setEditForm({ ...editForm, stage: e.target.value, groupId: '' })}
               className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
             >
               {STAGES.map((s) => (
                 <option key={s.key} value={s.key}>
                   {s.ar}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">المجموعة</label>
+            <select
+              value={editForm.groupId}
+              onChange={(e) => setEditForm({ ...editForm, groupId: e.target.value })}
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-center text-sm text-text-primary outline-none transition-colors focus:border-gold/60"
+            >
+              <option value="">من غير مجموعة</option>
+              {groups.filter((g) => g.stage === editForm.stage).map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
                 </option>
               ))}
             </select>

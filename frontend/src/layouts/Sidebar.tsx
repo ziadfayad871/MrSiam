@@ -74,7 +74,6 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/teacher/analytics', label: 'التحليلات', icon: Award },
             { to: '/teacher/live', label: 'البث المباشر', icon: Users },
             { to: '/teacher/testimonials', label: 'آراء الطلاب', icon: Award },
-            { to: '/timeline', label: 'رحلة التاريخ', icon: ScrollText },
           ]
         : [
             { to: '/secretary', label: 'نظرة عامة', icon: Home },

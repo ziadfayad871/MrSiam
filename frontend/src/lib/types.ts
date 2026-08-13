@@ -533,6 +533,8 @@ export interface StudentListItemDto {
   isActive: boolean;
   average: number;
   examsTaken: number;
+  groupId?: number | null;
+  groupName?: string | null;
 }
 
 export interface CreateStudentResult {

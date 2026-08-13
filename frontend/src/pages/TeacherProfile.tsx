@@ -61,8 +61,8 @@ export default function TeacherProfile() {
         <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-4 py-24 text-center">
           <Reveal>
             <div className="relative">
-              <div className="flex h-36 w-36 items-center justify-center rounded-full border border-gold/40 bg-white/[0.04]">
-                <span className="display-serif text-5xl font-bold text-gold-bright">ص</span>
+              <div className="flex h-36 w-36 items-center justify-center overflow-hidden rounded-full border border-gold/40 bg-white/[0.04]">
+                <img src="/caesar-logo.webp" alt="شعار القيصر" className="h-full w-full object-cover" />
               </div>
               <div className="absolute -end-4 -top-2">
                 <CompassBrand size="medium" animated />

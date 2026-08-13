@@ -1,13 +1,22 @@
-import { BarChart3, BookOpen, CheckCircle2, FileText, GraduationCap, Users, XCircle } from 'lucide-react';
+import { BarChart3, BookOpen, CheckCircle2, FileText, GraduationCap, Search, Users, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { CompassLoader } from '../design-system/components/CompassLoader';
 import { Card } from '../design-system/ui/Card';
 import { api } from '../lib/api';
-import type { AnalyticsOverviewDto, StudentListItemDto } from '../lib/types';
+import type { AnalyticsOverviewDto, StudyGroupDetailDto, StudyGroupListItemDto, StudyGroupMemberDto } from '../lib/types';
 import StudentDetail from './StudentDetail';
 
 const TH = 'py-2 text-center font-medium';
 const TD = 'py-2.5 text-center';
+
+const STAGES = [
+  { key: 'PrepOne', ar: 'أولى إعدادي' },
+  { key: 'PrepTwo', ar: 'تانية إعدادي' },
+  { key: 'PrepThree', ar: 'تالتة إعدادي' },
+  { key: 'SecOne', ar: 'أولى ثانوي' },
+  { key: 'SecTwo', ar: 'تانية ثانوي' },
+  { key: 'SecThree', ar: 'تالتة ثانوي' },
+] as const;
 
 function StatCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
   return (
@@ -37,8 +46,14 @@ export default function AnalyticsTab() {
   const [data, setData] = useState<AnalyticsOverviewDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [students, setStudents] = useState<StudentListItemDto[]>([]);
+
+  const [selectedStage, setSelectedStage] = useState('');
+  const [groups, setGroups] = useState<StudyGroupListItemDto[]>([]);
+  const [selectedGroupId, setSelectedGroupId] = useState('');
+  const [groupDetail, setGroupDetail] = useState<StudyGroupDetailDto | null>(null);
+  const [memberSearch, setMemberSearch] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
+  const [groupBusy, setGroupBusy] = useState(false);
 
   useEffect(() => {
     api
@@ -46,11 +61,39 @@ export default function AnalyticsTab() {
       .then(setData)
       .catch((e) => setError(e instanceof Error ? e.message : 'فشل تحميل التحليلات'))
       .finally(() => setLoading(false));
-    api
-      .get<{ items: StudentListItemDto[] }>('/students?pageSize=100')
-      .then((res) => setStudents(res?.items ?? []))
-      .catch(() => setStudents([]));
   }, []);
+
+  useEffect(() => {
+    setSelectedGroupId('');
+    setGroupDetail(null);
+    setSelected(null);
+    if (!selectedStage) {
+      setGroups([]);
+      return;
+    }
+    api
+      .get<StudyGroupListItemDto[]>(`/study-groups?stage=${selectedStage}`)
+      .then((res) => setGroups(Array.isArray(res) ? res : []))
+      .catch(() => setGroups([]));
+  }, [selectedStage]);
+
+  useEffect(() => {
+    setGroupDetail(null);
+    setSelected(null);
+    if (!selectedGroupId) return;
+    setGroupBusy(true);
+    api
+      .get<StudyGroupDetailDto>(`/study-groups/${selectedGroupId}`)
+      .then(setGroupDetail)
+      .catch(() => setGroupDetail(null))
+      .finally(() => setGroupBusy(false));
+  }, [selectedGroupId]);
+
+  const members: StudyGroupMemberDto[] = (groupDetail?.members ?? []).filter((m) => {
+    if (!memberSearch.trim()) return true;
+    const q = memberSearch.trim().toLowerCase();
+    return m.fullName.toLowerCase().includes(q) || m.studentCode.toLowerCase().includes(q) || m.stageAr.toLowerCase().includes(q);
+  });
 
   if (loading) return <CompassLoader text="بنحلل النتائج..." />;
   if (error || !data)
@@ -178,27 +221,86 @@ export default function AnalyticsTab() {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-text-primary">ملف طالب بالتفصيل</h2>
-            <p className="mt-0.5 text-xs text-text-muted">اختار طالب وشوف كل محاولاته ومستواه في كل مادة.</p>
+            <p className="mt-0.5 text-xs text-text-muted">اختار المرحلة والمجموعة، وبعدين دوّر على الطالب بالاسم أو شوف كل طلاب المجموعة.</p>
           </div>
-          <select
-            value={selected ?? ''}
-            onChange={(e) => setSelected(e.target.value ? Number(e.target.value) : null)}
-            className="w-full max-w-xs rounded-md border border-border-soft bg-surface px-3 py-2 text-sm text-text-primary outline-none focus:border-gold/60"
-          >
-            <option value="">اختار طالب...</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.fullName} ({s.username})
-              </option>
-            ))}
-          </select>
         </div>
-        {selected === null ? (
-          <p className="rounded-md border border-dashed border-border-soft py-8 text-center text-sm text-text-muted">
-            اختار طالب من القائمة عشان تشوف تحليله الكامل.
-          </p>
+
+        <div className="mb-4 grid gap-3 sm:grid-cols-3">
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-text-secondary">المرحلة</span>
+            <select
+              value={selectedStage}
+              onChange={(e) => setSelectedStage(e.target.value)}
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:border-gold/60"
+            >
+              <option value="">اختار المرحلة...</option>
+              {STAGES.map((s) => (
+                <option key={s.key} value={s.key}>{s.ar}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-text-secondary">المجموعة</span>
+            <select
+              value={selectedGroupId}
+              onChange={(e) => setSelectedGroupId(e.target.value)}
+              disabled={!selectedStage}
+              className="w-full rounded-md border border-border-soft bg-surface px-3 py-2.5 text-sm text-text-primary outline-none focus:border-gold/60 disabled:opacity-40"
+            >
+              <option value="">اختار المجموعة...</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>{g.name} ({g.memberCount} طالب)</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-semibold text-text-secondary">بحث بالاسم</span>
+            <div className="relative">
+              <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                value={memberSearch}
+                onChange={(e) => setMemberSearch(e.target.value)}
+                disabled={!groupDetail}
+                placeholder="اكتب اسم الطالب..."
+                className="w-full rounded-md border border-border-soft bg-surface py-2.5 ps-10 pe-3 text-sm text-text-primary outline-none focus:border-gold/60 disabled:opacity-40"
+              />
+            </div>
+          </label>
+        </div>
+
+        {groupBusy ? (
+          <CompassLoader text="بنجيب طلاب المجموعة..." />
+        ) : selectedStage && selectedGroupId && groupDetail && members.length > 0 ? (
+          <div className="max-h-72 overflow-y-auto rounded-md border border-border-soft">
+            {members.map((m) => (
+              <button
+                key={m.studentId}
+                onClick={() => setSelected(m.studentId)}
+                className={`flex w-full items-center justify-between px-4 py-2.5 text-sm transition-colors border-b border-border-soft/60 last:border-0 ${selected === m.studentId ? 'bg-gold/10 font-semibold text-gold' : 'text-text-secondary hover:bg-surface-sunken hover:text-text-primary'}`}
+              >
+                <span className="font-semibold">{m.fullName}</span>
+                <span className="font-plex text-xs text-text-muted" dir="ltr">{m.studentCode}</span>
+              </button>
+            ))}
+          </div>
         ) : (
-          <StudentDetail studentId={selected} />
+          <p className="rounded-md border border-dashed border-border-soft py-8 text-center text-sm text-text-muted">
+            {!selectedStage
+              ? 'اختار المرحلة الأول عشان تظهر المجموعات.'
+              : !selectedGroupId
+                ? groups.length > 0
+                  ? 'اختار المجموعة اللي فيها الطالب عشان تشوف أعضائها.'
+                  : 'مفيش مجموعات للمرحلة دي — أنشئ مجموعة في «المجموعات والشعب» الأول.'
+                : 'مفيش طلاب في المجموعة دي.'}
+          </p>
+        )}
+
+        {selected !== null && groupDetail?.members.some((m) => m.studentId === selected) && (
+          <div className="mt-5 border-t border-border-soft pt-5">
+            <StudentDetail studentId={selected} />
+          </div>
         )}
       </Card>
     </div>
