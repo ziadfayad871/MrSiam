@@ -11,6 +11,7 @@ public static class SchemaBootstrap
         await EnsureTableAsync(db, "StudyGroups", isSqlServer, StudyGroupsSql);
         await EnsureTableAsync(db, "StudyGroupMembers", isSqlServer, StudyGroupMembersSql);
         await EnsureTableAsync(db, "ScheduleSlots", isSqlServer, ScheduleSlotsSql);
+        await EnsureTableAsync(db, "StudentTestimonials", isSqlServer, TestimonialsSql);
     }
 
     private static async Task EnsureTableAsync(AppDbContext db, string tableName, bool isSqlServer, Func<bool, string> sql)
@@ -56,4 +57,9 @@ public static class SchemaBootstrap
         sqlServer
             ? "CREATE TABLE [ScheduleSlots] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [GroupId] int NOT NULL, [Day] int NOT NULL, [StartTime] time NOT NULL, [EndTime] time NOT NULL, [Subject] nvarchar(80) NULL, [Room] nvarchar(60) NULL)"
             : "CREATE TABLE ScheduleSlots (Id INTEGER PRIMARY KEY AUTOINCREMENT, GroupId INTEGER NOT NULL, Day INTEGER NOT NULL, StartTime TEXT NOT NULL, EndTime TEXT NOT NULL, Subject TEXT NULL, Room TEXT NULL)";
+
+    private static string TestimonialsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [StudentTestimonials] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [FullName] nvarchar(120) NOT NULL DEFAULT '', [Quote] nvarchar(1000) NOT NULL DEFAULT '', [StageAr] nvarchar(60) NULL, [PhotoUrl] nvarchar(300) NULL, [CreatedAt] datetime2 NOT NULL)"
+            : "CREATE TABLE StudentTestimonials (Id INTEGER PRIMARY KEY AUTOINCREMENT, FullName TEXT NOT NULL DEFAULT '', Quote TEXT NOT NULL DEFAULT '', StageAr TEXT NULL, PhotoUrl TEXT NULL, CreatedAt TEXT NOT NULL)";
 }
