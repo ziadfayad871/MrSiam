@@ -1,4 +1,4 @@
-import { Menu, Moon, Sun } from 'lucide-react';
+import { Facebook, Instagram, Menu, Moon, Sun } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
@@ -158,6 +158,15 @@ export function SiteFooter() {
             <Link to="/staff-login" className="transition-colors hover:text-gold">
               بوابة المستر
             </Link>
+          </div>
+
+          <div className="flex items-center gap-2" aria-label="حسابات التواصل الاجتماعي">
+            <a href="https://www.instagram.com/mr_mohamed_siam?igsh=ZmZ2aHh3eWxqazV6" target="_blank" rel="noreferrer" aria-label="إنستجرام مستر محمد صيام" className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-text-secondary transition hover:border-gold hover:bg-gold/10 hover:text-gold">
+              <Instagram size={18} />
+            </a>
+            <a href="https://www.facebook.com/mohamed.siam.413513" target="_blank" rel="noreferrer" aria-label="فيسبوك مستر محمد صيام" className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-text-secondary transition hover:border-gold hover:bg-gold/10 hover:text-gold">
+              <Facebook size={18} />
+            </a>
           </div>
         </div>
 

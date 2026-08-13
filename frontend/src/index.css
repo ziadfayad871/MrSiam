@@ -743,49 +743,21 @@
 .login-submit:disabled { cursor: wait; opacity: 0.7; }
 .login-caesar-emblem,
 .caesar-header-mark {
-  position: relative;
-  display: grid;
-  place-items: center;
-  color: #e5ae50;
-  background:
-    radial-gradient(circle at 50% 35%, rgba(237, 187, 89, 0.16), transparent 48%),
-    linear-gradient(145deg, rgba(37, 30, 18, 0.96), rgba(12, 13, 11, 0.96));
-  box-shadow: inset 0 1px 0 rgba(255, 231, 181, 0.2), 0 12px 30px rgba(0, 0, 0, 0.25);
+  display: block;
+  object-fit: contain;
+  background: #000;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
 }
 .login-caesar-emblem {
   width: 7rem;
   height: 7rem;
-  border: 1px solid rgba(222, 165, 63, 0.78);
   border-radius: 2rem 2rem 1.15rem 1.15rem;
-}
-.login-caesar-emblem::before,
-.caesar-header-mark::before {
-  content: "";
-  position: absolute;
-  inset: 0.35rem;
-  border: 1px solid rgba(228, 174, 76, 0.28);
-  border-radius: inherit;
-}
-.login-caesar-emblem svg,
-.caesar-header-mark svg { transform: translateY(-0.55rem); }
-.login-caesar-emblem span,
-.caesar-header-mark span {
-  position: absolute;
-  bottom: 0.55rem;
-  font-family: var(--font-plex), sans-serif;
-  font-size: 1.3rem;
-  font-weight: 900;
-  line-height: 1;
 }
 .caesar-header-mark {
   width: 5rem;
   height: 3.5rem;
-  border: 1px solid rgba(201, 155, 75, 0.65);
   border-radius: 1rem;
 }
-.caesar-header-mark::before { inset: 0.25rem; }
-.caesar-header-mark svg { transform: translateY(-0.28rem); }
-.caesar-header-mark span { bottom: 0.28rem; font-size: 0.78rem; }
 
 /* Teacher command center */
 .teacher-command-center .platform-stat,

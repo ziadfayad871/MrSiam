@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { BookOpen, Compass, Crown, LogIn, Moon, Sparkles, Sun, Users } from 'lucide-react';
+import { BookOpen, Compass, LogIn, Moon, Sparkles, Sun, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/api';
@@ -24,10 +24,7 @@ export function Hero() {
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-[1600px] flex-col px-4 pb-8 pt-5 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between" dir="rtl">
-          <div className="caesar-header-mark" role="img" aria-label="شعار القيصر">
-            <Crown size={24} strokeWidth={1.45} />
-            <span>ق</span>
-          </div>
+          <img src="/caesar-logo.webp" alt="شعار القيصر" className="caesar-header-mark" />
 
           <div className="flex items-center gap-2 sm:gap-3">
             <button

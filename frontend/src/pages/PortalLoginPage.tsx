@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Crown, Eye, EyeOff, LockKeyhole, Mail, Moon, Quote, Sun } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Eye, EyeOff, LockKeyhole, Mail, Moon, Quote, Sun } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '../design-system/ui/Toast';
@@ -73,10 +73,7 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
           <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(9,10,8,.75),transparent_45%)]" />
           <div className="absolute inset-y-12 right-10 w-px bg-gradient-to-b from-transparent via-[#c99236]/70 to-transparent" />
           <div className="relative flex h-full max-w-[45%] flex-col justify-center pr-14 text-right">
-            <div className="login-caesar-emblem mb-8" role="img" aria-label="شعار القيصر">
-              <Crown size={42} strokeWidth={1.35} />
-              <span>ق</span>
-            </div>
+            <img src="/caesar-logo.webp" alt="شعار القيصر" className="login-caesar-emblem mb-8" />
             <p className="text-4xl font-extrabold text-[#dca444]">القيصر</p>
             <p className="mt-2 text-lg font-bold text-white">مستر محمد صيام</p>
             <span className="my-7 h-px w-28 bg-[#c99236]/70" />
@@ -123,7 +120,7 @@ export default function PortalLoginPage({ portal }: PortalLoginProps) {
             </form>
 
             {meta.demoNote && <div className="mt-7 border-t border-[#b98131]/20 pt-5"><p className="mb-3 text-center text-xs text-[#d7c0a0]">{meta.demoNote}</p><div className="grid grid-cols-2 gap-3">{meta.demo.map((account) => <button key={account.username} onClick={() => { setUsername(account.username); setPassword('123456'); }} className="rounded-xl border border-[#b98131]/30 px-3 py-2 text-xs text-[#efd8b2] hover:bg-[#c78d32]/10">{account.label}</button>)}</div></div>}
-            <p className="mt-8 text-center text-sm text-[#d7c0a0]">ليس لديك حساب؟ <span className="font-bold text-[#dca444]">تواصل مع إدارة المنصة</span></p>
+            <p className="mt-8 text-center text-sm text-[#d7c0a0]">ليس لديك حساب؟ {portal === 'student' ? <a href="https://wa.me/201207275688" target="_blank" rel="noreferrer" className="font-bold text-[#dca444] transition hover:text-[#f5c567]">تواصل مع إدارة المنصة</a> : <span className="font-bold text-[#dca444]">تواصل مع إدارة المنصة</span>}</p>
             <Link to={meta.path} className="mt-5 flex items-center justify-center gap-2 text-xs text-[#cbb995] hover:text-[#dca444]">{meta.pathLabel} <ArrowRight size={14} /></Link>
           </motion.div>
           <button onClick={() => navigate('/')} className="absolute bottom-5 text-sm text-[#cbb995] transition hover:text-[#dca444]">العودة للرئيسية</button>
