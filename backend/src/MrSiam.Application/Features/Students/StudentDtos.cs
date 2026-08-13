@@ -56,6 +56,9 @@ public record StudentCredentialsDto(string Username, string Password);
 public record GetStudentCredentialsQuery(int StudentId)
     : IRequest<ApiResponse<StudentCredentialsDto>>;
 
+public record GetAllStudentsCredentialsQuery()
+    : IRequest<ApiResponse<IReadOnlyList<StudentCredentialsDto>>>;
+
 public record UpdateStudentCommand(
     int Id,
     string? FullName,

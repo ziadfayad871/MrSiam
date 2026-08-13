@@ -24,6 +24,13 @@ public class PaymentsController(MediatR.IMediator mediator) : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    [HttpPost("collect")]
+    public async Task<IActionResult> Collect([FromBody] CreatePaidPaymentCommand command)
+    {
+        var result = await mediator.Send(command);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpPatch("{paymentId:int}/paid")]
     public async Task<IActionResult> MarkPaid(int paymentId, [FromQuery] string? method)
     {

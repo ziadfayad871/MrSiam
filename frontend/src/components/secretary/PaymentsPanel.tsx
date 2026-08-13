@@ -1,4 +1,4 @@
-import { Banknote, CheckCircle2, CalendarClock, Check, Plus, Search, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Banknote, CalendarClock, Check, CheckCircle2, Plus, Printer, Search, UserCheck, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Badge } from '../../design-system/ui/Badge';
@@ -9,7 +9,7 @@ import { Input } from '../../design-system/ui/Field';
 import { Select } from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
 import { api } from '../../lib/api';
-import type { PaymentDto, StudentListItemDto } from '../../lib/types';
+import type { PaymentDto, PaymentReceiptDto, StudentListItemDto } from '../../lib/types';
 
 const TH = 'py-2 text-center font-medium';
 const TD = 'py-2.5 text-center';
@@ -28,6 +28,165 @@ function formatMoney(n: number): string {
   return `${Number(n).toLocaleString('ar-EG')} ج.م`;
 }
 
+const WORDS_UNITS = ['صفر', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+const WORDS_TEENS: Record<number, string> = {
+  10: 'عشرة',
+  11: 'أحد عشر',
+  12: 'اثنا عشر',
+  13: 'ثلاثة عشر',
+  14: 'أربعة عشر',
+  15: 'خمسة عشر',
+  16: 'ستة عشر',
+  17: 'سبعة عشر',
+  18: 'ثمانية عشر',
+  19: 'تسعة عشر',
+};
+const WORDS_TENS = ['', '', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+const WORDS_HUNDREDS = ['', 'مئة', 'مئتان', 'ثلاثمئة', 'أربعمئة', 'خمسمئة', 'ستمئة', 'سبعمئة', 'ثمانمئة', 'تسعمئة'];
+
+function chunkWords(n: number): string {
+  const h = Math.floor(n / 100);
+  const rest = n % 100;
+  let s = h > 0 ? WORDS_HUNDREDS[h] : '';
+  let t = '';
+  if (rest > 0) {
+    if (rest < 10) t = WORDS_UNITS[rest];
+    else if (rest < 20) t = WORDS_TEENS[rest];
+    else {
+      const tens = Math.floor(rest / 10);
+      const ones = rest % 10;
+      t = ones > 0 ? `${WORDS_UNITS[ones]} و${WORDS_TENS[tens]}` : WORDS_TENS[tens];
+    }
+  }
+  return [s, t].filter(Boolean).join(' و');
+}
+
+function scaleLabel(scale: number, count: number): string {
+  if (scale === 1) {
+    if (count === 1) return 'ألف';
+    if (count === 2) return 'ألفان';
+    if (count <= 10) return 'آلاف';
+    return 'ألف';
+  }
+  const names = ['', 'مليون', 'مليار'];
+  const dual = ['', 'مليونان', 'ملياران'];
+  const plural = ['', 'ملايين', 'مليارات'];
+  if (count === 1) return names[scale];
+  if (count === 2) return dual[scale];
+  if (count <= 10) return plural[scale];
+  return names[scale];
+}
+
+function amountInWords(amount: number): string {
+  const n = Math.round(Math.abs(amount));
+  if (n === 0) return 'صفر جنيه مصري';
+  const parts: string[] = [];
+  let rest = n;
+  let scale = 0;
+  while (rest > 0) {
+    const chunk = rest % 1000;
+    if (chunk > 0) {
+      const words = chunkWords(chunk);
+      if (scale === 0) parts.unshift(words);
+      else if (chunk <= 2) parts.unshift(scaleLabel(scale, chunk));
+      else parts.unshift(`${words} ${scaleLabel(scale, chunk)}`);
+    }
+    rest = Math.floor(rest / 1000);
+    scale++;
+  }
+  return `${parts.join(' و')} جنيه مصري`;
+}
+
+function formatHijri(d: Date): string {
+  try {
+    return new Intl.DateTimeFormat('ar-EG-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  } catch {
+    return '';
+  }
+}
+
+function formatMonth(month: string): string {
+  const [y, m] = month.split('-').map(Number);
+  const d = new Date(y, (m || 1) - 1, 1);
+  return d.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+}
+
+function ReceiptRow({ label, value, ltr }: { label: string; value: string; ltr?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-[#8a6d2f]">{label}</span>
+      <span className={`font-bold ${ltr ? 'font-plex' : ''}`} dir={ltr ? 'ltr' : undefined}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ReceiptView({ rec }: { rec: PaymentReceiptDto }) {
+  const paidDate = new Date(rec.paidAt);
+  return (
+    <div
+      id="payment-receipt"
+      className="w-full max-w-[430px] rounded-xl border-[3px] border-double border-gold bg-[#fffdf7] p-6 text-center text-[#16121f]"
+    >
+      <div className="flex items-center justify-between text-[10px] text-[#8a6d2f]">
+        <span>رقم الإيصال</span>
+        <span className="font-plex font-bold" dir="ltr">
+          RCP-{String(rec.id).padStart(4, '0')}
+        </span>
+      </div>
+
+      <h1 className="display-serif mt-3 text-2xl font-black tracking-wide text-[#16121f]">مستر محمد صيام</h1>
+      <p className="mt-0.5 text-[11px] text-[#6b6b76]">مع أبو كيان .. الدراسات في أمان</p>
+
+      <div className="my-3 flex items-center gap-2 text-gold">
+        <span className="h-px flex-1 bg-gold/40" />
+        <span>◆</span>
+        <span className="h-px flex-1 bg-gold/40" />
+      </div>
+
+      <p className="text-sm font-bold uppercase tracking-[0.3em] text-gold">إيصال دفع</p>
+
+      <div className="mt-4 space-y-1.5 rounded-lg border border-gold/30 bg-[#fdf9ee] p-3">
+        <ReceiptRow label="الطالب" value={rec.studentName} />
+        <ReceiptRow label="المرحلة" value={rec.stageAr || '—'} />
+        <ReceiptRow label="يوزر نيم المنصة" value={rec.username || '—'} ltr />
+        <ReceiptRow label="رقم الطالب" value={rec.studentCode || '—'} ltr />
+        <ReceiptRow label="الشهر المستحق" value={formatMonth(rec.month)} />
+        <ReceiptRow label="طريقة الدفع" value={rec.method ?? 'نقدي'} />
+      </div>
+
+      <div className="mt-4 rounded-lg border-2 border-gold/60 bg-gold/5 p-4">
+        <p className="text-[10px] text-[#6b6b76]">المبلغ المدفوع</p>
+        <p className="mt-1 text-4xl font-black text-[#16121f]">
+          {Number(rec.amount).toLocaleString('ar-EG')}
+          <span className="ms-1 text-lg font-bold text-gold">ج.م</span>
+        </p>
+        <p className="mt-1.5 text-[11px] font-semibold text-[#8a6d2f]">{amountInWords(rec.amount)}</p>
+      </div>
+
+      <p className="mt-4 text-xs leading-relaxed text-[#3a3a42]">
+        استلمنا من الطالب <b>{rec.studentName}</b> مبلغ{' '}
+        <b>{Number(rec.amount).toLocaleString('ar-EG')} جنيه مصري</b> عن اشتراك شهر <b>{formatMonth(rec.month)}</b>.
+      </p>
+
+      <div className="mt-4 flex items-center justify-between border-t border-gold/30 pt-3 text-[10px] text-[#6b6b76]">
+        <span>التاريخ: {formatDate(rec.paidAt)}</span>
+        <span>{formatHijri(paidDate)}</span>
+      </div>
+
+      <div className="mt-3 flex items-center justify-center gap-1.5 text-xs font-bold text-[#2e7d5b]">
+        <CheckCircle2 size={14} /> مدفوع ✓
+      </div>
+
+      <div className="mt-4 flex items-end justify-between text-[10px] text-[#8a6d2f]">
+        <span className="text-xs font-bold">إمضاء الأمين</span>
+        <span className="mb-2 text-xs font-bold">مستر محمد صيام</span>
+      </div>
+    </div>
+  );
+}
+
 export default function PaymentsTab() {
   const [payments, setPayments] = useState<PaymentDto[]>([]);
   const [students, setStudents] = useState<StudentListItemDto[]>([]);
@@ -39,8 +198,12 @@ export default function PaymentsTab() {
   const [search, setSearch] = useState('');
 
   const [createOpen, setCreateOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ studentId: '', amount: '', month: currentMonth() });
+  const [createForm, setCreateForm] = useState({ amount: '', month: currentMonth(), method: 'نقدي' });
   const [savingCreate, setSavingCreate] = useState(false);
+  const [codeQuery, setCodeQuery] = useState('');
+  const [selectedStudent, setSelectedStudent] = useState<StudentListItemDto | null>(null);
+
+  const [receipt, setReceipt] = useState<PaymentReceiptDto | null>(null);
 
   const [markingId, setMarkingId] = useState<number | null>(null);
   const [markMethod, setMarkMethod] = useState('نقدي');
@@ -76,6 +239,19 @@ export default function PaymentsTab() {
     return payments.filter((p) => p.studentName.toLowerCase().includes(q));
   }, [payments, search]);
 
+  const studentMatches = useMemo(() => {
+    const q = codeQuery.trim().toLowerCase();
+    if (!q) return [];
+    return students
+      .filter(
+        (s) =>
+          s.username.toLowerCase().includes(q) ||
+          s.studentCode.toLowerCase().includes(q) ||
+          s.fullName.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [codeQuery, students]);
+
   const totals = useMemo(() => {
     const collected = payments.filter((p) => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
     const pending = payments.filter((p) => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
@@ -97,26 +273,46 @@ export default function PaymentsTab() {
 
   const createPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createForm.studentId || !createForm.amount) {
-      setError('اختار الطالب والمبلغ');
+    if (!selectedStudent || !createForm.amount) {
+      setError('اكتب كود الطالب واختاره، وحدد المبلغ');
       return;
     }
     setSavingCreate(true);
     setError(null);
     try {
-      await api.post<number>('/payments', {
-        studentId: Number(createForm.studentId),
+      const rec = await api.post<PaymentReceiptDto>('/payments/collect', {
+        studentId: selectedStudent.id,
         amount: Number(createForm.amount),
         month: createForm.month || currentMonth(),
+        method: createForm.method,
       });
+      setReceipt(rec);
       setCreateOpen(false);
-      setCreateForm({ studentId: '', amount: '', month: currentMonth() });
+      setCreateForm({ amount: '', month: currentMonth(), method: 'نقدي' });
+      setSelectedStudent(null);
+      setCodeQuery('');
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'فشل إضافة الدفعة');
+      setError(e instanceof Error ? e.message : 'فشل تسجيل الدفعة');
     } finally {
       setSavingCreate(false);
     }
+  };
+
+  const openReceipt = (p: PaymentDto) => {
+    const s = students.find((x) => x.id === p.studentId);
+    setReceipt({
+      id: p.id,
+      studentId: p.studentId,
+      studentName: p.studentName,
+      username: s?.username ?? '—',
+      studentCode: s?.studentCode ?? '—',
+      stageAr: s?.stageAr ?? '',
+      amount: p.amount,
+      month: p.month,
+      method: p.method ?? null,
+      paidAt: p.paidAt ?? new Date().toISOString(),
+    });
   };
 
   return (
@@ -142,7 +338,7 @@ export default function PaymentsTab() {
             />
           </div>
           <Button variant="gold" onClick={() => setCreateOpen(true)} icon={<Plus size={16} />}>
-            دفعة جديدة
+            تحصيل وإيصال
           </Button>
         </div>
       </div>
@@ -232,8 +428,17 @@ export default function PaymentsTab() {
                           </button>
                         )
                       ) : (
-                        <span className="flex items-center justify-center gap-1 text-xs font-semibold text-success">
-                          <CheckCircle2 size={13} /> مؤكدة
+                        <span className="flex items-center justify-center gap-1.5">
+                          <span className="flex items-center gap-1 text-xs font-semibold text-success">
+                            <CheckCircle2 size={13} /> مؤكدة
+                          </span>
+                          <button
+                            onClick={() => openReceipt(p)}
+                            title="طباعة الإيصال"
+                            className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold"
+                          >
+                            <Printer size={14} />
+                          </button>
                         </span>
                       )}
                     </td>
@@ -245,21 +450,128 @@ export default function PaymentsTab() {
         )}
       </Card>
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="تسجيل دفعة جديدة">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="تحصيل دفع — إيصال فوري">
         <form onSubmit={createPayment} className="grid gap-4">
-          <Select label="الطالب" required value={createForm.studentId} onChange={(e) => setCreateForm({ ...createForm, studentId: e.target.value })}>
-            <option value="">اختار الطالب</option>
-            {students.map((s) => (
-              <option key={s.id} value={s.id}>{s.fullName} ({s.username})</option>
-            ))}
-          </Select>
-          <Input label="المبلغ (جنيه)" required type="number" min={1} value={createForm.amount} onChange={(e) => setCreateForm({ ...createForm, amount: e.target.value })} />
-          <Input label="الشهر" type="month" value={createForm.month} onChange={(e) => setCreateForm({ ...createForm, month: e.target.value })} />
+          {error && (
+            <p className="rounded-md border border-error/40 bg-error/10 px-3 py-2 text-xs text-error">{error}</p>
+          )}
+          <div>
+            <label className="mb-1.5 block text-center text-xs font-semibold text-text-secondary">
+              كود الطالب (اليوزر نيم على المنصة)
+            </label>
+            <div className="relative">
+              <UserCheck size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-text-muted" />
+              <input
+                value={codeQuery}
+                onChange={(e) => setCodeQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && studentMatches.length > 0) {
+                    e.preventDefault();
+                    setSelectedStudent(studentMatches[0]);
+                    setCodeQuery('');
+                  }
+                }}
+                placeholder="اكتب الكود... مثال: SIMO12"
+                className="w-full rounded-md border border-border-subtle bg-surface-elevated py-2.5 ps-9 pe-3 text-sm text-text-primary outline-none transition-colors focus:border-gold"
+              />
+            </div>
+
+            {selectedStudent ? (
+              <div className="mt-2 flex items-center justify-between gap-2 rounded-md border border-success/30 bg-success/10 p-3">
+                <div>
+                  <p className="text-sm font-bold text-text-primary">{selectedStudent.fullName}</p>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    <span className="font-plex text-gold" dir="ltr">
+                      {selectedStudent.username}
+                    </span>
+                    {' · '}
+                    {selectedStudent.stageAr} · {selectedStudent.studentCode}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedStudent(null);
+                    setCodeQuery('');
+                  }}
+                  className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-error/10 hover:text-error"
+                  title="تغيير الطالب"
+                >
+                  <X size={15} />
+                </button>
+              </div>
+            ) : studentMatches.length > 0 ? (
+              <div className="mt-2 overflow-hidden rounded-md border border-border-soft bg-surface-elevated shadow-soft">
+                {studentMatches.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedStudent(s);
+                      setCodeQuery('');
+                    }}
+                    className="flex w-full items-center justify-between gap-2 border-b border-border-subtle px-3 py-2 text-start transition-colors last:border-0 hover:bg-gold/10"
+                  >
+                    <span className="text-sm font-semibold text-text-primary">{s.fullName}</span>
+                    <span className="font-plex text-xs text-gold" dir="ltr">
+                      {s.username}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : codeQuery.trim() ? (
+              <p className="mt-2 text-xs text-error">مفيش طالب بكود «{codeQuery}» — تأكد من اليوزر نيم</p>
+            ) : null}
+          </div>
+
+          <Input
+            label="المبلغ (جنيه)"
+            required
+            type="number"
+            min={1}
+            value={createForm.amount}
+            onChange={(e) => setCreateForm({ ...createForm, amount: e.target.value })}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="الشهر"
+              type="month"
+              value={createForm.month}
+              onChange={(e) => setCreateForm({ ...createForm, month: e.target.value })}
+            />
+            <Select label="طريقة الدفع" value={createForm.method} onChange={(e) => setCreateForm({ ...createForm, method: e.target.value })}>
+              <option value="نقدي">نقدي</option>
+              <option value="محفظة إلكترونية">محفظة إلكترونية</option>
+              <option value="تحويل بنكي">تحويل بنكي</option>
+            </Select>
+          </div>
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>إلغاء</Button>
-            <Button type="submit" variant="gold" loading={savingCreate} icon={<Plus size={15} />}>إضافة الدفعة</Button>
+            <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>
+              إلغاء
+            </Button>
+            <Button type="submit" variant="gold" loading={savingCreate} icon={<CheckCircle2 size={15} />}>
+              سدّد واطبع الإيصال
+            </Button>
           </div>
         </form>
+      </Modal>
+
+      <Modal open={receipt !== null} onClose={() => setReceipt(null)} title="إيصال دفع">
+        {receipt && (
+          <div className="flex flex-col gap-4">
+            <div className="flex justify-center">
+              <ReceiptView rec={receipt} />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setReceipt(null)}>
+                إغلاق
+              </Button>
+              <Button variant="gold" icon={<Printer size={16} />} onClick={() => window.print()}>
+                طباعة الإيصال
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

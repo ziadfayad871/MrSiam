@@ -26,6 +26,23 @@ public record MarkPaymentPaidCommand(int PaymentId, string? Method = null) : IRe
 
 public record CreatePaymentCommand(int StudentId, decimal Amount, string Month) : IRequest<ApiResponse<int>>;
 
+public record PaymentReceiptDto
+{
+    public int Id { get; init; }
+    public int StudentId { get; init; }
+    public required string StudentName { get; init; }
+    public required string Username { get; init; }
+    public required string StudentCode { get; init; }
+    public required string StageAr { get; init; }
+    public decimal Amount { get; init; }
+    public required string Month { get; init; }
+    public string? Method { get; init; }
+    public DateTime PaidAt { get; init; }
+}
+
+public record CreatePaidPaymentCommand(int StudentId, decimal Amount, string Month, string? Method = null)
+    : IRequest<ApiResponse<PaymentReceiptDto>>;
+
 public class ListPaymentsQueryHandler(IApplicationDbContext db)
     : IRequestHandler<ListPaymentsQuery, ApiResponse<PagedResult<PaymentDto>>>
 {
@@ -103,5 +120,51 @@ public class CreatePaymentCommandHandler(IApplicationDbContext db, ICurrentUserS
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<int>.Ok(payment.Id, "تم إضافة الدفعة");
+    }
+}
+
+public class CreatePaidPaymentCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+    : IRequestHandler<CreatePaidPaymentCommand, ApiResponse<PaymentReceiptDto>>
+{
+    public async Task<ApiResponse<PaymentReceiptDto>> Handle(CreatePaidPaymentCommand request, CancellationToken ct)
+    {
+        var student = await db.Students.AsNoTracking()
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.Id == request.StudentId, ct);
+        if (student is null)
+            return ApiResponse<PaymentReceiptDto>.Fail("الطالب غير موجود");
+
+        var payment = new Payment
+        {
+            StudentId = request.StudentId,
+            Amount = request.Amount,
+            Month = request.Month,
+            Status = PaymentStatus.Paid,
+            PaidAt = DateTime.UtcNow,
+            Method = request.Method ?? "نقدي"
+        };
+
+        db.Payments.Add(payment);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "create", "Payment", payment.Id.ToString(),
+            $"سداد {payment.Month} بمبلغ {payment.Amount:N0} — طريقة: {payment.Method}");
+        await db.SaveChangesAsync(ct);
+
+        var receipt = new PaymentReceiptDto
+        {
+            Id = payment.Id,
+            StudentId = student.Id,
+            StudentName = student.FullName,
+            Username = student.User?.Username ?? string.Empty,
+            StudentCode = student.StudentCode,
+            StageAr = student.Stage.ToArabic(),
+            Amount = payment.Amount,
+            Month = payment.Month,
+            Method = payment.Method,
+            PaidAt = payment.PaidAt!.Value
+        };
+
+        return ApiResponse<PaymentReceiptDto>.Ok(receipt, "تم السداد وتسجيل الإيصال");
     }
 }

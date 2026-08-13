@@ -1,6 +1,7 @@
 import QRCode from 'qrcode';
 import { AlertTriangle, Banknote, CalendarClock, CheckCircle2, KeyRound, Loader2, Pencil, Plus, Printer, QrCode, Trash2, Users, XCircle } from 'lucide-react';
 import { useEffect, useState, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import CoordinateLabel from '../../design-system/components/CoordinateLabel';
@@ -183,6 +184,38 @@ function OverviewTab({ data }: { data: SecretaryDashboardDto }) {
   );
 }
 
+interface PrintAllCard {
+  id: number;
+  fullName: string;
+  stageAr: string;
+  username: string;
+  password: string | null;
+  qr: string | null;
+}
+
+function QrCardSmall({ card }: { card: PrintAllCard }) {
+  return (
+    <div className="qr-cut-card flex flex-col items-center rounded-lg border border-border-soft bg-white p-3 text-center shadow-soft">
+      <p className="display-serif text-sm font-bold text-[#16121f]">مستر محمد صيام</p>
+      <p className="mt-2 text-xs font-bold text-[#16121f]">{card.fullName}</p>
+      <p className="text-[10px] text-[#6b6b76]">{card.stageAr}</p>
+      <div className="mt-2 flex h-[124px] w-[124px] items-center justify-center">
+        {card.qr ? (
+          <img src={card.qr} alt={`QR ${card.username}`} className="h-[124px] w-[124px]" />
+        ) : (
+          <span className="text-[10px] text-[#b4483a]">مفيش باسورد</span>
+        )}
+      </div>
+      <div className="mt-2 w-full rounded border border-[#e4e0d8] p-2" dir="ltr">
+        <p className="font-plex text-xs font-bold tracking-wide text-[#16121f]">{card.username}</p>
+        <p className="mt-0.5 font-plex text-xs font-bold tracking-wide text-[#16121f]">
+          باسورد: {card.password ?? '———'}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function StudentsTab() {
   const { toast } = useToast();
   const [students, setStudents] = useState<StudentListItemDto[]>([]);
@@ -202,6 +235,11 @@ export function StudentsTab() {
   const [printError, setPrintError] = useState<string | null>(null);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrBusy, setQrBusy] = useState(false);
+
+  const [printingAll, setPrintingAll] = useState(false);
+  const [printAllBusy, setPrintAllBusy] = useState(false);
+  const [printAllError, setPrintAllError] = useState<string | null>(null);
+  const [printAllCards, setPrintAllCards] = useState<PrintAllCard[]>([]);
 
   async function load() {
     setLoading(true);
@@ -354,6 +392,50 @@ export function StudentsTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [printPassword, printing]);
 
+  async function printAll() {
+    if (students.length === 0) return;
+    setPrintingAll(true);
+    setPrintAllError(null);
+    setPrintAllCards([]);
+    setPrintAllBusy(true);
+    try {
+      const creds = await api.get<StudentCredentialsDto[]>('/students/credentials');
+      const pwdMap = new Map<string, string>((creds ?? []).map((c) => [c.username, c.password]));
+      const cards = await Promise.all(
+        students.map(async (s) => {
+          const password = pwdMap.get(s.username) ?? null;
+          let qr: string | null = null;
+          if (password) {
+            try {
+              const url = new URL('/login', window.location.origin);
+              url.searchParams.set('u', s.username);
+              url.searchParams.set('p', password);
+              qr = await QRCode.toDataURL(url.toString(), {
+                width: 260,
+                margin: 1,
+                errorCorrectionLevel: 'M',
+                color: { dark: '#16121f', light: '#ffffff' },
+              });
+            } catch {
+              qr = null;
+            }
+          }
+          return { id: s.id, fullName: s.fullName, stageAr: s.stageAr, username: s.username, password, qr };
+        }),
+      );
+      setPrintAllCards(cards);
+    } catch (err) {
+      setPrintAllError(err instanceof Error ? err.message : 'فشل تجهيز الكروت');
+    } finally {
+      setPrintAllBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    document.body.classList.toggle('print-all-mode', printingAll);
+    return () => document.body.classList.remove('print-all-mode');
+  }, [printingAll]);
+
   async function remove(student: StudentListItemDto) {
     if (!window.confirm(`حذف الطالب ${student.fullName} (${student.username})؟ كل بياناته هتتمسح.`)) return;
     setDeletingId(student.id);
@@ -494,9 +576,20 @@ export function StudentsTab() {
       </Card>
 
       <Card>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-lg font-bold text-text-primary">قائمة الطلبة</h2>
-          <span className="text-xs text-text-muted">{students.length} طالب</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-text-muted">{students.length} طالب</span>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<Printer size={14} />}
+              disabled={loading || students.length === 0}
+              onClick={printAll}
+            >
+              اطبع الكل
+            </Button>
+          </div>
         </div>
         {loading ? (
           <CompassLoader text="بنجيب السجلات..." />
@@ -702,6 +795,57 @@ export function StudentsTab() {
           </div>
         </div>
       </Modal>
+
+      {/* Print All modal */}
+      <Modal
+        open={printingAll}
+        onClose={() => setPrintingAll(false)}
+        title={`طباعة كل كروت الدخول (${printAllCards.length}/${students.length})`}
+        size="lg"
+      >
+        {printAllBusy ? (
+          <div className="flex flex-col items-center gap-3 py-10">
+            <Loader2 size={28} className="animate-spin text-gold" />
+            <p className="text-sm text-text-muted">بنجهّز كروت {students.length} طالب... شوية ثواني</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {printAllError && (
+              <p className="rounded-md border border-error/40 bg-error/10 px-3 py-2 text-xs text-error">
+                {printAllError}
+              </p>
+            )}
+            <div className="grid max-h-[60vh] grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3">
+              {printAllCards.map((c) => (
+                <QrCardSmall key={c.id} card={c} />
+              ))}
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setPrintingAll(false)}>
+                إلغاء
+              </Button>
+              <Button
+                variant="gold"
+                icon={<Printer size={16} />}
+                disabled={printAllCards.length === 0}
+                onClick={() => window.print()}
+              >
+                طباعة الكل
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {printingAll &&
+        createPortal(
+          <div id="student-qr-sheet">
+            {printAllCards.map((c) => (
+              <QrCardSmall key={c.id} card={c} />
+            ))}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

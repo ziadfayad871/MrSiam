@@ -537,6 +537,55 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* ---------- Print All (bulk student QR cards) ---------- */
+#student-qr-sheet {
+  display: none;
+}
+
+@media print {
+  body.print-all-mode #root {
+    display: none !important;
+  }
+  body.print-all-mode #student-qr-sheet,
+  body.print-all-mode #student-qr-sheet * {
+    visibility: visible;
+  }
+  body.print-all-mode #student-qr-sheet {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5mm;
+    padding: 4mm;
+  }
+  body.print-all-mode #student-qr-sheet .qr-cut-card {
+    break-inside: avoid;
+    border: 1px dashed #9a9a9a;
+    box-shadow: none;
+  }
+  body.print-all-mode #student-qr-sheet img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+/* ---------- Payment receipt print ---------- */
+@media print {
+  #payment-receipt,
+  #payment-receipt * {
+    visibility: visible;
+  }
+  #payment-receipt {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    box-shadow: none;
+    border-color: #c89b3c;
+  }
+  #payment-receipt img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
 .realmap-marker {
   position: relative;
   display: flex;

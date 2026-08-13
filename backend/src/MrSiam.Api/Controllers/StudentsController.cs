@@ -32,6 +32,14 @@ public class StudentsController(MediatR.IMediator mediator) : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    [HttpGet("credentials")]
+    [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
+    public async Task<IActionResult> AllCredentials()
+    {
+        var result = await mediator.Send(new GetAllStudentsCredentialsQuery());
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpPost]
     [Authorize(Roles = nameof(Role.Secretary) + "," + nameof(Role.Admin))]
     public async Task<IActionResult> Create([FromBody] CreateStudentCommand command)

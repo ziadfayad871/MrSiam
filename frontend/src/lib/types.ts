@@ -730,6 +730,19 @@ export interface PaymentDto {
   method?: string | null;
 }
 
+export interface PaymentReceiptDto {
+  id: number;
+  studentId: number;
+  studentName: string;
+  username: string;
+  studentCode: string;
+  stageAr: string;
+  amount: number;
+  month: string;
+  method: string | null;
+  paidAt: string;
+}
+
 export interface StudyGroupListItemDto {
   id: number;
   name: string;
