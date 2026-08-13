@@ -350,6 +350,7 @@ function CoursesManagementDropdown({ collapsed, onNavigate }: { collapsed: boole
   const items = [
     { to: '/admin/courses/new', label: 'إضافة كورس', icon: Plus },
     { to: '/admin/courses', label: 'الكورسات', icon: LayoutGrid },
+    { to: '/teacher/content', label: 'المحتوى', icon: FileText },
   ];
   const anyActive = items.some((i) => location.pathname.startsWith(i.to));
 
