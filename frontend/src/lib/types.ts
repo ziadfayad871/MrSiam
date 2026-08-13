@@ -768,3 +768,25 @@ export interface ScheduleSlotDto {
   subject?: string | null;
   room?: string | null;
 }
+
+export interface UserListItemDto {
+  id: number;
+  username: string;
+  fullName: string;
+  role: Role;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string | null;
+  storedPassword?: string | null;
+}
+
+export interface AuditLogListItemDto {
+  id: number;
+  userId?: number | null;
+  username?: string | null;
+  action: string;
+  entity: string;
+  entityId?: string | null;
+  details?: string | null;
+  createdAt: string;
+}

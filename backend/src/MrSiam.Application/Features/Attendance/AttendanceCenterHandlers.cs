@@ -59,7 +59,7 @@ public class GetDailyAttendanceQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db)
+public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<BulkMarkAttendanceCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(BulkMarkAttendanceCommand request, CancellationToken ct)
@@ -92,6 +92,10 @@ public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db)
         }
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "bulk", "Attendance", request.Date.ToString("yyyy-MM-dd"), $"تسجيل حضور جماعي — {request.Items.Count} طالب ({request.Date})");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
     }
 }

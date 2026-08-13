@@ -76,7 +76,7 @@ public class ListScheduleQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class CreateScheduleSlotCommandHandler(IApplicationDbContext db)
+public class CreateScheduleSlotCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreateScheduleSlotCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreateScheduleSlotCommand request, CancellationToken ct)
@@ -101,11 +101,14 @@ public class CreateScheduleSlotCommandHandler(IApplicationDbContext db)
         db.ScheduleSlots.Add(slot);
         await db.SaveChangesAsync(ct);
 
+        AuditLogWriter.Add(db, currentUser, "create", "ScheduleSlot", slot.Id.ToString(), $"إضافة حصة {request.Day} {request.StartTime}-{request.EndTime}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<int>.Ok(slot.Id, "تمت إضافة الحصة");
     }
 }
 
-public class UpdateScheduleSlotCommandHandler(IApplicationDbContext db)
+public class UpdateScheduleSlotCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<UpdateScheduleSlotCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(UpdateScheduleSlotCommand request, CancellationToken ct)
@@ -130,11 +133,15 @@ public class UpdateScheduleSlotCommandHandler(IApplicationDbContext db)
             return ApiResponse<bool>.Fail("وقت النهاية لازم ييجي بعد وقت البداية");
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "update", "ScheduleSlot", slot.Id.ToString(), $"تعديل حصة {slot.Day} {slot.StartTime}-{slot.EndTime}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تحديث الحصة");
     }
 }
 
-public class DeleteScheduleSlotCommandHandler(IApplicationDbContext db)
+public class DeleteScheduleSlotCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<DeleteScheduleSlotCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteScheduleSlotCommand request, CancellationToken ct)
@@ -144,6 +151,9 @@ public class DeleteScheduleSlotCommandHandler(IApplicationDbContext db)
             return ApiResponse<bool>.Fail("الحصة غير موجودة");
 
         db.ScheduleSlots.Remove(slot);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "delete", "ScheduleSlot", request.SlotId.ToString(), $"حذف حصة {slot.Day} {slot.StartTime}-{slot.EndTime}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تم حذف الحصة");

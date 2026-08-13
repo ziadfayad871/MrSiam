@@ -34,7 +34,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}/api${path}`, { ...options, headers });
+  const res = await fetch(`${API_BASE}/api${path}`, { ...options, cache: 'no-store', headers });
 
   const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
 
@@ -63,7 +63,7 @@ export const api = {
     const token = getToken();
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return fetch(`${API_BASE}/api${path}`, { method: 'POST', body: formData, headers }).then(async (res) => {
+    return fetch(`${API_BASE}/api${path}`, { method: 'POST', body: formData, headers, cache: 'no-store' }).then(async (res) => {
       const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
       if (!res.ok) throw new ApiError(body?.message ?? 'فشل رفع البيانات', res.status);
       if (body && !body.success) throw new ApiError(body.message ?? 'فشلت العملية', res.status);
@@ -74,7 +74,7 @@ export const api = {
     const token = getToken();
     const headers: Record<string, string> = {};
     if (token) headers.Authorization = `Bearer ${token}`;
-    return fetch(`${API_BASE}/api${path}`, { method, body: formData, headers }).then(async (res) => {
+    return fetch(`${API_BASE}/api${path}`, { method, body: formData, headers, cache: 'no-store' }).then(async (res) => {
       const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
       if (!res.ok) throw new ApiError(body?.message ?? 'فشل رفع البيانات', res.status);
       if (body && !body.success) throw new ApiError(body.message ?? 'فشلت العملية', res.status);

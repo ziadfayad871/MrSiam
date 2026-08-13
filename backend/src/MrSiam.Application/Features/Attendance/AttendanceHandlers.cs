@@ -50,7 +50,7 @@ public class GetAttendanceQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class MarkAttendanceCommandHandler(IApplicationDbContext db)
+public class MarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<MarkAttendanceCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(MarkAttendanceCommand request, CancellationToken ct)
@@ -79,6 +79,10 @@ public class MarkAttendanceCommandHandler(IApplicationDbContext db)
         }
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, existing is not null ? "update" : "create", "Attendance", request.StudentId.ToString(), $"تسجيل حضور {request.Date} — {request.Status}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
     }
 }

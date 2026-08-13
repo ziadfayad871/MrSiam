@@ -354,43 +354,18 @@ http://localhost:5173
 
 ---
 
-🧪 Demo Data
+👑 Master Account
 
-أول تشغيل يقوم بإنشاء بيانات تجريبية كاملة تشمل:
+أول تشغيل يقوم بإنشاء حساب المستر (مالك المنصة) فقط — بدون أي بيانات تجريبية.
 
-- 9 مواد
-- دروس
-- اختبارات
-- 12 طالب
-- ميداليات
-- مدفوعات
-- حضور
-- مستخدمين بمختلف الصلاحيات
+Username| Password
+👑 master| `Master@123`
 
----
+من حساب المستر، يمكن إضافة حسابات السكرتارية من قائمة **إدارة المستخدمين** في الشريط الجانبي:
 
-🔐 Demo Accounts
-
-«كلمة المرور لجميع الحسابات التجريبية:»
-
-123456
-
-Role| Username
-👨‍🏫 Teacher| "siam"
-🧑‍💼 Secretary| "secretary"
-👑 Admin| "admin"
-🎓 Student| "ahmed.samir"
-🎓 Student| "malak.mahmoud"
-🎓 Student| "omar.khaled"
-🎓 Student| "sara.ahmed"
-🎓 Student| "youssef.ibrahim"
-🎓 Student| "fatma.ali"
-🎓 Student| "abdelrahman.hassan"
-🎓 Student| "nadia.mostafa"
-🎓 Student| "karim.tarek"
-🎓 Student| "laila.mohamed"
-🎓 Student| "hassan.fouad"
-🎓 Student| "reem.sherif"
+- **إضافة** — إنشاء حساب سكرتير/مدير جديد (اسم مستخدم + كلمة مرور).
+- **قائمة المستخدمين** — عرض/تعديل/إيقاف/حذف الحسابات.
+- **سجل العمليات** — كل عمليات السكرتارية تُسجّل (الاسم + التاريخ + نوع العملية + الشرح) مع فلترة حسب السكرتير.
 
 ---
 

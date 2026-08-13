@@ -11,6 +11,7 @@ public static class SchemaBootstrap
         await EnsureTableAsync(db, "StudyGroups", isSqlServer, StudyGroupsSql);
         await EnsureTableAsync(db, "StudyGroupMembers", isSqlServer, StudyGroupMembersSql);
         await EnsureTableAsync(db, "ScheduleSlots", isSqlServer, ScheduleSlotsSql);
+        await EnsureTableAsync(db, "AuditLogs", isSqlServer, AuditLogsSql);
         await EnsureTableAsync(db, "StudentTestimonials", isSqlServer, TestimonialsSql);
         await EnsureTableAsync(db, "Assignments", isSqlServer, AssignmentsSql);
         await EnsureTableAsync(db, "LessonResources", isSqlServer, LessonResourcesSql);
@@ -109,4 +110,9 @@ public static class SchemaBootstrap
         sqlServer
             ? "CREATE TABLE [LessonResources] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [LessonId] int NOT NULL, [Title] nvarchar(200) NOT NULL, [Kind] nvarchar(30) NOT NULL, [FileUrl] nvarchar(400) NOT NULL, [CreatedAt] datetime2 NOT NULL)"
             : "CREATE TABLE LessonResources (Id INTEGER PRIMARY KEY AUTOINCREMENT, LessonId INTEGER NOT NULL, Title TEXT NOT NULL, Kind TEXT NOT NULL, FileUrl TEXT NOT NULL, CreatedAt TEXT NOT NULL)";
+
+    private static string AuditLogsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [AuditLogs] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [UserId] int NULL, [Username] nvarchar(64) NULL, [Action] nvarchar(60) NOT NULL, [Entity] nvarchar(60) NOT NULL, [EntityId] nvarchar(40) NULL, [Details] nvarchar(max) NULL, [IpAddress] nvarchar(45) NULL, [CreatedAt] datetime2 NOT NULL)"
+            : "CREATE TABLE AuditLogs (Id INTEGER PRIMARY KEY AUTOINCREMENT, UserId INTEGER NULL, Username TEXT NULL, Action TEXT NOT NULL, Entity TEXT NOT NULL, EntityId TEXT NULL, Details TEXT NULL, IpAddress TEXT NULL, CreatedAt TEXT NOT NULL)";
 }

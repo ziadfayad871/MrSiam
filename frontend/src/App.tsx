@@ -25,6 +25,9 @@ import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
 import TeacherLivePage from './pages/teacher/TeacherLivePage';
 import TeacherTestimonialsPage from './pages/teacher/TeacherTestimonialsPage';
 import SecretaryDashboard from './pages/secretary/SecretaryDashboard';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminUserFormPage from './pages/admin/AdminUserFormPage';
+import AdminAuditLogsPage from './pages/admin/AdminAuditLogsPage';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
@@ -44,7 +47,8 @@ import SearchPage from './pages/SearchPage';
 
 function homeForRole(role: Role): string {
   if (role === 'Student') return '/dashboard';
-  if (role === 'Teacher' || role === 'Admin') return '/teacher';
+  if (role === 'Teacher') return '/teacher';
+  if (role === 'Admin') return '/admin/users';
   if (role === 'Secretary') return '/secretary';
   return '/parent';
 }
@@ -73,6 +77,10 @@ function RequireTeacher({ children }: { children: React.ReactNode }) {
 
 function RequireSecretary({ children }: { children: React.ReactNode }) {
   return <RequireAuth roles={['Secretary', 'Admin']}>{children}</RequireAuth>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  return <RequireAuth roles={['Admin']}>{children}</RequireAuth>;
 }
 
 function RequireParent({ children }: { children: React.ReactNode }) {
@@ -314,6 +322,54 @@ export default function App() {
               </PageTransition>
             </DashboardLayout>
           </RequireTeacher>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <AdminUsersPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/users/new"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <AdminUserFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/users/:id/edit"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <AdminUserFormPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
+        }
+      />
+      <Route
+        path="/admin/audit-logs"
+        element={
+          <RequireAdmin>
+            <DashboardLayout>
+              <PageTransition>
+                <AdminAuditLogsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireAdmin>
         }
       />
       <Route

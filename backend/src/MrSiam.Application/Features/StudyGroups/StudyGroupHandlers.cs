@@ -133,7 +133,7 @@ public class GetStudyGroupQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class CreateStudyGroupCommandHandler(IApplicationDbContext db)
+public class CreateStudyGroupCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreateStudyGroupCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreateStudyGroupCommand request, CancellationToken ct)
@@ -153,11 +153,14 @@ public class CreateStudyGroupCommandHandler(IApplicationDbContext db)
         db.StudyGroups.Add(group);
         await db.SaveChangesAsync(ct);
 
+        AuditLogWriter.Add(db, currentUser, "create", "StudyGroup", group.Id.ToString(), $"إنشاء مجموعة {group.Name}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<int>.Ok(group.Id, "تم إنشاء المجموعة");
     }
 }
 
-public class UpdateStudyGroupCommandHandler(IApplicationDbContext db)
+public class UpdateStudyGroupCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<UpdateStudyGroupCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(UpdateStudyGroupCommand request, CancellationToken ct)
@@ -176,11 +179,15 @@ public class UpdateStudyGroupCommandHandler(IApplicationDbContext db)
             group.IsActive = request.IsActive.Value;
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "update", "StudyGroup", group.Id.ToString(), $"تعديل مجموعة {group.Name}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تحديث المجموعة");
     }
 }
 
-public class DeleteStudyGroupCommandHandler(IApplicationDbContext db)
+public class DeleteStudyGroupCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<DeleteStudyGroupCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteStudyGroupCommand request, CancellationToken ct)
@@ -189,14 +196,18 @@ public class DeleteStudyGroupCommandHandler(IApplicationDbContext db)
         if (group is null)
             return ApiResponse<bool>.Fail("المجموعة غير موجودة");
 
+        var name = group.Name;
         db.StudyGroups.Remove(group);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "delete", "StudyGroup", request.GroupId.ToString(), $"حذف مجموعة {name}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تم حذف المجموعة");
     }
 }
 
-public class AddMemberCommandHandler(IApplicationDbContext db)
+public class AddMemberCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<AddMemberCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(AddMemberCommand request, CancellationToken ct)
@@ -221,11 +232,15 @@ public class AddMemberCommandHandler(IApplicationDbContext db)
         });
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "create", "StudyGroupMember", request.GroupId.ToString(), $"إضافة طالب (رقم {request.StudentId}) للمجموعة {request.GroupId}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تمت إضافة الطالب للمجموعة");
     }
 }
 
-public class RemoveMemberCommandHandler(IApplicationDbContext db)
+public class RemoveMemberCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<RemoveMemberCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(RemoveMemberCommand request, CancellationToken ct)
@@ -236,6 +251,9 @@ public class RemoveMemberCommandHandler(IApplicationDbContext db)
             return ApiResponse<bool>.Fail("الطالب ليس عضوًا في المجموعة");
 
         db.StudyGroupMembers.Remove(member);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "delete", "StudyGroupMember", request.GroupId.ToString(), $"إزالة طالب (رقم {request.StudentId}) من المجموعة {request.GroupId}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تمت إزالة الطالب من المجموعة");

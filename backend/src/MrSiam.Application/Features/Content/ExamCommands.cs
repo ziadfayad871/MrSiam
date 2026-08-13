@@ -69,7 +69,7 @@ public static class ExamBuilder
     }
 }
 
-public class CreateExamCommandHandler(IApplicationDbContext db)
+public class CreateExamCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreateExamCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreateExamCommand request, CancellationToken ct)
@@ -126,21 +126,14 @@ public class CreateExamCommandHandler(IApplicationDbContext db)
                 $"اتنشر «{exam.Title}» — جاهز تجرب حظك فيه",
                 "exam", "/courses", ct);
 
-        db.AuditLogs.Add(new AuditLog
-        {
-            Action = "create",
-            Entity = "Exam",
-            EntityId = exam.Id.ToString(),
-            Details = $"إنشاء اختبار {exam.Title} (منشور: {exam.IsPublished})",
-            CreatedAt = DateTime.UtcNow
-        });
+        AuditLogWriter.Add(db, currentUser, "create", "Exam", exam.Id.ToString(), $"إنشاء اختبار {exam.Title} (منشور: {exam.IsPublished})");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<int>.Ok(exam.Id, "تم إنشاء الاختبار");
     }
 }
 
-public class UpdateExamCommandHandler(IApplicationDbContext db)
+public class UpdateExamCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<UpdateExamCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(UpdateExamCommand request, CancellationToken ct)
@@ -208,11 +201,14 @@ public class UpdateExamCommandHandler(IApplicationDbContext db)
                 $"اتنشر «{exam.Title}» — جاهز تجرب حظك فيه",
                 "exam", "/courses", ct);
 
+        AuditLogWriter.Add(db, currentUser, "update", "Exam", exam.Id.ToString(), $"تعديل اختبار {exam.Title}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تعديل الاختبار");
     }
 }
 
-public class DeleteExamCommandHandler(IApplicationDbContext db)
+public class DeleteExamCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<DeleteExamCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteExamCommand request, CancellationToken ct)
@@ -221,8 +217,13 @@ public class DeleteExamCommandHandler(IApplicationDbContext db)
         if (exam is null)
             return ApiResponse<bool>.Fail("الاختبار غير موجود");
 
+        var title = exam.Title;
         db.Exams.Remove(exam);
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "delete", "Exam", request.Id.ToString(), $"حذف اختبار {title}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم حذف الاختبار");
     }
 }

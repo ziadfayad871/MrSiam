@@ -162,7 +162,7 @@ public class GetMySubscriptionQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class CreateSubscriptionPlanCommandHandler(IApplicationDbContext db)
+public class CreateSubscriptionPlanCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreateSubscriptionPlanCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreateSubscriptionPlanCommand request, CancellationToken ct)
@@ -185,11 +185,14 @@ public class CreateSubscriptionPlanCommandHandler(IApplicationDbContext db)
         db.SubscriptionPlans.Add(plan);
         await db.SaveChangesAsync(ct);
 
+        AuditLogWriter.Add(db, currentUser, "create", "SubscriptionPlan", plan.Id.ToString(), $"إضافة باقة {plan.Name} — {plan.Price:N0} ج.م");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<int>.Ok(plan.Id, "تم إضافة الباقة");
     }
 }
 
-public class CreateCouponCommandHandler(IApplicationDbContext db)
+public class CreateCouponCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreateCouponCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreateCouponCommand request, CancellationToken ct)
@@ -212,6 +215,9 @@ public class CreateCouponCommandHandler(IApplicationDbContext db)
         db.Coupons.Add(coupon);
         await db.SaveChangesAsync(ct);
 
+        AuditLogWriter.Add(db, currentUser, "create", "Coupon", coupon.Id.ToString(), $"إضافة كود خصم {coupon.Code} — {coupon.DiscountPercent}%");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<int>.Ok(coupon.Id, "تم إضافة كود الخصم");
     }
 
@@ -223,7 +229,7 @@ public class CreateCouponCommandHandler(IApplicationDbContext db)
     }
 }
 
-public class ActivateSubscriptionCommandHandler(IApplicationDbContext db)
+public class ActivateSubscriptionCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<ActivateSubscriptionCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(ActivateSubscriptionCommand request, CancellationToken ct)
@@ -280,6 +286,9 @@ public class ActivateSubscriptionCommandHandler(IApplicationDbContext db)
             Notes = couponCode is null ? null : $"كوبون {couponCode}"
         });
 
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "create", "Subscription", subscription.Id.ToString(), $"تفعيل اشتراك {plan.Name} للطالب {student.FullName} — {price:N0} ج.م");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<int>.Ok(subscription.Id, "تم تفعيل الاشتراك بنجاح");

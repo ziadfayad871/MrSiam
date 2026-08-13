@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using MrSiam.Application;
@@ -131,7 +132,7 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<MrSiam.Infrastructure.Persistence.AppDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<MrSiam.Application.Abstractions.IPasswordHasher>();
-        db.Database.EnsureCreated();
+        await db.Database.MigrateAsync();
         await MrSiam.Infrastructure.Persistence.SchemaBootstrap.EnsureCenterSchemaAsync(db);
         await MrSiam.Infrastructure.Persistence.SeedData.SeedAsync(db, hasher);
     }

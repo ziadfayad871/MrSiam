@@ -57,7 +57,7 @@ public class ListPaymentsQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class MarkPaymentPaidCommandHandler(IApplicationDbContext db)
+public class MarkPaymentPaidCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<MarkPaymentPaidCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(MarkPaymentPaidCommand request, CancellationToken ct)
@@ -71,11 +71,15 @@ public class MarkPaymentPaidCommandHandler(IApplicationDbContext db)
         payment.Method = request.Method ?? "نقدي";
 
         await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "update", "Payment", payment.Id.ToString(), $"تأكيد دفعة {payment.Month} بمبلغ {payment.Amount:N0}");
+        await db.SaveChangesAsync(ct);
+
         return ApiResponse<bool>.Ok(true, "تم تأكيد الدفعة");
     }
 }
 
-public class CreatePaymentCommandHandler(IApplicationDbContext db)
+public class CreatePaymentCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<CreatePaymentCommand, ApiResponse<int>>
 {
     public async Task<ApiResponse<int>> Handle(CreatePaymentCommand request, CancellationToken ct)
@@ -93,6 +97,9 @@ public class CreatePaymentCommandHandler(IApplicationDbContext db)
         };
 
         db.Payments.Add(payment);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "create", "Payment", payment.Id.ToString(), $"إضافة دفعة {payment.Month} بمبلغ {payment.Amount:N0}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<int>.Ok(payment.Id, "تم إضافة الدفعة");

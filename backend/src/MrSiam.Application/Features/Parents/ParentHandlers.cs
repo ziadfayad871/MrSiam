@@ -49,7 +49,7 @@ public record LinkStudentToParentCommand(int ParentId, int StudentId) : IRequest
 
 public record GetParentDashboardQuery(int ParentId) : IRequest<ApiResponse<ParentDashboardDto>>;
 
-public class CreateParentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher)
+public class CreateParentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher, ICurrentUserService currentUser)
     : IRequestHandler<CreateParentCommand, ApiResponse<ParentCreatedResult>>
 {
     private const string UsernamePrefix = "WALI";
@@ -91,6 +91,9 @@ public class CreateParentCommandHandler(IApplicationDbContext db, IPasswordHashe
                 s.ParentId = parent.Id;
             await db.SaveChangesAsync(ct);
         }
+
+        AuditLogWriter.Add(db, currentUser, "create", "Parent", parent.Id.ToString(), $"إنشاء حساب ولي أمر {fullName} ({username})");
+        await db.SaveChangesAsync(ct);
 
         return ApiResponse<ParentCreatedResult>.Ok(
             new ParentCreatedResult(parent.Id, username),

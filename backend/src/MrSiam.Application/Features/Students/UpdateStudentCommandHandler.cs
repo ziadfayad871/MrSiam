@@ -5,7 +5,7 @@ using MrSiam.Application.Common;
 
 namespace MrSiam.Application.Features.Students;
 
-public class UpdateStudentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher)
+public class UpdateStudentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher, ICurrentUserService currentUser)
     : IRequestHandler<UpdateStudentCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(UpdateStudentCommand request, CancellationToken ct)
@@ -40,14 +40,7 @@ public class UpdateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
 
         await db.SaveChangesAsync(ct);
 
-        db.AuditLogs.Add(new Domain.Entities.AuditLog
-        {
-            Action = "update",
-            Entity = "Student",
-            EntityId = student.Id.ToString(),
-            Details = $"تعديل بيانات الطالب {student.FullName}",
-            CreatedAt = DateTime.UtcNow
-        });
+        AuditLogWriter.Add(db, currentUser, "update", "Student", student.Id.ToString(), $"تعديل بيانات الطالب {student.FullName}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تم تحديث بيانات الطالب");

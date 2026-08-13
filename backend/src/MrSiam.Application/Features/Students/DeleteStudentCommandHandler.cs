@@ -5,7 +5,7 @@ using MrSiam.Application.Common;
 
 namespace MrSiam.Application.Features.Students;
 
-public class DeleteStudentCommandHandler(IApplicationDbContext db)
+public class DeleteStudentCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
     : IRequestHandler<DeleteStudentCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(DeleteStudentCommand request, CancellationToken ct)
@@ -32,14 +32,7 @@ public class DeleteStudentCommandHandler(IApplicationDbContext db)
             }
         }
 
-        db.AuditLogs.Add(new Domain.Entities.AuditLog
-        {
-            Action = "delete",
-            Entity = "Student",
-            EntityId = request.StudentId.ToString(),
-            Details = $"حذف الطالب {student.FullName}",
-            CreatedAt = DateTime.UtcNow
-        });
+        AuditLogWriter.Add(db, currentUser, "delete", "Student", request.StudentId.ToString(), $"حذف الطالب {student.FullName}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تم حذف الطالب");

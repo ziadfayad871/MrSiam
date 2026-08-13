@@ -320,21 +320,25 @@ export default function TeacherCourseDetailPage() {
 
   function loadContent() {
     if (!course) return;
-    Promise.all([
+    Promise.allSettled([
       api.get<LessonDto[]>(`/courses/${course.id}/lessons`),
       api.get<ExamListItemDto[]>(`/exams/course/${course.id}?includeUnpublished=true`),
       api.get<AssignmentDto[]>(`/courses/${course.id}/assignments`),
       api.get<CourseExamStatsDto[]>(`/analytics/courses/${course.id}/exam-stats`),
       api.get<LessonResourceDto[]>(`/courses/${course.id}/resources`),
-    ])
-      .then(([l, e, a, s, r]) => {
-        setLessons(l);
-        setExams(e);
-        setAssignments(a);
-        setExamStats(s);
-        setResources(r);
-      })
-      .catch(() => toast('فشل تحميل المحتوى', '', 'error'));
+    ]).then((results) => {
+      if (results[0].status === 'fulfilled') setLessons(results[0].value);
+      if (results[1].status === 'fulfilled') setExams(results[1].value);
+      if (results[2].status === 'fulfilled') setAssignments(results[2].value);
+      if (results[3].status === 'fulfilled') setExamStats(results[3].value);
+      if (results[4].status === 'fulfilled') setResources(results[4].value);
+
+      const failed = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
+      if (failed.length > 0) {
+        const reason = failed[0].reason;
+        toast(reason instanceof Error && reason.message ? reason.message : 'فشل تحميل جزء من المحتوى', '', 'error');
+      }
+    });
   }
 
   useEffect(() => {

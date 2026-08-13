@@ -6,7 +6,7 @@ using MrSiam.Domain.Entities;
 
 namespace MrSiam.Application.Features.Students;
 
-public class CreateStudentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher)
+public class CreateStudentCommandHandler(IApplicationDbContext db, IPasswordHasher hasher, ICurrentUserService currentUser)
     : IRequestHandler<CreateStudentCommand, ApiResponse<CreateStudentResult>>
 {
     private const string UsernamePrefix = "SIMO";
@@ -52,15 +52,7 @@ public class CreateStudentCommandHandler(IApplicationDbContext db, IPasswordHash
         db.Students.Add(student);
         await db.SaveChangesAsync(ct);
 
-        db.AuditLogs.Add(new Domain.Entities.AuditLog
-        {
-            Username = username,
-            Action = "create",
-            Entity = "Student",
-            EntityId = student.Id.ToString(),
-            Details = $"تسجيل طالب جديد {fullName} — {studentCode}",
-            CreatedAt = DateTime.UtcNow
-        });
+        AuditLogWriter.Add(db, currentUser, "create", "Student", student.Id.ToString(), $"تسجيل طالب جديد {fullName} — {studentCode}");
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<CreateStudentResult>.Ok(
