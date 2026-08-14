@@ -665,6 +665,93 @@
     font-weight: 600;
   }
 }
+
+/* ---------- Monthly attendance report print ---------- */
+#attendance-month-print-sheet {
+  display: none;
+}
+
+@media print {
+  body.print-attendance-month-mode #root {
+    display: none !important;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet,
+  body.print-attendance-month-mode #attendance-month-print-sheet * {
+    visibility: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet {
+    display: block;
+    padding: 5mm;
+    background: #fff;
+    color: #111;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-size: 9px;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-header {
+    text-align: center;
+    margin-bottom: 4mm;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-header h1 {
+    font-size: 20px;
+    font-weight: 900;
+    color: #1a1206;
+    margin: 0;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-sub {
+    font-size: 10px;
+    color: #7a6a3d;
+    margin: 2px 0 0;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 3mm;
+    padding: 2mm 2mm;
+    border-block: 1px solid #c9b98a;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet th,
+  body.print-attendance-month-mode #attendance-month-print-sheet td {
+    border: 1px solid #9a9a9a;
+    padding: 2px 2px;
+    text-align: center;
+    overflow: hidden;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet th {
+    background: #efe7d2 !important;
+    font-weight: 700;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet th.print-month-weekend,
+  body.print-attendance-month-mode #attendance-month-print-sheet td.print-month-weekend {
+    background: #f5efe0 !important;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-name {
+    text-align: right;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet tr.print-month-total td {
+    background: #f7f3e7 !important;
+    font-weight: 700;
+  }
+  body.print-attendance-month-mode #attendance-month-print-sheet .print-month-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8mm;
+    font-size: 11px;
+    font-weight: 600;
+  }
+}
 .realmap-marker {
   position: relative;
   display: flex;

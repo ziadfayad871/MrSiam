@@ -745,6 +745,29 @@ export interface PaymentReceiptDto {
   paidAt: string;
 }
 
+export interface MonthlyAttendanceDayDto {
+  day: number;
+  isSession?: boolean;
+  status?: AttendanceStatusType | null;
+}
+
+export interface MonthlyAttendanceStudentDto {
+  studentId: number;
+  fullName: string;
+  studentCode: string;
+  stage: Stage;
+  stageAr: string;
+  groupId?: number | null;
+  groupName?: string | null;
+  presentCount: number;
+  absentCount: number;
+  lateCount: number;
+  excusedCount: number;
+  markedCount: number;
+  sessionCount: number;
+  days: MonthlyAttendanceDayDto[];
+}
+
 export interface StudyGroupListItemDto {
   id: number;
   name: string;

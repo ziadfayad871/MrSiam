@@ -2,6 +2,7 @@
 
 import {
   Award,
+  CalendarDays,
   FileText,
   GraduationCap,
   Home,
@@ -77,6 +78,8 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/teacher', label: 'لوحة القيادة', icon: Home },
             { to: '/teacher/content', label: 'المحتوى', icon: FileText },
             { to: '/teacher/class', label: 'الفصول والتنبيهات', icon: Users },
+            { to: '/teacher/attendance', label: 'تحضير اليوم', icon: GraduationCap },
+            { to: '/teacher/attendance/monthly', label: 'تقرير الحضور الشهري', icon: CalendarDays },
             { to: '/teacher/analytics', label: 'التحليلات', icon: Award },
             { to: '/teacher/live', label: 'البث المباشر', icon: Users },
             { to: '/teacher/testimonials', label: 'آراء الطلاب', icon: Award },
@@ -85,6 +88,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/secretary', label: 'نظرة عامة', icon: Home },
             { to: '/secretary/students', label: 'إدارة الطلبة', icon: Users },
             { to: '/secretary/attendance', label: 'التحضير اليومي', icon: GraduationCap },
+            { to: '/secretary/attendance/monthly', label: 'تقرير الحضور الشهري', icon: CalendarDays },
             { to: '/secretary/payments', label: 'التحصيل والمدفوعات', icon: FileText },
             { to: '/secretary/groups', label: 'المجموعات والشعب', icon: Users },
             { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: Map },

@@ -31,6 +31,13 @@ public class AttendanceController(MediatR.IMediator mediator) : ControllerBase
         return result.Success ? Ok(result) : BadRequest(result);
     }
 
+    [HttpGet("monthly")]
+    public async Task<IActionResult> GetMonthly([FromQuery] string month, [FromQuery] Stage? stage = null, [FromQuery] int? groupId = null)
+    {
+        var result = await mediator.Send(new GetMonthlyAttendanceQuery(month, groupId, stage));
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpPost("bulk")]
     public async Task<IActionResult> MarkBulk([FromBody] BulkMarkAttendanceCommand command)
     {

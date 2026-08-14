@@ -1,17 +1,20 @@
 import {
   Banknote,
+  CalendarDays,
   CheckCircle2,
   Clock,
   Pencil,
   Printer,
   Save,
   Search,
+  Settings2,
   Trash2,
   UserCheck,
   Users,
   XCircle,
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Badge } from '../../design-system/ui/Badge';
@@ -21,11 +24,13 @@ import { EmptyState } from '../../design-system/ui/EmptyState';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { Input, Select, Textarea } from '../../design-system/ui/Field';
 import { Modal } from '../../design-system/ui/Modal';
+import { useAuth } from '../../lib/auth';
 import { api } from '../../lib/api';
 import type {
   AttendanceStatusType,
   DailyAttendanceStudentDto,
   PaymentReceiptDto,
+  ScheduleSlotDto,
   Stage,
   StudyGroupDetailDto,
   StudyGroupListItemDto,
@@ -47,6 +52,21 @@ const STATUS_OPTIONS: { value: AttendanceStatusType; label: string; color: strin
   { value: 'Late', label: 'متأخر', color: 'text-gold border-gold/40 hover:bg-gold/10' },
   { value: 'Excused', label: 'معذور', color: 'text-blue-400 border-blue-500/40 hover:bg-blue-500/10' },
 ];
+
+const WEEKDAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+const DAY_NAME_TO_NUM: Record<string, number> = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
+const toDow = (day: number | string): number =>
+  typeof day === 'number' ? day : (DAY_NAME_TO_NUM[day] ?? -1);
 
 const ACTIVE_BG: Record<AttendanceStatusType, string> = {
   Present: 'bg-success/15 text-success border-success/60',
@@ -77,11 +97,34 @@ function formatDateLong(dateISO: string): string {
   });
 }
 
+const FEES_KEY = 'mrsiam_monthly_fees_v1';
+
+interface MonthlyFees {
+  stages: Partial<Record<Stage, number>>;
+  groups: Partial<Record<number, number>>;
+}
+
+function loadFees(): MonthlyFees {
+  try {
+    const raw = localStorage.getItem(FEES_KEY);
+    if (!raw) return { stages: {}, groups: {} };
+    const parsed = JSON.parse(raw) as Partial<MonthlyFees>;
+    return { stages: parsed?.stages ?? {}, groups: parsed?.groups ?? {} };
+  } catch {
+    return { stages: {}, groups: {} };
+  }
+}
+
+function formatMoney(n: number): string {
+  return `${Number(n).toLocaleString('ar-EG')} ج.م`;
+}
+
 export default function AttendanceSheet() {
   const [date, setDate] = useState(todayISO());
   const [students, setStudents] = useState<DailyAttendanceStudentDto[]>([]);
   const [groups, setGroups] = useState<StudyGroupListItemDto[]>([]);
   const [groupDetail, setGroupDetail] = useState<StudyGroupDetailDto | null>(null);
+  const [sessionDow, setSessionDow] = useState<Set<number>>(new Set());
   const [paidIds, setPaidIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +147,13 @@ export default function AttendanceSheet() {
   const [collecting, setCollecting] = useState(false);
   const [receipt, setReceipt] = useState<PaymentReceiptDto | null>(null);
 
+  const [fees, setFees] = useState<MonthlyFees>(loadFees);
+  const [feesOpen, setFeesOpen] = useState(false);
+  const [feesDraft, setFeesDraft] = useState<MonthlyFees | null>(null);
+
+  const { user } = useAuth();
+  const isCollector = user?.role === 'Secretary' || user?.role === 'Admin';
+
   const load = async (selectedDate: string) => {
     setLoading(true);
     setError(null);
@@ -112,9 +162,11 @@ export default function AttendanceSheet() {
       const [daily, groupsRes, paymentsRes] = await Promise.all([
         api.get<DailyAttendanceStudentDto[]>(`/attendance/daily?date=${selectedDate}`),
         api.get<StudyGroupListItemDto[]>('/study-groups?includeInactive=false'),
-        api
-          .get<{ items: { studentId: number }[] }>(`/payments?month=${monthOf(selectedDate)}&status=Paid&pageSize=200`)
-          .catch(() => ({ items: [] })),
+        isCollector
+          ? api
+              .get<{ items: { studentId: number }[] }>(`/payments?month=${monthOf(selectedDate)}&status=Paid&pageSize=200`)
+              .catch(() => ({ items: [] }))
+          : Promise.resolve({ items: [] }),
       ]);
       setStudents(Array.isArray(daily) ? daily : []);
       setGroups(Array.isArray(groupsRes) ? groupsRes : []);
@@ -134,6 +186,7 @@ export default function AttendanceSheet() {
   useEffect(() => {
     if (!groupFilter) {
       setGroupDetail(null);
+      setSessionDow(new Set());
       return;
     }
     let cancelled = false;
@@ -144,6 +197,21 @@ export default function AttendanceSheet() {
       })
       .catch(() => {
         if (!cancelled) setGroupDetail(null);
+      });
+    api
+      .get<ScheduleSlotDto[]>(`/schedule?groupId=${groupFilter}`)
+      .then((res) => {
+        if (!cancelled)
+          setSessionDow(
+            new Set(
+              (Array.isArray(res) ? res : [])
+                .map((s) => toDow(s.day))
+                .filter((d) => d >= 0),
+            ),
+          );
+      })
+      .catch(() => {
+        if (!cancelled) setSessionDow(new Set());
       });
     return () => {
       cancelled = true;
@@ -279,9 +347,42 @@ export default function AttendanceSheet() {
     setTimeout(cleanup, 1500);
   };
 
+  const suggestedAmount = (s: DailyAttendanceStudentDto): string => {
+    const override = s.groupId != null ? fees.groups[s.groupId] : undefined;
+    const value = override ?? fees.stages[s.stage];
+    return value != null && value > 0 ? String(value) : '';
+  };
+
+  const openFees = () => {
+    setFeesDraft({ stages: { ...fees.stages }, groups: { ...fees.groups } });
+    setFeesOpen(true);
+  };
+
+  const saveFees = () => {
+    if (!feesDraft) return;
+    const stages: MonthlyFees['stages'] = {};
+    for (const [k, v] of Object.entries(feesDraft.stages)) {
+      const n = Number(v);
+      if (n > 0) stages[k as Stage] = n;
+    }
+    const groups: MonthlyFees['groups'] = {};
+    for (const [k, v] of Object.entries(feesDraft.groups)) {
+      const n = Number(v);
+      if (n > 0) groups[Number(k)] = n;
+    }
+    const next = { stages, groups };
+    setFees(next);
+    localStorage.setItem(FEES_KEY, JSON.stringify(next));
+    setFeesOpen(false);
+  };
+
   const stageLabel = groupDetail?.stageAr ?? (stageFilter ? STAGES.find((s) => s.key === stageFilter)?.ar ?? '—' : 'جميع المراحل');
   const groupLabel = groupDetail?.name ?? (groupFilter ? '—' : 'جميع المجموعات');
   const showStageCol = !stageFilter && !groupFilter;
+
+  const dateDow = new Date(`${date}T00:00:00`).getDay();
+  const isSessionDay = sessionDow.has(dateDow);
+  const sessionDowNames = [...sessionDow].map((d) => WEEKDAY_NAMES[d]).join(' و');
 
   return (
     <div className="flex flex-col gap-6">
@@ -307,6 +408,16 @@ export default function AttendanceSheet() {
           <Button variant="outline" onClick={handlePrint} icon={<Printer size={16} />} disabled={roster.length === 0}>
             طباعة الكشف
           </Button>
+          {isCollector && (
+            <Button variant="outline" onClick={openFees} icon={<Settings2 size={16} />}>
+              المصاريف الشهرية
+            </Button>
+          )}
+          <Link to={isCollector ? '/secretary/attendance/monthly' : '/teacher/attendance/monthly'}>
+            <Button variant="outline" icon={<CalendarDays size={16} />}>
+              التقرير الشهري
+            </Button>
+          </Link>
           <Button variant="gold" onClick={() => void save()} loading={saving} icon={<Save size={16} />}>
             حفظ الكشف
           </Button>
@@ -374,6 +485,18 @@ export default function AttendanceSheet() {
         </div>
       </Card>
 
+      {groupFilter && sessionDow.size > 0 && (
+        <p className="flex flex-wrap items-center gap-2 rounded-md border border-gold/30 bg-gold/[.06] px-4 py-2.5 text-sm text-text-secondary">
+          <Clock size={15} className="text-gold" />
+          أيام حصص مجموعة «{groupDetail?.name ?? ''}»: <b className="text-text-primary">{sessionDowNames}</b>
+          {isSessionDay ? (
+            <Badge variant="outline" className="border-success/50 text-success">اليوم يوم حصة ✓</Badge>
+          ) : (
+            <Badge variant="outline" className="border-error/40 text-error">اليوم مش من أيام الحصص</Badge>
+          )}
+        </p>
+      )}
+
       {saved && (
         <p className="flex items-center gap-2 rounded-md border border-success/40 bg-success/10 px-4 py-2.5 text-sm font-semibold text-success">
           <CheckCircle2 size={16} /> تم حفظ حضور اليوم بنجاح
@@ -381,7 +504,7 @@ export default function AttendanceSheet() {
       )}
 
       {/* ---- Stats ---- */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-6">
+      <div className={`grid grid-cols-2 gap-4 ${isCollector ? 'sm:grid-cols-6' : 'sm:grid-cols-5'}`}>
         <Card className="p-4">
           <p className="flex items-center gap-2 text-xs text-text-muted"><Users size={14} /> مسجلون</p>
           <p className="mt-2 text-2xl font-bold text-text-primary">{counts.marked} <span className="text-xs font-normal text-text-muted">من {roster.length}</span></p>
@@ -402,10 +525,12 @@ export default function AttendanceSheet() {
           <p className="flex items-center gap-2 text-xs text-text-muted"><CheckCircle2 size={14} className="text-blue-400" /> معذور</p>
           <p className="mt-2 text-2xl font-bold text-blue-400">{counts.excused}</p>
         </Card>
-        <Card className="p-4">
-          <p className="flex items-center gap-2 text-xs text-text-muted"><Banknote size={14} className="text-gold" /> محصَّل</p>
-          <p className="mt-2 text-2xl font-bold text-gold">{counts.collected}</p>
-        </Card>
+        {isCollector && (
+          <Card className="p-4">
+            <p className="flex items-center gap-2 text-xs text-text-muted"><Banknote size={14} className="text-gold" /> محصَّل</p>
+            <p className="mt-2 text-2xl font-bold text-gold">{counts.collected}</p>
+          </Card>
+        )}
       </div>
 
       {/* ---- Table ---- */}
@@ -431,7 +556,7 @@ export default function AttendanceSheet() {
               <Users size={15} className="text-gold" /> {groupLabel}
               <Badge variant="outline">{roster.length} طالب</Badge>
             </h3>
-            <span className="text-xs text-text-muted">تحصيل شهر {monthOf(date)}</span>
+            {isCollector && <span className="text-xs text-text-muted">تحصيل شهر {monthOf(date)}</span>}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-sm">
@@ -443,7 +568,7 @@ export default function AttendanceSheet() {
                   {showStageCol && <th className={TH}>المرحلة</th>}
                   {!groupFilter && <th className={TH}>المجموعة</th>}
                   <th className={TH}>الحالة</th>
-                  <th className={TH}>التحصيل</th>
+                  {isCollector && <th className={TH}>التحصيل</th>}
                   <th className={TH}>إجراءات</th>
                 </tr>
               </thead>
@@ -480,29 +605,31 @@ export default function AttendanceSheet() {
                           })}
                         </div>
                       </td>
-                      <td className={TD}>
-                        {paid ? (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-success/40 bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
-                            <CheckCircle2 size={13} /> محصَّل
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5">
-                            <span className="rounded-md border border-error/40 bg-error/10 px-2.5 py-1 text-xs font-bold text-error">
-                              لم يُحصَّل
+                      {isCollector && (
+                        <td className={TD}>
+                          {paid ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-success/40 bg-success/10 px-2.5 py-1 text-xs font-bold text-success">
+                              <CheckCircle2 size={13} /> محصَّل
                             </span>
-                            <button
-                              onClick={() => {
-                                setCollectTarget(s);
-                                setCollectForm({ amount: '', method: 'نقدي' });
-                              }}
-                              title="تحصيل الآن"
-                              className="rounded-md border border-gold/40 bg-gold/10 p-1.5 text-gold transition-colors hover:bg-gold/25"
-                            >
-                              <Banknote size={13} />
-                            </button>
-                          </span>
-                        )}
-                      </td>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="rounded-md border border-error/40 bg-error/10 px-2.5 py-1 text-xs font-bold text-error">
+                                لم يُحصَّل
+                              </span>
+                              <button
+                                onClick={() => {
+                                  setCollectTarget(s);
+                                  setCollectForm({ amount: suggestedAmount(s), method: 'نقدي' });
+                                }}
+                                title="تحصيل الآن"
+                                className="rounded-md border border-gold/40 bg-gold/10 p-1.5 text-gold transition-colors hover:bg-gold/25"
+                              >
+                                <Banknote size={13} />
+                              </button>
+                            </span>
+                          )}
+                        </td>
+                      )}
                       <td className={TD}>
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -621,12 +748,93 @@ export default function AttendanceSheet() {
                 <option value="تحويل بنكي">تحويل بنكي</option>
               </Select>
             </div>
+            {suggestedAmount(collectTarget) && (
+              <p className="text-xs text-text-muted">
+                المبلغ الافتراضي المحدد: <b className="text-gold">{formatMoney(Number(suggestedAmount(collectTarget)))}</b>
+                {collectTarget.groupName ? ` — مجموعة ${collectTarget.groupName}` : ''}
+              </p>
+            )}
             <div className="flex justify-end gap-3">
               <Button type="button" variant="ghost" onClick={() => setCollectTarget(null)}>
                 إلغاء
               </Button>
               <Button type="button" variant="gold" onClick={() => void collect()} loading={collecting} icon={<Banknote size={15} />}>
                 سدّد واطبع الإيصال
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ---- Monthly fees settings modal ---- */}
+      <Modal open={feesOpen} onClose={() => setFeesOpen(false)} title="المصاريف الشهرية" size="lg">
+        {feesDraft && (
+          <div className="grid gap-6">
+            <div>
+              <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-text-primary">
+                <Banknote size={15} className="text-gold" /> المبلغ الافتراضي لكل مرحلة
+              </h4>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {STAGES.map((s) => (
+                  <Input
+                    key={s.key}
+                    label={s.ar}
+                    type="number"
+                    min={0}
+                    placeholder="—"
+                    value={feesDraft.stages[s.key] ?? ''}
+                    onChange={(e) =>
+                      setFeesDraft({
+                        ...feesDraft,
+                        stages: {
+                          ...feesDraft.stages,
+                          [s.key]: e.target.value === '' ? undefined : Number(e.target.value),
+                        },
+                      })
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 className="mb-1 flex items-center gap-2 text-sm font-bold text-text-primary">
+                <Users size={15} className="text-gold" /> تخصيص المجموعات (اختياري)
+              </h4>
+              <p className="mb-2 text-xs text-text-muted">
+                لو مجموعة ليها مبلغ مختلف عن المرحلة اكتبه هنا — لو سايبها فاضلة هتاخد مبلغ المرحلة تلقائيًا.
+              </p>
+              {groups.length === 0 ? (
+                <p className="text-xs text-text-muted">مفيش مجموعات مسجلة.</p>
+              ) : (
+                <div className="grid max-h-56 grid-cols-2 gap-3 overflow-y-auto pe-1 sm:grid-cols-3">
+                  {groups.map((g) => (
+                    <Input
+                      key={g.id}
+                      label={`${g.name} — ${g.stageAr}`}
+                      type="number"
+                      min={0}
+                      placeholder={fees.stages[g.stage] ? `افتراضي: ${fees.stages[g.stage]}` : '—'}
+                      value={feesDraft.groups[g.id] ?? ''}
+                      onChange={(e) =>
+                        setFeesDraft({
+                          ...feesDraft,
+                          groups: {
+                            ...feesDraft.groups,
+                            [g.id]: e.target.value === '' ? undefined : Number(e.target.value),
+                          },
+                        })
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 border-t border-border-subtle pt-4">
+              <Button type="button" variant="ghost" onClick={() => setFeesOpen(false)}>
+                إلغاء
+              </Button>
+              <Button type="button" variant="gold" onClick={saveFees} icon={<Save size={15} />}>
+                حفظ الإعدادات
               </Button>
             </div>
           </div>
@@ -676,7 +884,7 @@ export default function AttendanceSheet() {
                   <th>غائب</th>
                   <th>متأخر</th>
                   <th>معذور</th>
-                  <th>التحصيل</th>
+                  {isCollector && <th>التحصيل</th>}
                   <th>ملاحظات</th>
                 </tr>
               </thead>
@@ -690,7 +898,7 @@ export default function AttendanceSheet() {
                     <td className="print-mark">{s.status === 'Absent' ? '✓' : ''}</td>
                     <td className="print-mark">{s.status === 'Late' ? '✓' : ''}</td>
                     <td className="print-mark">{s.status === 'Excused' ? '✓' : ''}</td>
-                    <td className="print-mark">{paidIds.has(s.studentId) ? '✓' : ''}</td>
+                    {isCollector && <td className="print-mark">{paidIds.has(s.studentId) ? '✓' : ''}</td>}
                     <td>{s.notes ?? ''}</td>
                   </tr>
                 ))}

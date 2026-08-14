@@ -21,6 +21,8 @@ import TeacherLessonFormPage from './pages/teacher/TeacherLessonFormPage';
 import TeacherExamFormPage from './pages/teacher/TeacherExamFormPage';
 import TeacherAssignmentFormPage from './pages/teacher/TeacherAssignmentFormPage';
 import TeacherClassPage from './pages/teacher/TeacherClassPage';
+import TeacherAttendancePage from './pages/teacher/TeacherAttendancePage';
+import TeacherMonthlyAttendancePage from './pages/teacher/TeacherMonthlyAttendancePage';
 import TeacherAnalyticsPage from './pages/teacher/TeacherAnalyticsPage';
 import TeacherLivePage from './pages/teacher/TeacherLivePage';
 import TeacherTestimonialsPage from './pages/teacher/TeacherTestimonialsPage';
@@ -35,6 +37,7 @@ import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
 import SecretaryAttendancePage from './pages/secretary/SecretaryAttendancePage';
+import SecretaryMonthlyAttendancePage from './pages/secretary/SecretaryMonthlyAttendancePage';
 import SecretaryPaymentsPage from './pages/secretary/SecretaryPaymentsPage';
 import SecretaryGroupsPage from './pages/secretary/SecretaryGroupsPage';
 import SecretarySchedulePage from './pages/secretary/SecretarySchedulePage';
@@ -291,6 +294,30 @@ export default function App() {
         }
       />
       <Route
+        path="/teacher/attendance"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherAttendancePage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
+        path="/teacher/attendance/monthly"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <TeacherMonthlyAttendancePage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
         path="/teacher/analytics"
         element={
           <RequireTeacher>
@@ -478,6 +505,18 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <SecretaryAttendancePage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/attendance/monthly"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryMonthlyAttendancePage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>
