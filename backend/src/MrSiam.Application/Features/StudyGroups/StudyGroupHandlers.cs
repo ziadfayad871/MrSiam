@@ -17,6 +17,7 @@ public record StudyGroupListItemDto
     public bool IsActive { get; init; }
     public int MemberCount { get; init; }
     public DateTime CreatedAt { get; init; }
+    public IReadOnlyList<int> ScheduleDays { get; init; } = Array.Empty<int>();
 }
 
 public record StudyGroupMemberDto
@@ -46,11 +47,26 @@ public record ListStudyGroupsQuery(bool IncludeInactive = false, Stage? Stage = 
 public record GetStudyGroupQuery(int GroupId)
     : IRequest<ApiResponse<StudyGroupDetailDto>>;
 
-public record CreateStudyGroupCommand(string Name, Stage Stage, string AcademicYear)
-    : IRequest<ApiResponse<int>>;
+public record CreateStudyGroupCommand(
+    string Name,
+    Stage Stage,
+    string AcademicYear,
+    IReadOnlyList<DayOfWeek>? ScheduleDays = null,
+    TimeOnly? StartTime = null,
+    TimeOnly? EndTime = null,
+    string? Subject = null,
+    string? Room = null) : IRequest<ApiResponse<int>>;
 
-public record UpdateStudyGroupCommand(int GroupId, string? Name, Stage? Stage, string? AcademicYear, bool? IsActive)
-    : IRequest<ApiResponse<bool>>;
+public record UpdateStudyGroupCommand(
+    int GroupId,
+    string? Name,
+    Stage? Stage,
+    string? AcademicYear,
+    bool? IsActive,
+    IReadOnlyList<DayOfWeek>? ScheduleDays = null,
+    TimeOnly? StartTime = null,
+    TimeOnly? EndTime = null,
+    string? Subject = null) : IRequest<ApiResponse<bool>>;
 
 public record DeleteStudyGroupCommand(int GroupId)
     : IRequest<ApiResponse<bool>>;
@@ -85,7 +101,8 @@ public class ListStudyGroupsQueryHandler(IApplicationDbContext db)
                 AcademicYear = g.AcademicYear,
                 IsActive = g.IsActive,
                 MemberCount = g.Members.Count,
-                CreatedAt = g.CreatedAt
+                CreatedAt = g.CreatedAt,
+                ScheduleDays = g.Slots.Select(s => (int)s.Day).ToArray()
             })
             .ToListAsync(ct);
 
@@ -150,6 +167,28 @@ public class CreateStudyGroupCommandHandler(IApplicationDbContext db, ICurrentUs
                 : request.AcademicYear.Trim()
         };
 
+        if (request.ScheduleDays is { Count: > 0 })
+        {
+            var start = request.StartTime ?? new TimeOnly(17, 0);
+            var end = request.EndTime ?? start.AddHours(1.5);
+            if (end <= start)
+                return ApiResponse<int>.Fail("وقت النهاية لازم ييجي بعد وقت البداية");
+
+            var subject = request.Subject?.Trim();
+            var room = request.Room?.Trim();
+            foreach (var day in request.ScheduleDays.Distinct())
+            {
+                group.Slots.Add(new ScheduleSlot
+                {
+                    Day = day,
+                    StartTime = start,
+                    EndTime = end,
+                    Subject = string.IsNullOrWhiteSpace(subject) ? null : subject,
+                    Room = string.IsNullOrWhiteSpace(room) ? null : room
+                });
+            }
+        }
+
         db.StudyGroups.Add(group);
         await db.SaveChangesAsync(ct);
 
@@ -177,6 +216,30 @@ public class UpdateStudyGroupCommandHandler(IApplicationDbContext db, ICurrentUs
             group.AcademicYear = request.AcademicYear.Trim();
         if (request.IsActive is not null)
             group.IsActive = request.IsActive.Value;
+
+        // لو ScheduleDays موجود (حتى لو فاضي) بنستبدل حصص المجموعة كلها بالأيام دي.
+        if (request.ScheduleDays is not null)
+        {
+            var start = request.StartTime ?? new TimeOnly(17, 0);
+            var end = request.EndTime ?? start.AddHours(1.5);
+            if (end <= start)
+                return ApiResponse<bool>.Fail("وقت النهاية لازم ييجي بعد وقت البداية");
+
+            var subject = request.Subject?.Trim();
+            var oldSlots = await db.ScheduleSlots.Where(s => s.GroupId == group.Id).ToListAsync(ct);
+            db.ScheduleSlots.RemoveRange(oldSlots);
+            foreach (var day in request.ScheduleDays.Distinct())
+            {
+                group.Slots.Add(new ScheduleSlot
+                {
+                    Day = day,
+                    StartTime = start,
+                    EndTime = end,
+                    Subject = string.IsNullOrWhiteSpace(subject) ? null : subject,
+                    Room = null
+                });
+            }
+        }
 
         await db.SaveChangesAsync(ct);
 

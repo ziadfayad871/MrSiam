@@ -11,9 +11,9 @@ namespace MrSiam.Api.Controllers;
 public class ScheduleController(MediatR.IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] DayOfWeek? day, [FromQuery] Stage? stage)
+    public async Task<IActionResult> GetAll([FromQuery] DayOfWeek? day, [FromQuery] Stage? stage, [FromQuery] int? groupId)
     {
-        var result = await mediator.Send(new ListScheduleQuery(day, stage));
+        var result = await mediator.Send(new ListScheduleQuery(day, stage, groupId));
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

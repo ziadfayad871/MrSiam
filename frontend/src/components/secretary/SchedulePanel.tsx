@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, Plus, Search, Trash2 } from 'lucide-react';
+import { CalendarDays, Check, Clock, Plus, Search, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CompassLoader } from '../../design-system/components/CompassLoader';
 import { Badge } from '../../design-system/ui/Badge';
@@ -21,6 +21,20 @@ const DAYS = [
   { value: 6, label: 'السبت' },
 ];
 
+const DAY_NAME_TO_NUM: Record<string, number> = {
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6,
+};
+
+// الـ API بيرجّع اليوم كاسم نصي (Sunday) — نوحّده لرقم 0-6.
+const toDow = (day: number | string): number =>
+  typeof day === 'number' ? day : (DAY_NAME_TO_NUM[day] ?? -1);
+
 function toLocalTime(time: string): string {
   const d = new Date(`2000-01-01T${time.slice(0, 5)}`);
   return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
@@ -39,7 +53,7 @@ export default function SecretarySchedulePage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState({
     groupId: '',
-    day: '0',
+    days: [] as number[],
     startTime: '17:00',
     endTime: '18:30',
     subject: '',
@@ -72,28 +86,76 @@ export default function SecretarySchedulePage() {
       .catch(() => setGroups([]));
   }, [load]);
 
+  const toggleDay = (d: number) =>
+    setCreateForm((f) => ({
+      ...f,
+      days: f.days.includes(d) ? f.days.filter((x) => x !== d) : [...f.days, d].sort((a, b) => a - b),
+    }));
+
+  // أيام الحصص الحالية للمجموعة المختارة — عشان المستخدم يشوف إيه ناقص.
+  const existingForGroup = useMemo(() => {
+    if (!createForm.groupId) return [];
+    const gid = Number(createForm.groupId);
+    const daySet = new Set<number>();
+    for (const s of slots) if (s.groupId === gid) daySet.add(toDow(s.day));
+    return DAYS.filter((d) => daySet.has(d.value));
+  }, [slots, createForm.groupId]);
+
   const createSlot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createForm.groupId) {
       setError('اختار المجموعة');
       return;
     }
+    if (createForm.days.length === 0) {
+      setError('اختار يوم واحد على الأقل');
+      return;
+    }
+    const gid = Number(createForm.groupId);
+    // نتخطى الأيام اللي ليها نفس الحصة بالظبط (نفس المجموعة واليوم والموعد) ونضيف الباقي.
+    const duplicateDays = createForm.days.filter((d) =>
+      slots.some(
+        (s) =>
+          s.groupId === gid &&
+          toDow(s.day) === d &&
+          s.startTime.slice(0, 5) === createForm.startTime &&
+          s.endTime.slice(0, 5) === createForm.endTime,
+      ),
+    );
+    const daysToCreate = createForm.days.filter((d) => !duplicateDays.includes(d));
+    if (daysToCreate.length === 0) {
+      const names = DAYS.filter((x) => duplicateDays.includes(x.value))
+        .map((x) => x.label)
+        .join(' و');
+      setError(`المجموعة دي ليها حصة بنفس الموعد في: ${names} — غيّر الموعد أو اختار أيام تانية`);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
-      await api.post<number>('/schedule', {
-        groupId: Number(createForm.groupId),
-        day: Number(createForm.day),
-        startTime: createForm.startTime,
-        endTime: createForm.endTime,
-        subject: createForm.subject.trim() || null,
-        room: createForm.room.trim() || null,
-      });
+      await Promise.all(
+        daysToCreate.map((d) =>
+          api.post<number>('/schedule', {
+            groupId: gid,
+            day: d,
+            startTime: createForm.startTime,
+            endTime: createForm.endTime,
+            subject: createForm.subject.trim() || null,
+            room: createForm.room.trim() || null,
+          }),
+        ),
+      );
       setCreateOpen(false);
-      setCreateForm({ groupId: '', day: '0', startTime: '17:00', endTime: '18:30', subject: '', room: '' });
+      setCreateForm({ groupId: '', days: [], startTime: '17:00', endTime: '18:30', subject: '', room: '' });
       await load();
+      if (duplicateDays.length > 0) {
+        const names = DAYS.filter((x) => duplicateDays.includes(x.value))
+          .map((x) => x.label)
+          .join(' و');
+        setError(`اتضافت ${daysToCreate.length} حصة — واللي في ${names} موجودة بنفس الموعد فاتخطت.`);
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'فشل إضافة الحصة');
+      setError(e instanceof Error ? e.message : 'فشل إضافة الحصص');
     } finally {
       setSaving(false);
     }
@@ -121,9 +183,11 @@ export default function SecretarySchedulePage() {
     });
     const map = new Map<number, ScheduleSlotDto[]>();
     for (const s of filtered) {
-      const arr = map.get(s.day) ?? [];
+      const dow = toDow(s.day);
+      if (dow < 0) continue;
+      const arr = map.get(dow) ?? [];
       arr.push(s);
-      map.set(s.day, arr);
+      map.set(dow, arr);
     }
     return DAYS.map((d) => ({ day: d.value, label: d.label, items: map.get(d.value) ?? [] })).filter((d) => d.items.length > 0);
   }, [slots, search]);
@@ -156,7 +220,7 @@ export default function SecretarySchedulePage() {
             />
           </div>
           <Button variant="gold" onClick={() => setCreateOpen(true)} icon={<Plus size={16} />}>
-            حصة جديدة
+            حصص جديدة
           </Button>
         </div>
       </div>
@@ -166,7 +230,7 @@ export default function SecretarySchedulePage() {
       {loading ? (
         <CompassLoader text="بنجيب الجدول..." />
       ) : grouped.length === 0 ? (
-        <EmptyState title="الجدول فاضي" description="أضف أول حصة من زر «حصة جديدة»." />
+        <EmptyState title="الجدول فاضي" description="أضف أول حصص من زر «حصص جديدة» — واختار كل أيام الأسبوع بتوع كل مجموعة." />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {grouped.map((day) => (
@@ -208,7 +272,7 @@ export default function SecretarySchedulePage() {
         </div>
       )}
 
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="حصة جديدة">
+      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="إضافة حصص جديدة">
         <form onSubmit={createSlot} className="grid gap-4">
           <Select label="المجموعة" required value={createForm.groupId} onChange={(e) => setCreateForm({ ...createForm, groupId: e.target.value })}>
             <option value="">اختار المجموعة</option>
@@ -216,19 +280,45 @@ export default function SecretarySchedulePage() {
               <option key={g.id} value={g.id}>{g.name} ({g.stageAr})</option>
             ))}
           </Select>
-          <div className="grid grid-cols-2 gap-3">
-            <Select label="اليوم" required value={createForm.day} onChange={(e) => setCreateForm({ ...createForm, day: e.target.value })}>
-              {DAYS.map((d) => (
-                <option key={d.value} value={d.value}>{d.label}</option>
-              ))}
-            </Select>
-            <Select label="المادة" value={createForm.subject} onChange={(e) => setCreateForm({ ...createForm, subject: e.target.value })}>
-              <option value="">بدون</option>
-              <option value="تاريخ">تاريخ</option>
-              <option value="جغرافيا">جغرافيا</option>
-              <option value="دراسات">دراسات</option>
-            </Select>
+
+          {existingForGroup.length > 0 && (
+            <p className="rounded-md border border-gold/30 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold">
+              المجموعة دي ليها حصص حالياً: {existingForGroup.map((d) => d.label).join(' و')} — اختار الأيام الناقصة بس.
+            </p>
+          )}
+
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-text-muted">
+              أيام الحصص (ممكن أكتر من يوم — زي الأحد والأربعاء)
+            </label>
+            <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
+              {DAYS.map((d) => {
+                const active = createForm.days.includes(d.value);
+                return (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => toggleDay(d.value)}
+                    className={`flex items-center justify-center gap-1 rounded-md border px-1 py-2 text-[11px] font-bold transition-colors ${
+                      active
+                        ? 'border-gold bg-gold/15 text-gold'
+                        : 'border-border-soft bg-surface-elevated text-text-muted hover:border-gold/50'
+                    }`}
+                  >
+                    {active && <Check size={11} className="shrink-0" />}
+                    {d.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
+          <Select label="المادة" value={createForm.subject} onChange={(e) => setCreateForm({ ...createForm, subject: e.target.value })}>
+            <option value="">بدون</option>
+            <option value="تاريخ">تاريخ</option>
+            <option value="جغرافيا">جغرافيا</option>
+            <option value="دراسات">دراسات</option>
+          </Select>
           <div className="grid grid-cols-2 gap-3">
             <Input label="بداية" type="time" required value={createForm.startTime} onChange={(e) => setCreateForm({ ...createForm, startTime: e.target.value })} />
             <Input label="نهاية" type="time" required value={createForm.endTime} onChange={(e) => setCreateForm({ ...createForm, endTime: e.target.value })} />
@@ -236,7 +326,9 @@ export default function SecretarySchedulePage() {
           <Input label="القاعة (اختياري)" value={createForm.room} onChange={(e) => setCreateForm({ ...createForm, room: e.target.value })} placeholder="مثال: القاعة الرئيسية" />
           <div className="flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>إلغاء</Button>
-            <Button type="submit" variant="gold" loading={saving} icon={<Plus size={15} />}>إضافة الحصة</Button>
+            <Button type="submit" variant="gold" loading={saving} icon={<Plus size={15} />}>
+              إضافة الحصص ({createForm.days.length})
+            </Button>
           </div>
         </form>
       </Modal>

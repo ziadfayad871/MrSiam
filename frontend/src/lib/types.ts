@@ -777,6 +777,7 @@ export interface StudyGroupListItemDto {
   isActive: boolean;
   memberCount: number;
   createdAt: string;
+  scheduleDays: number[];
 }
 
 export interface StudyGroupMemberDto {

@@ -21,7 +21,7 @@ public record ScheduleSlotDto
     public string? Room { get; init; }
 }
 
-public record ListScheduleQuery(DayOfWeek? Day = null, Stage? Stage = null)
+public record ListScheduleQuery(DayOfWeek? Day = null, Stage? Stage = null, int? GroupId = null)
     : IRequest<ApiResponse<IReadOnlyList<ScheduleSlotDto>>>;
 
 public record CreateScheduleSlotCommand(
@@ -53,6 +53,8 @@ public class ListScheduleQueryHandler(IApplicationDbContext db)
             query = query.Where(s => s.Day == request.Day);
         if (request.Stage is not null)
             query = query.Where(s => s.Group != null && s.Group.Stage == request.Stage);
+        if (request.GroupId is not null)
+            query = query.Where(s => s.GroupId == request.GroupId.Value);
 
         var slots = await query
             .OrderBy(s => s.Day)
