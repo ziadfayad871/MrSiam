@@ -84,7 +84,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         : [
             { to: '/secretary', label: 'نظرة عامة', icon: Home },
             { to: '/secretary/students', label: 'إدارة الطلبة', icon: Users },
-            { to: '/secretary/attendance', label: 'الحضور والغياب', icon: GraduationCap },
+            { to: '/secretary/attendance', label: 'التحضير اليومي', icon: GraduationCap },
             { to: '/secretary/payments', label: 'التحصيل والمدفوعات', icon: FileText },
             { to: '/secretary/groups', label: 'المجموعات والشعب', icon: Users },
             { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: Map },

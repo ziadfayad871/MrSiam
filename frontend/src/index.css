@@ -586,6 +586,85 @@
     -webkit-print-color-adjust: exact;
   }
 }
+
+/* ---------- Attendance sheet (كشف تحضير) print ---------- */
+#attendance-print-sheet {
+  display: none;
+}
+
+@media print {
+  body.print-attendance-mode #root {
+    display: none !important;
+  }
+  body.print-attendance-mode #attendance-print-sheet,
+  body.print-attendance-mode #attendance-print-sheet * {
+    visibility: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  body.print-attendance-mode #attendance-print-sheet {
+    display: block;
+    padding: 6mm;
+    background: #fff;
+    color: #111;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-sheet-header {
+    text-align: center;
+    margin-bottom: 6mm;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-sheet-header h1 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #1a1206;
+    margin: 0;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-sheet-sub {
+    font-size: 11px;
+    color: #7a6a3d;
+    margin: 2px 0 0;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-sheet-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4mm;
+    padding: 3mm 2mm;
+    border-block: 1px solid #c9b98a;
+  }
+  body.print-attendance-mode #attendance-print-sheet table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  body.print-attendance-mode #attendance-print-sheet th,
+  body.print-attendance-mode #attendance-print-sheet td {
+    border: 1px solid #8a8a8a;
+    padding: 5px 6px;
+    text-align: center;
+  }
+  body.print-attendance-mode #attendance-print-sheet th {
+    background: #efe7d2 !important;
+    font-weight: 700;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-name {
+    text-align: right;
+    font-weight: 600;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-mark {
+    font-size: 13px;
+  }
+  body.print-attendance-mode #attendance-print-sheet .print-sheet-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10mm;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
 .realmap-marker {
   position: relative;
   display: flex;

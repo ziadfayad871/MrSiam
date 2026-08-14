@@ -715,6 +715,8 @@ export interface DailyAttendanceStudentDto {
   studentCode: string;
   stage: Stage;
   stageAr: string;
+  groupId?: number | null;
+  groupName?: string | null;
   status?: AttendanceStatusType | null;
   notes?: string | null;
 }

@@ -37,4 +37,11 @@ public class AttendanceController(MediatR.IMediator mediator) : ControllerBase
         var result = await mediator.Send(command);
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    [HttpDelete("records/{studentId:int}")]
+    public async Task<IActionResult> DeleteRecord(int studentId, [FromQuery] DateOnly date)
+    {
+        var result = await mediator.Send(new DeleteAttendanceRecordCommand(studentId, date));
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
 }

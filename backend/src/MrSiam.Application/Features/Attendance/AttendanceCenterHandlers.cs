@@ -13,6 +13,8 @@ public record DailyAttendanceStudentDto
     public required string StudentCode { get; init; }
     public Stage Stage { get; init; }
     public required string StageAr { get; init; }
+    public int? GroupId { get; init; }
+    public string? GroupName { get; init; }
     public AttendanceStatus? Status { get; init; }
     public string? Notes { get; init; }
 }
@@ -40,9 +42,19 @@ public class GetDailyAttendanceQueryHandler(IApplicationDbContext db)
             .Where(a => a.Date == request.Date)
             .ToDictionaryAsync(a => a.StudentId, ct);
 
+        var memberships = await db.StudyGroupMembers.AsNoTracking()
+            .Where(m => m.Group != null && m.Group.IsActive)
+            .Select(m => new { m.StudentId, m.Group!.Id, m.Group!.Name })
+            .ToListAsync(ct);
+
+        var groupByStudent = memberships
+            .GroupBy(m => m.StudentId)
+            .ToDictionary(g => g.Key, g => g.OrderBy(x => x.Id).First());
+
         var result = students.Select(s =>
         {
             records.TryGetValue(s.Id, out var record);
+            groupByStudent.TryGetValue(s.Id, out var group);
             return new DailyAttendanceStudentDto
             {
                 StudentId = s.Id,
@@ -50,6 +62,8 @@ public class GetDailyAttendanceQueryHandler(IApplicationDbContext db)
                 StudentCode = s.StudentCode,
                 Stage = s.Stage,
                 StageAr = s.Stage.ToArabic(),
+                GroupId = group?.Id,
+                GroupName = group?.Name,
                 Status = record?.Status,
                 Notes = record?.Notes
             };
@@ -97,5 +111,28 @@ public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrent
         await db.SaveChangesAsync(ct);
 
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
+    }
+}
+
+public record DeleteAttendanceRecordCommand(int StudentId, DateOnly Date)
+    : IRequest<ApiResponse<bool>>;
+
+public class DeleteAttendanceRecordCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+    : IRequestHandler<DeleteAttendanceRecordCommand, ApiResponse<bool>>
+{
+    public async Task<ApiResponse<bool>> Handle(DeleteAttendanceRecordCommand request, CancellationToken ct)
+    {
+        var record = await db.AttendanceRecords
+            .FirstOrDefaultAsync(a => a.StudentId == request.StudentId && a.Date == request.Date, ct);
+        if (record is null)
+            return ApiResponse<bool>.Fail("لا يوجد تسجيل حضور لهذا الطالب في هذا اليوم");
+
+        db.AttendanceRecords.Remove(record);
+        await db.SaveChangesAsync(ct);
+
+        AuditLogWriter.Add(db, currentUser, "delete", "Attendance", request.StudentId.ToString(), $"حذف تسجيل حضور {request.Date} — طالب رقم {request.StudentId}");
+        await db.SaveChangesAsync(ct);
+
+        return ApiResponse<bool>.Ok(true, "تم حذف تسجيل الحضور");
     }
 }
