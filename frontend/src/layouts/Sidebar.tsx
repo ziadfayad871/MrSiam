@@ -11,6 +11,7 @@ import {
   LogOut,
   Map,
   Medal,
+  MessageCircle,
   MessageSquareQuote,
   Moon,
   Plus,
@@ -94,6 +95,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: Map },
             { to: '/secretary/billing', label: 'الفوترة', icon: FileText },
             { to: '/secretary/analytics', label: 'التحليلات', icon: Award },
+            { to: '/secretary/whatsapp', label: 'ربط واتساب', icon: MessageCircle },
           ];
 
   const isActive = (to: string) => location.pathname.startsWith(to);

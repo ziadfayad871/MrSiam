@@ -34,6 +34,7 @@ import MasterCoursesPage from './pages/admin/MasterCoursesPage';
 import MasterCourseNewPage from './pages/admin/MasterCourseNewPage';
 import MasterTopStudentsPage from './pages/admin/MasterTopStudentsPage';
 import SecretaryStudentsPage from './pages/secretary/SecretaryStudentsPage';
+import SecretaryWhatsAppPage from './pages/secretary/SecretaryWhatsAppPage';
 import SecretaryBillingPage from './pages/secretary/SecretaryBillingPage';
 import SecretaryAnalyticsPage from './pages/secretary/SecretaryAnalyticsPage';
 import SecretaryAttendancePage from './pages/secretary/SecretaryAttendancePage';
@@ -469,6 +470,18 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <SecretaryStudentsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/whatsapp"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <SecretaryWhatsAppPage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>

@@ -123,7 +123,10 @@ public class CreatePaymentCommandHandler(IApplicationDbContext db, ICurrentUserS
     }
 }
 
-public class CreatePaidPaymentCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+public class CreatePaidPaymentCommandHandler(
+    IApplicationDbContext db,
+    ICurrentUserService currentUser,
+    IWhatsAppService whatsApp)
     : IRequestHandler<CreatePaidPaymentCommand, ApiResponse<PaymentReceiptDto>>
 {
     public async Task<ApiResponse<PaymentReceiptDto>> Handle(CreatePaidPaymentCommand request, CancellationToken ct)
@@ -150,6 +153,22 @@ public class CreatePaidPaymentCommandHandler(IApplicationDbContext db, ICurrentU
         AuditLogWriter.Add(db, currentUser, "create", "Payment", payment.Id.ToString(),
             $"سداد {payment.Month} بمبلغ {payment.Amount:N0} — طريقة: {payment.Method}");
         await db.SaveChangesAsync(ct);
+
+        if (!string.IsNullOrWhiteSpace(student.GuardianPhone))
+        {
+            var msg =
+                $"مستر محمد سامي\n\n" +
+                $"إيصال سداد\n" +
+                $"--------------------\n" +
+                $"الطالب: {student.FullName} ({student.StudentCode})\n" +
+                $"الشهر: {payment.Month}\n" +
+                $"المبلغ: {payment.Amount:N0} ج.م\n" +
+                $"طريقة الدفع: {payment.Method}\n" +
+                $"التاريخ: {payment.PaidAt!.Value.ToLocalTime():dd/MM/yyyy hh:mm tt}\n" +
+                $"--------------------\n" +
+                $"تم تسجيل السداد بنجاح، شكرًا لثقتكم في مستر محمد سامي.";
+            _ = whatsApp.SendAsync(student.GuardianPhone, msg, ct);
+        }
 
         var receipt = new PaymentReceiptDto
         {

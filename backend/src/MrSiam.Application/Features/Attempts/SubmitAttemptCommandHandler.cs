@@ -9,7 +9,11 @@ using MrSiam.Domain.Enums;
 
 namespace MrSiam.Application.Features.Attempts;
 
-public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementService achievementService)
+public class SubmitAttemptCommandHandler(
+    IApplicationDbContext db,
+    IAchievementService achievementService,
+    IWhatsAppService whatsApp,
+    IAppEnvironment env)
     : IRequestHandler<SubmitAttemptCommand, ApiResponse<AttemptResultDto>>
 {
     public async Task<ApiResponse<AttemptResultDto>> Handle(SubmitAttemptCommand request, CancellationToken ct)
@@ -115,6 +119,29 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
 
         db.ExamAttempts.Add(attempt);
         await db.SaveChangesAsync(ct);
+
+        var grader = await db.Students.AsNoTracking()
+            .Where(s => s.Id == request.StudentId)
+            .Select(s => new { s.FullName, s.GuardianPhone, s.UserId })
+            .FirstOrDefaultAsync(ct);
+
+        if (grader is not null)
+        {
+            var link = $"{env.BaseUrl}/results/{attempt.Id}";
+
+            if (!string.IsNullOrWhiteSpace(grader.GuardianPhone))
+            {
+                var phone = NormalizeEgyptianPhone(grader.GuardianPhone);
+                var message = BuildGradeMessage(grader.FullName, exam.Title, score, exam.TotalMarks, percentage, passed, link);
+                _ = whatsApp.SendAsync(phone, message, CancellationToken.None);
+            }
+
+            if (grader.UserId > 0)
+                await NotificationService.PushAsync(db, grader.UserId,
+                    "نتيجة جديدة 🎯",
+                    $"محاولتك في «{exam.Title}» = {percentage}% — افتح الشريحة للتفاصيل",
+                    "grade", $"/results/{attempt.Id}", ct);
+        }
 
         await CaptureMistakesAsync(request.StudentId, exam, attemptAnswers, attempt.Id, ct);
 
@@ -288,5 +315,28 @@ public class SubmitAttemptCommandHandler(IApplicationDbContext db, IAchievementS
         return lesson is null
             ? "المرحلة القادمة — تبدأ رحلة جديدة"
             : lesson.Title;
+    }
+
+    private static string NormalizeEgyptianPhone(string phone)
+    {
+        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        if (digits.Length >= 12 && digits.StartsWith("20")) return "+" + digits;
+        if (digits.Length >= 10 && digits.StartsWith("01")) return "+2" + digits;
+        return string.IsNullOrWhiteSpace(digits) ? phone : "+" + digits;
+    }
+
+    private static string BuildGradeMessage(string studentName, string examTitle, decimal score, decimal totalMarks, decimal percentage, bool passed, string link)
+    {
+        var status = passed
+            ? "🎉 نجحت! درجتك في الشريحة جاهزة"
+            : "💪 محاولة محسوبة — الشريحة جاهزة";
+
+        return $"🎓 مستر محمد صيام\n" +
+               $"مع أبو كيان .. الدراسات في أمان\n\n" +
+               $"أهلاً {studentName} 👋\n" +
+               $"محاولتك في «{examTitle}» اتحسبت:\n" +
+               $"📈 درجتك: {score:N0}/{totalMarks:N0} — {percentage}%\n\n" +
+               $"{status}\n" +
+               $"افتح الشريحة من هنا:\n{link}";
     }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "mrsiam-whatsapp-gateway",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "بوابة واتساب السنتر — بتتصل برقم واتساب واحد (زي واتساب ويب) والمنصة تبعت منه رسايل",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.16",
+    "qrcode": "^1.5.4"
+  }
+}

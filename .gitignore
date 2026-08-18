@@ -287,6 +287,9 @@ node_modules/
 frontend/dist/
 *.tsbuildinfo
 frontend/start-vite.bat
+run-all.bat
+backend/whatsapp-gateway/node_modules/
+backend/whatsapp-gateway/auth/
 backend/src/MrSiam.Api/app_data/
 backend/src/MrSiam.Api/wwwroot/*
 !backend/src/MrSiam.Api/wwwroot/.gitkeep

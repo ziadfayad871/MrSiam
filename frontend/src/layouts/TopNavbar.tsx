@@ -47,6 +47,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/secretary/schedule': 'الجدول الدراسي',
   '/secretary/billing': 'الفوترة',
   '/secretary/analytics': 'التحليلات',
+  '/secretary/whatsapp': 'ربط واتساب',
 };
 
 function generateBreadcrumbs(pathname: string): BreadcrumbItem[] {

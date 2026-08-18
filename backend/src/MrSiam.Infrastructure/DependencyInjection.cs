@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MrSiam.Application.Abstractions;
+using MrSiam.Infrastructure.Messaging;
 using MrSiam.Infrastructure.Persistence;
 using MrSiam.Infrastructure.Security;
 
@@ -30,6 +31,13 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+        services.AddHttpClient("whatsapp", client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
+        services.AddScoped<IWhatsAppService, WhatsAppService>();
+        services.AddScoped<IAppEnvironment, AppEnvironmentService>();
 
         return services;
     }
