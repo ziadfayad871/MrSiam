@@ -1,5 +1,6 @@
 import { makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } from '@whiskeysockets/baileys';
 import QRCode from 'qrcode';
+import WebSocket from 'ws';
 import http from 'node:http';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
@@ -7,13 +8,25 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AUTH_DIR = path.join(__dirname, 'auth');
-const PORT = Number(process.env.GATEWAY_PORT || 3002);
+const PORT = Number(process.env.PORT || process.env.GATEWAY_PORT || 3002);
+const GATEWAY_KEY = process.env.GATEWAY_KEY || '';
+const TUNNEL_URL = process.env.GATEWAY_TUNNEL || 'wss://mrmohamedsiam.runasp.net/wa/tunnel';
+const TUNNEL_KEY = process.env.GATEWAY_TUNNEL_KEY || '';
+
+function keyMatches(req) {
+  if (!GATEWAY_KEY) return true;
+  const header = req.headers['x-api-key'];
+  if (header === GATEWAY_KEY) return true;
+  const url = new URL(req.url, 'http://localhost:' + PORT);
+  return url.searchParams.get('key') === GATEWAY_KEY;
+}
 
 let socket = null;
 let starting = false;
 let currentQr = null;
 let connected = false;
 let myNumber = null;
+let tunnel = null;
 
 function normalizePhone(raw) {
   let d = String(raw ?? '').replace(/\D/g, '');
@@ -21,6 +34,68 @@ function normalizePhone(raw) {
   if (d.length >= 12 && d.startsWith('20')) return d;
   if (d.startsWith('0')) return '2' + d;
   return d;
+}
+
+function tunnelTarget() {
+  const url = new URL(TUNNEL_URL);
+  if (TUNNEL_KEY) url.searchParams.set('key', TUNNEL_KEY);
+  if (url.protocol === 'http:') url.protocol = 'ws:';
+  if (url.protocol === 'https:') url.protocol = 'wss:';
+  return url.toString();
+}
+
+function tunnelSend(obj) {
+  if (tunnel && tunnel.readyState === WebSocket.OPEN) {
+    try {
+      tunnel.send(JSON.stringify(obj));
+    } catch {}
+  }
+}
+
+async function handleTunnelMessage(text) {
+  let msg;
+  try {
+    msg = JSON.parse(text);
+  } catch {
+    return;
+  }
+  if (msg?.type !== 'send') return;
+
+  let ok = false;
+  if (connected && socket) {
+    try {
+      await socket.sendMessage(normalizePhone(msg.phone) + '@s.whatsapp.net', { text: String(msg.message ?? '') });
+      ok = true;
+      console.log('[📤] اتسجلت (عبر المستضاف) لـ', msg.phone);
+    } catch (e) {
+      console.error('[❌] فشل الإرسال (عبر المستضاف):', e.message);
+    }
+  }
+  tunnelSend({ type: 'sent', id: msg.id, ok });
+}
+
+function startTunnel() {
+  if (tunnel && (tunnel.readyState === WebSocket.CONNECTING || tunnel.readyState === WebSocket.OPEN)) return;
+
+  const target = tunnelTarget();
+  tunnel = new WebSocket(target);
+  tunnel.on('open', () => console.log('[🔌] متصل بالمستضاف:', target.split('?')[0]));
+  tunnel.on('message', (data) => handleTunnelMessage(String(data)));
+  tunnel.on('close', () => {
+    tunnel = null;
+    console.log('[🔌] انقطع اتصال المستضاف — بنوصل تاني بعد 5 ثوانٍ');
+    setTimeout(startTunnel, 5000);
+  });
+  tunnel.on('error', (err) => console.error('[🔌] غلط في النفق:', err.message));
+}
+
+async function qrDataUrl() {
+  if (!currentQr) return null;
+  try {
+    return await QRCode.toDataURL(currentQr, { width: 340, margin: 2 });
+  } catch {
+    return null;
+  }
 }
 
 function json(res, obj, status = 200) {
@@ -118,7 +193,8 @@ async function setup() {
     if (qr) {
       currentQr = qr;
       connected = false;
-      console.log('[⌛] QR جديد — امسحه من الصفحة: http://localhost:' + PORT);
+      console.log('[⌛] QR جديد — امسحه من منصة السنتر أو الصفحة المحلية');
+      qrDataUrl().then((dataUrl) => tunnelSend({ type: 'qr', qr: dataUrl }));
     }
 
     if (connection === 'open') {
@@ -126,11 +202,13 @@ async function setup() {
       currentQr = null;
       myNumber = socket?.user?.id ?? null;
       console.log('[✅] متصل بالرقم:', myNumber);
+      tunnelSend({ type: 'update', connected: true, phone: myNumber });
     }
 
     if (connection === 'close') {
       connected = false;
       currentQr = null;
+      tunnelSend({ type: 'update', connected: false, phone: null });
       const statusCode = lastDisconnect?.error?.output?.statusCode;
       const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
       console.log('[🔌] انقطع الاتصال', shouldReconnect ? '— جارٍ إعادة الاتصال...' : '— اتسجلت الخروج من الواتساب');
@@ -183,13 +261,13 @@ const server = http.createServer(async (req, res) => {
 
   if (url.pathname === '/qr') {
     if (!connected && currentQr) {
-      const dataUrl = await QRCode.toDataURL(currentQr, { width: 340, margin: 2 });
-      return json(res, { qr: dataUrl });
+      return json(res, { qr: await qrDataUrl() });
     }
     return json(res, { qr: null });
   }
 
   if (url.pathname === '/send' && req.method === 'POST') {
+    if (!keyMatches(req)) return json(res, { ok: false, error: 'unauthorized' }, 401);
     const body = await readBody(req);
     const phone = normalizePhone(body.phone);
     const message = String(body.message ?? '').trim();
@@ -219,3 +297,4 @@ server.listen(PORT, () => {
 });
 
 start();
+startTunnel();

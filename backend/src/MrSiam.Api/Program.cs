@@ -99,6 +99,11 @@ try
     app.UseMiddleware<MrSiam.Api.Middleware.ExceptionHandlingMiddleware>();
 
     app.UseCors("Frontend");
+    app.UseWebSockets();
+    app.Map("/wa/tunnel", async (HttpContext context, MrSiam.Infrastructure.Messaging.WhatsAppTunnelHub hub) =>
+    {
+        await hub.AcceptAsync(context, context.RequestAborted);
+    });
     app.UseDefaultFiles();
     app.UseStaticFiles();
 

@@ -24,6 +24,9 @@ public static class DependencyInjection
                 options.UseSqlServer(connectionString);
             else
                 options.UseSqlite(connectionString);
+
+            options.ConfigureWarnings(w =>
+                w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
         });
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<AppDbContext>());
@@ -37,6 +40,8 @@ public static class DependencyInjection
             client.Timeout = TimeSpan.FromSeconds(15);
         });
         services.AddScoped<IWhatsAppService, WhatsAppService>();
+        services.AddSingleton<WhatsAppTunnelHub>();
+        services.AddHostedService<WhatsAppKeepAliveService>();
         services.AddScoped<IAppEnvironment, AppEnvironmentService>();
 
         return services;

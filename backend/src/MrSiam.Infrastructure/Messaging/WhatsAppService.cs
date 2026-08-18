@@ -12,7 +12,11 @@ namespace MrSiam.Infrastructure.Messaging;
 /// أو gateway محلي (بيتصل برقم واتساب زي واتساب ويب وبيتصل من غير مفاتيح).
 /// كل حاجة بتتظبط من إعدادات `WhatsApp` في appsettings.
 /// </summary>
-public class WhatsAppService(IHttpClientFactory httpClientFactory, IConfiguration configuration, ILogger<WhatsAppService> logger)
+public class WhatsAppService(
+    IHttpClientFactory httpClientFactory,
+    IConfiguration configuration,
+    WhatsAppTunnelHub tunnel,
+    ILogger<WhatsAppService> logger)
     : IWhatsAppService
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -40,7 +44,8 @@ public class WhatsAppService(IHttpClientFactory httpClientFactory, IConfiguratio
             {
                 "whapi" => await SendWhapiAsync(client, endpoint, apiKeyValue, phone, message, ct),
                 "ultramsg" => await SendUltraMsgAsync(client, endpoint, instanceId, apiKeyValue, phone, message, ct),
-                "local" or "gateway" => await SendLocalGatewayAsync(client, phone, message, ct),
+                "local" => await tunnel.SendAsync(phone, message, ct),
+                "gateway" => await SendLocalGatewayAsync(client, phone, message, ct),
                 _ => await SendCallMeBotAsync(client, endpoint, apiKeyValue, phone, message, ct)
             };
 
@@ -100,6 +105,9 @@ public class WhatsAppService(IHttpClientFactory httpClientFactory, IConfiguratio
         {
             Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
         };
+        var apiKey = configuration["WhatsApp:GatewayApiKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
         using var res = await client.SendAsync(request, ct);
         if (!res.IsSuccessStatusCode)
         {

@@ -1,19 +1,24 @@
-import { CheckCircle2, ExternalLink, Loader2, MessageCircle, QrCode, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Loader2, MessageCircle, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '../../design-system/ui/Button';
 import { Card } from '../../design-system/ui/Card';
-
-const GATEWAY = (import.meta.env.VITE_WA_GATEWAY as string | undefined) ?? 'http://localhost:3002';
+import { api } from '../../lib/api';
 
 interface WaStatus {
+  reachable: boolean;
   connected: boolean;
   phone?: string | null;
+}
+
+interface WaQr {
+  reachable: boolean;
+  qr?: string | null;
 }
 
 export default function SecretaryWhatsAppPage() {
   const [status, setStatus] = useState<WaStatus | null>(null);
   const [qr, setQr] = useState<string | null>(null);
-  const [reachable, setReachable] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -21,15 +26,16 @@ export default function SecretaryWhatsAppPage() {
     async function tick() {
       try {
         const [s, q] = await Promise.all([
-          fetch(`${GATEWAY}/status`, { cache: 'no-store' }).then((r) => r.json()),
-          fetch(`${GATEWAY}/qr`, { cache: 'no-store' }).then((r) => r.json()),
+          api.get<WaStatus>('/whatsapp/status'),
+          api.get<WaQr>('/whatsapp/qr'),
         ]);
         if (!alive) return;
-        setStatus(s as WaStatus);
-        setQr((q as { qr: string | null })?.qr ?? null);
-        setReachable(true);
+        setStatus(s);
+        setQr(q?.qr ?? null);
       } catch {
-        if (alive) setReachable(false);
+        if (alive) setStatus({ reachable: false, connected: false });
+      } finally {
+        if (alive) setLoading(false);
       }
     }
     tick();
@@ -40,6 +46,8 @@ export default function SecretaryWhatsAppPage() {
     };
   }, [attempt]);
 
+  const unreachable = status && !status.reachable;
+
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div>
@@ -49,14 +57,23 @@ export default function SecretaryWhatsAppPage() {
         </p>
       </div>
 
-      {!reachable ? (
+      {loading ? (
+        <Card className="p-6">
+          <div className="flex items-center justify-center gap-2 py-10 text-text-muted">
+            <Loader2 size={20} className="animate-spin text-gold" />
+            <span className="text-sm">بنجيب حالة الربط...</span>
+          </div>
+        </Card>
+      ) : unreachable ? (
         <Card className="p-6">
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <Loader2 size={28} className="animate-spin text-gold" />
             <p className="font-bold text-text-primary">البوابة مش شغالة حاليًا</p>
             <p className="max-w-md text-sm text-text-muted">
-              شغّل الملف <code className="rounded bg-gold/10 px-1.5 py-0.5 font-plex text-gold">run-all.bat</code> في جذر
-              المشروع — بيفتح الباك اند والواجهة والبوابة مع بعض. الصفحة دي بتتحدّث لوحدها.
+              شغّل الملف <code className="rounded bg-gold/10 px-1.5 py-0.5 font-plex text-gold">run-all.bat</code> على
+              جهاز السنتر (بيفتح البوابة + نفق عام إن النفق محطوط فيه)، وبعدها اربط الرقم. ولو لسه مش ظاهرة تأكد إن
+              إعدادات <code className="font-plex" dir="ltr">WhatsApp:GatewayBaseUrl</code> على السيرفر فيها رابط النفق
+              العام بتاعك.
             </p>
             <Button variant="outline" icon={<RefreshCw size={14} />} onClick={() => setAttempt((a) => a + 1)}>
               أعد المحاولة
@@ -76,9 +93,6 @@ export default function SecretaryWhatsAppPage() {
             <p className="max-w-md text-sm text-text-muted">
               إيصالات السداد والنتايج هتتوجه لأولياء الأمور تلقائيًا من الرقم ده.
             </p>
-            <Button variant="outline" icon={<ExternalLink size={14} />} onClick={() => window.open(GATEWAY, '_blank')}>
-              فتح صفحة البوابة
-            </Button>
           </div>
         </Card>
       ) : (
@@ -103,14 +117,9 @@ export default function SecretaryWhatsAppPage() {
               </li>
               <li>امسح الكود ده — وما تقفلش الصفحة لحد ما الكود يظهر (بيتجدد تلقائيًا)</li>
             </ol>
-            <div className="flex gap-2">
-              <Button variant="outline" icon={<ExternalLink size={14} />} onClick={() => window.open(GATEWAY, '_blank')}>
-                فتح الصفحة كاملة
-              </Button>
-              <Button variant="ghost" icon={<QrCode size={14} />} onClick={() => setAttempt((a) => a + 1)}>
-                تحديث
-              </Button>
-            </div>
+            <Button variant="outline" icon={<RefreshCw size={14} />} onClick={() => setAttempt((a) => a + 1)}>
+              تحديث
+            </Button>
           </div>
         </Card>
       )}
