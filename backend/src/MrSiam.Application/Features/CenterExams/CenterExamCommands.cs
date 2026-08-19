@@ -72,6 +72,8 @@ public record DeleteCenterExamCommand(int Id) : IRequest<ApiResponse<bool>>;
 
 public record GetCenterExamsQuery(int? CourseId = null) : IRequest<ApiResponse<IReadOnlyList<CenterExamDto>>>;
 
+public record GetCenterExamByIdQuery(int Id) : IRequest<ApiResponse<CenterExamDto>>;
+
 public record GetCenterExamResultsQuery(int CenterExamId) : IRequest<ApiResponse<IReadOnlyList<CenterExamResultRowDto>>>;
 
 public record SaveCenterExamResultsCommand(int CenterExamId, List<CenterExamResultInputDto> Items)
@@ -204,6 +206,52 @@ public class GetCenterExamsQueryHandler(IApplicationDbContext db)
         }).ToList();
 
         return ApiResponse<IReadOnlyList<CenterExamDto>>.Ok(result);
+    }
+}
+
+public class GetCenterExamByIdQueryHandler(IApplicationDbContext db)
+    : IRequestHandler<GetCenterExamByIdQuery, ApiResponse<CenterExamDto>>
+{
+    public async Task<ApiResponse<CenterExamDto>> Handle(GetCenterExamByIdQuery request, CancellationToken ct)
+    {
+        var exam = await db.CenterExams
+            .AsNoTracking()
+            .Where(x => x.Id == request.Id)
+            .Select(x => new
+            {
+                x.Id,
+                x.CourseId,
+                CourseTitle = x.Course != null ? x.Course.Title : string.Empty,
+                x.Title,
+                x.ExamDate,
+                x.TotalMarks,
+                x.PassMark,
+                x.Notes,
+                x.CreatedAt,
+                ResultsCount = x.Results.Count,
+                TotalScore = x.Results.Sum(r => r.Score)
+            })
+            .FirstOrDefaultAsync(ct);
+
+        if (exam is null)
+            return ApiResponse<CenterExamDto>.Fail("امتحان السنتر غير موجود");
+
+        return ApiResponse<CenterExamDto>.Ok(new CenterExamDto
+        {
+            Id = exam.Id,
+            CourseId = exam.CourseId,
+            CourseTitle = exam.CourseTitle,
+            Title = exam.Title,
+            ExamDate = exam.ExamDate,
+            TotalMarks = exam.TotalMarks,
+            PassMark = exam.PassMark,
+            Notes = exam.Notes,
+            CreatedAt = exam.CreatedAt,
+            ResultsCount = exam.ResultsCount,
+            AveragePercentage = exam.ResultsCount > 0
+                ? Math.Round(exam.TotalScore / exam.ResultsCount / exam.TotalMarks * 100m, 1)
+                : 0
+        });
     }
 }
 

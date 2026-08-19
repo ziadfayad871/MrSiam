@@ -31,6 +31,13 @@ public class CenterExamsController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id, CancellationToken ct)
         => Ok(await mediator.Send(new DeleteCenterExamCommand(id), ct));
 
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetCenterExamByIdQuery(id), ct);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
     [HttpGet("{id:int}/results")]
     public async Task<IActionResult> GetResults(int id, CancellationToken ct)
     {

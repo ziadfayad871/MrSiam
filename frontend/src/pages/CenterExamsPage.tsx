@@ -1,5 +1,5 @@
 import { ArrowRight, ClipboardCheck, Loader2, Pencil, Plus, Trash2, Users } from 'lucide-react';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { CompassLoader } from '../design-system/components/CompassLoader';
@@ -11,7 +11,7 @@ import Input from '../design-system/ui/Field';
 import { Modal } from '../design-system/ui/Modal';
 import { useToast } from '../design-system/ui/Toast';
 import { api } from '../lib/api';
-import type { CenterExamDto, CenterExamResultRowDto, CourseDto } from '../lib/types';
+import type { CenterExamDto, CourseDto } from '../lib/types';
 
 interface ExamFormState {
   title: string;
@@ -119,130 +119,13 @@ function CenterExamFormModal({
   );
 }
 
-function GradeSheetModal({
-  exam,
-  onClose,
-  onSaved,
-}: {
-  exam: CenterExamDto;
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const { toast } = useToast();
-  const [rows, setRows] = useState<CenterExamResultRowDto[] | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [scores, setScores] = useState<Record<number, string>>({});
-  const [absent, setAbsent] = useState<Record<number, boolean>>({});
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    api
-      .get<CenterExamResultRowDto[]>(`/center-exams/${exam.id}/results`)
-      .then((list) => {
-        setRows(list);
-        const s: Record<number, string> = {};
-        const a: Record<number, boolean> = {};
-        for (const r of list) {
-          s[r.studentId] = r.score != null ? String(r.score) : '';
-          a[r.studentId] = r.isAbsent;
-        }
-        setScores(s);
-        setAbsent(a);
-      })
-      .catch((e) => toast('فشل تحميل الطلاب', e instanceof Error ? e.message : 'خطأ', 'error'))
-      .finally(() => setLoading(false));
-  }, [exam.id, toast]);
-
-  const filled = useMemo(
-    () => (rows ?? []).filter((r) => absent[r.studentId] || scores[r.studentId]?.trim() !== '').length,
-    [rows, scores, absent],
-  );
-
-  async function save() {
-    const items = (rows ?? [])
-      .filter((r) => absent[r.studentId] || scores[r.studentId]?.trim() !== '')
-      .map((r) => ({
-        studentId: r.studentId,
-        score: absent[r.studentId] ? 0 : Number(scores[r.studentId]) || 0,
-        isAbsent: absent[r.studentId],
-        notes: null,
-      }));
-    if (items.length === 0) {
-      toast('سجّل درجة طالب واحد على الأقل', '', 'error');
-      return;
-    }
-    setSaving(true);
-    try {
-      await api.post(`/center-exams/${exam.id}/results`, { centerExamId: exam.id, items });
-      toast('تم حفظ الدرجات', '', 'success');
-      onSaved();
-      onClose();
-    } catch (err) {
-      toast('فشل الحفظ', err instanceof Error ? err.message : 'خطأ', 'error');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <Modal open onClose={onClose} title={`درجات «${exam.title}»`} size="lg">
-      <p className="mb-3 text-xs text-text-muted">
-        {exam.courseTitle} · {new Date(exam.examDate).toLocaleDateString('ar-EG')} · من {exam.totalMarks} درجة · النجاح من {exam.passMark}
-      </p>
-      {loading ? (
-        <div className="py-10 text-center text-sm text-text-muted">بنجيب الطلاب...</div>
-      ) : !rows || rows.length === 0 ? (
-        <p className="py-10 text-center text-sm text-text-muted">مفيش طلاب نشطين في الوقت الحالي.</p>
-      ) : (
-        <div className="flex max-h-[60vh] flex-col gap-1.5 overflow-y-auto">
-          {rows.map((r) => (
-            <div key={r.studentId} className="flex items-center gap-3 rounded-md border border-border-soft/70 px-3 py-2">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-text-primary">{r.studentName}</p>
-                <p className="text-[10px] text-text-muted">
-                  {r.studentCode}{r.groupName ? ` · ${r.groupName}` : ''}
-                </p>
-              </div>
-              <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-text-secondary">
-                <input type="checkbox" checked={!!absent[r.studentId]} onChange={(e) => setAbsent({ ...absent, [r.studentId]: e.target.checked })} className="h-4 w-4 accent-error" />
-                غياب
-              </label>
-              <input
-                type="number"
-                dir="ltr"
-                min={0}
-                max={exam.totalMarks}
-                disabled={!!absent[r.studentId]}
-                value={absent[r.studentId] ? '' : (scores[r.studentId] ?? '')}
-                onChange={(e) => setScores({ ...scores, [r.studentId]: e.target.value })}
-                placeholder="الدرجة"
-                className="w-24 shrink-0 rounded-md border border-border-soft bg-surface px-2 py-1.5 text-center text-sm text-text-primary outline-none focus:border-gold/60 disabled:opacity-40"
-              />
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-border-soft pt-3">
-        <p className="text-xs text-text-muted">سجّلت {filled} من {(rows ?? []).length} طالب</p>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose} disabled={saving}>
-            إغلاق
-          </Button>
-          <Button variant="gold" loading={saving} disabled={filled === 0} onClick={save}>
-            حفظ الدرجات
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
 export default function CenterExamsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const isSecretary = user?.role === 'Secretary';
   const backTo = isSecretary ? '/secretary' : '/teacher';
+  const gradesBase = isSecretary ? '/secretary/center-exams' : '/teacher/center-exams';
 
   const [courses, setCourses] = useState<CourseDto[]>([]);
   const [courseId, setCourseId] = useState<number | ''>('');
@@ -252,7 +135,6 @@ export default function CenterExamsPage() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CenterExamDto | null>(null);
-  const [gradeExam, setGradeExam] = useState<CenterExamDto | null>(null);
 
   function loadExams() {
     if (courseId === '') {
@@ -368,7 +250,7 @@ export default function CenterExamsPage() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
-                <button onClick={() => setGradeExam(exam)} title="سجل الدرجات" className="flex items-center gap-1.5 rounded-md bg-gold px-3 py-1.5 text-xs font-bold text-navy-deep transition-opacity hover:opacity-90">
+                <button onClick={() => navigate(`${gradesBase}/${exam.id}/grades`)} title="سجل الدرجات" className="flex items-center gap-1.5 rounded-md bg-gold px-3 py-1.5 text-xs font-bold text-navy-deep transition-opacity hover:opacity-90">
                   <ClipboardCheck size={13} /> الدرجات
                 </button>
                 <button onClick={() => { setEditing(exam); setFormOpen(true); }} title="تعديل" className="rounded-md p-1.5 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold">
@@ -384,11 +266,10 @@ export default function CenterExamsPage() {
       )}
 
       <p className="flex items-center gap-1.5 text-[11px] text-text-muted">
-        <Users size={13} /> عند حفظ الدرجات: النتيجة بتوصل لولي الأمر واتساب + إشعار للطالب داخل المنصة.
+        <Users size={13} /> عند حفظ الدرجات: النتيجة أو الغياب بتوصل ولي الأمر واتساب + إشعار للطالب داخل المنصة.
       </p>
 
       <CenterExamFormModal open={formOpen} courseId={courseId === '' ? 0 : courseId} editing={editing} onClose={() => setFormOpen(false)} onSaved={loadExams} />
-      {gradeExam && <GradeSheetModal exam={gradeExam} onClose={() => setGradeExam(null)} onSaved={loadExams} />}
     </div>
   );
 }

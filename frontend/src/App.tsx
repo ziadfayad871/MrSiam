@@ -48,6 +48,7 @@ import CourseDetailPage from './pages/CourseDetailPage';
 import ExamPage from './pages/ExamPage';
 import AssignmentTakePage from './pages/AssignmentTakePage';
 import CenterExamsPage from './pages/CenterExamsPage';
+import CenterExamGradesPage from './pages/CenterExamGradesPage';
 import StudentCenterResultsPage from './pages/student/StudentCenterResultsPage';
 import ResultsPage from './pages/ResultsPage';
 import AchievementsPage from './pages/AchievementsPage';
@@ -322,6 +323,18 @@ export default function App() {
         }
       />
       <Route
+        path="/teacher/center-exams/:examId/grades"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <CenterExamGradesPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
         path="/teacher/attendance/monthly"
         element={
           <RequireTeacher>
@@ -497,6 +510,18 @@ export default function App() {
             <DashboardLayout>
               <PageTransition>
                 <CenterExamsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
+        path="/secretary/center-exams/:examId/grades"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <CenterExamGradesPage />
               </PageTransition>
             </DashboardLayout>
           </RequireSecretary>
