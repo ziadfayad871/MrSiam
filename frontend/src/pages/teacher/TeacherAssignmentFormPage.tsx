@@ -7,7 +7,7 @@ import { Button } from '../../design-system/ui/Button';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import { api } from '../../lib/api';
 import { useUnsavedGuard } from '../../lib/useUnsavedGuard';
-import type { AssignmentDto, CourseDto } from '../../lib/types';
+import type { AssignmentDetailDto, AssignmentDto, CourseDto } from '../../lib/types';
 
 export default function TeacherAssignmentFormPage() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function TeacherAssignmentFormPage() {
 
   const [course, setCourse] = useState<CourseDto | null>(null);
   const [assignment, setAssignment] = useState<AssignmentDto | null>(null);
+  const [initialCorrectAnswers, setInitialCorrectAnswers] = useState<number[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +46,14 @@ export default function TeacherAssignmentFormPage() {
             return;
           }
           setAssignment(foundAssignment);
+          if (foundAssignment.hasQuestions) {
+            api
+              .get<AssignmentDetailDto>(`/assignments/${foundAssignment.id}`)
+              .then((d) => {
+                if (!cancelled) setInitialCorrectAnswers(d.questions.map((q) => q.correctIndex));
+              })
+              .catch(() => {});
+          }
         }
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'فشل تحميل البيانات'))
@@ -76,7 +85,7 @@ export default function TeacherAssignmentFormPage() {
       </header>
 
       <div className="rounded-xl border border-border-soft bg-surface p-5 sm:p-8">
-        <AssignmentForm courseId={course.id} editing={editing ? assignment : null} defaultLessonId={defaultLessonId} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
+        <AssignmentForm courseId={course.id} editing={editing ? assignment : null} defaultLessonId={defaultLessonId} initialCorrectAnswers={initialCorrectAnswers} onDone={() => { disarm(); navigate('/teacher/content'); }} onCancel={back} onDirtyChange={setDirty} submitLabel={editing ? 'حفظ التعديلات' : 'حفظ'} />
       </div>
     </div>
   );

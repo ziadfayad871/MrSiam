@@ -74,6 +74,62 @@ export interface AssignmentDto {
   description: string;
   dueDate?: string;
   createdAt: string;
+  questionCount?: number;
+  choicesPerQuestion?: number;
+  hasQuestions?: boolean;
+  submitted?: boolean;
+  submissionPercentage?: number;
+}
+
+export interface AssignmentQuestionDto {
+  order: number;
+  correctIndex: number;
+  label: string;
+  options: string[];
+}
+
+export interface AssignmentSubmissionAnswerDto {
+  order: number;
+  selectedIndex?: number;
+  correctIndex: number;
+  isCorrect: boolean;
+  isSkipped: boolean;
+  correctLetter: string;
+  selectedLetter?: string;
+}
+
+export interface AssignmentSubmissionResultDto {
+  submissionId: number;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  passed: boolean;
+  answers: AssignmentSubmissionAnswerDto[];
+}
+
+export interface AssignmentDetailDto {
+  id: number;
+  courseId: number;
+  lessonId?: number;
+  title: string;
+  description: string;
+  dueDate?: string;
+  questionCount: number;
+  choicesPerQuestion: number;
+  questions: AssignmentQuestionDto[];
+  submitted: boolean;
+  mySubmission?: AssignmentSubmissionResultDto;
+}
+
+export interface AssignmentSubmissionListItemDto {
+  studentId: number;
+  studentName: string;
+  studentCode: string;
+  submittedAt: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  passed: boolean;
 }
 
 export interface LessonResourceDto {

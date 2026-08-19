@@ -11,6 +11,7 @@ import {
   Search,
   Trash2,
   Upload,
+  Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -19,14 +20,52 @@ import { Badge } from '../../design-system/ui/Badge';
 import { Button } from '../../design-system/ui/Button';
 import { ErrorState } from '../../design-system/ui/ErrorState';
 import Input from '../../design-system/ui/Field';
+import { Modal } from '../../design-system/ui/Modal';
 import { useToast } from '../../design-system/ui/Toast';
 import { api, resolveFileUrl } from '../../lib/api';
-import type { AssignmentDto, CourseDto, CourseExamStatsDto, ExamListItemDto, LessonDto, LessonResourceDto } from '../../lib/types';
+import type { AssignmentDto, AssignmentSubmissionListItemDto, CourseDto, CourseExamStatsDto, ExamListItemDto, LessonDto, LessonResourceDto } from '../../lib/types';
 
 function fileKindLabel(kind: string, url: string): string {
   if (kind === 'pdf') return 'PDF';
   const ext = url.split('.').pop()?.toUpperCase() ?? '';
   return ext === 'PDF' ? 'PDF' : ext || 'ملف';
+}
+
+function AssignmentSubmissionsModal({ assignment, onClose }: { assignment: AssignmentDto; onClose: () => void }) {
+  const [list, setList] = useState<AssignmentSubmissionListItemDto[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api
+      .get<AssignmentSubmissionListItemDto[]>(`/assignments/${assignment.id}/submissions`)
+      .then(setList)
+      .catch(() => setList([]))
+      .finally(() => setLoading(false));
+  }, [assignment.id]);
+
+  return (
+    <Modal open onClose={onClose} title={`نتايج واجب «${assignment.title}»`}>
+      {loading ? (
+        <div className="py-10 text-center text-sm text-text-muted">بنجيب النتايج...</div>
+      ) : !list || list.length === 0 ? (
+        <p className="py-10 text-center text-sm text-text-muted">مفيش حد سلم الواجب لسه.</p>
+      ) : (
+        <div className="flex max-h-[60vh] flex-col gap-2 overflow-y-auto">
+          {list.map((s) => (
+            <div key={s.studentId} className="flex items-center justify-between gap-3 rounded-md border border-border-soft/70 px-3 py-2">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-text-primary">{s.studentName}</p>
+                <p className="text-[10px] text-text-muted">{s.studentCode} · {new Date(s.submittedAt).toLocaleDateString('ar-EG')}</p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${s.passed ? 'bg-success/10 text-success' : 'bg-gold/10 text-gold'}`}>
+                {s.score}/{s.totalQuestions} · {s.percentage}٪
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
 }
 
 function ResourceUploadButton({ lessonId, onUploaded }: { lessonId: number; onUploaded: () => void }) {
@@ -86,6 +125,7 @@ function SessionCard({
   busyId,
   onBusy,
   onChanged,
+  onViewSubmissions,
 }: {
   courseId: number;
   lesson: LessonDto;
@@ -96,6 +136,7 @@ function SessionCard({
   busyId: string | null;
   onBusy: (id: string | null) => void;
   onChanged: () => void;
+  onViewSubmissions: (a: AssignmentDto) => void;
 }) {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -245,6 +286,11 @@ function SessionCard({
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
+                    {a.hasQuestions && (
+                      <button onClick={() => onViewSubmissions(a)} title="نتايج الطلاب" className="rounded-md p-1 text-text-secondary transition-colors hover:bg-success/10 hover:text-success">
+                        <Users size={13} />
+                      </button>
+                    )}
                     <button onClick={() => navigate(`/teacher/content/courses/${courseId}/assignments/${a.id}/edit`)} title="تعديل" className="rounded-md p-1 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold">
                       <Pencil size={13} />
                     </button>
@@ -316,6 +362,7 @@ export default function TeacherCourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [subsAssignment, setSubsAssignment] = useState<AssignmentDto | null>(null);
   const [q, setQ] = useState('');
 
   function loadContent() {
@@ -481,6 +528,7 @@ export default function TeacherCourseDetailPage() {
                 busyId={busyId}
                 onBusy={setBusyId}
                 onChanged={loadContent}
+                onViewSubmissions={setSubsAssignment}
               />
             ))
           )}
@@ -532,6 +580,11 @@ export default function TeacherCourseDetailPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
+                      {a.hasQuestions && (
+                        <button onClick={() => setSubsAssignment(a)} title="نتايج الطلاب" className="rounded-md p-1 text-text-secondary transition-colors hover:bg-success/10 hover:text-success">
+                          <Users size={13} />
+                        </button>
+                      )}
                       <button onClick={() => navigate(`/teacher/content/courses/${course.id}/assignments/${a.id}/edit`)} title="تعديل" className="rounded-md p-1 text-text-secondary transition-colors hover:bg-gold/10 hover:text-gold">
                         <Pencil size={13} />
                       </button>
@@ -551,6 +604,8 @@ export default function TeacherCourseDetailPage() {
           )}
         </div>
       </div>
+
+      {subsAssignment && <AssignmentSubmissionsModal assignment={subsAssignment} onClose={() => setSubsAssignment(null)} />}
     </div>
   );
 }

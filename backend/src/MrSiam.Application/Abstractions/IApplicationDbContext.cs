@@ -22,6 +22,8 @@ public interface IApplicationDbContext
     DbSet<TopStudent> TopStudents { get; }
     DbSet<StudentTestimonial> StudentTestimonials { get; }
     DbSet<Assignment> Assignments { get; }
+    DbSet<AssignmentQuestion> AssignmentQuestions { get; }
+    DbSet<AssignmentSubmission> AssignmentSubmissions { get; }
     DbSet<StudentNote> StudentNotes { get; }
     DbSet<Bookmark> Bookmarks { get; }
     DbSet<WatchProgress> WatchProgress { get; }

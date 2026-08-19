@@ -23,6 +23,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TopStudent> TopStudents => Set<TopStudent>();
     public DbSet<StudentTestimonial> StudentTestimonials => Set<StudentTestimonial>();
     public DbSet<Assignment> Assignments => Set<Assignment>();
+    public DbSet<AssignmentQuestion> AssignmentQuestions => Set<AssignmentQuestion>();
+    public DbSet<AssignmentSubmission> AssignmentSubmissions => Set<AssignmentSubmission>();
     public DbSet<StudentNote> StudentNotes => Set<StudentNote>();
     public DbSet<Bookmark> Bookmarks => Set<Bookmark>();
     public DbSet<WatchProgress> WatchProgress => Set<WatchProgress>();
@@ -150,6 +152,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(a => a.Title).HasMaxLength(160);
             e.HasOne(a => a.Course).WithMany().HasForeignKey(a => a.CourseId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(a => a.Lesson).WithMany().HasForeignKey(a => a.LessonId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<AssignmentQuestion>(e =>
+        {
+            e.HasIndex(q => new { q.AssignmentId, q.Order }).IsUnique();
+            e.HasOne(q => q.Assignment).WithMany(a => a.Questions).HasForeignKey(q => q.AssignmentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AssignmentSubmission>(e =>
+        {
+            e.HasIndex(s => new { s.AssignmentId, s.StudentId }).IsUnique();
+            e.Property(s => s.AnswersJson).HasMaxLength(8000);
+            e.HasOne(s => s.Assignment).WithMany(a => a.Submissions).HasForeignKey(s => s.AssignmentId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(s => s.Student).WithMany().HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<StudentNote>(e =>

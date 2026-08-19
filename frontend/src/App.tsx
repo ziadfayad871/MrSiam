@@ -46,6 +46,7 @@ import TeacherProfile from './pages/TeacherProfile';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import ExamPage from './pages/ExamPage';
+import AssignmentTakePage from './pages/AssignmentTakePage';
 import ResultsPage from './pages/ResultsPage';
 import AchievementsPage from './pages/AchievementsPage';
 import HistoryTimelinePage from './pages/HistoryTimelinePage';
@@ -602,6 +603,18 @@ export default function App() {
             <DashboardLayout>
               <ParchmentTransition motif="exams">
                 <ExamPage />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireStudent>
+        }
+      />
+      <Route
+        path="/assignment/:assignmentId"
+        element={
+          <RequireStudent>
+            <DashboardLayout>
+              <ParchmentTransition motif="exams">
+                <AssignmentTakePage />
               </ParchmentTransition>
             </DashboardLayout>
           </RequireStudent>

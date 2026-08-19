@@ -424,12 +424,27 @@ export default function CourseDetailPage() {
                   <div>
                     <p className="text-sm font-bold text-text-primary">{a.title}</p>
                     {a.description && <p className="mt-1 text-xs leading-relaxed text-text-secondary">{a.description}</p>}
+                    {a.hasQuestions && (
+                      <p className="mt-1.5 text-[11px] text-text-muted">
+                        {a.questionCount} سؤال · إجابتك بتتصحح تلقائيًا{typeof a.submissionPercentage === 'number' ? ` · نتيجتك: ${a.submissionPercentage}٪` : ''}
+                      </p>
+                    )}
                   </div>
-                  {a.dueDate && (
-                    <span className="shrink-0 rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold text-gold">
-                      آخر موعد: {new Date(a.dueDate).toLocaleDateString('ar-EG')}
-                    </span>
-                  )}
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
+                    {a.dueDate && (
+                      <span className="rounded-full border border-gold/30 bg-gold/10 px-3 py-1 text-[10px] font-bold text-gold">
+                        آخر موعد: {new Date(a.dueDate).toLocaleDateString('ar-EG')}
+                      </span>
+                    )}
+                    {a.hasQuestions && (
+                      <Link
+                        to={`/assignment/${a.id}`}
+                        className="inline-flex items-center gap-1 rounded-md bg-gold px-3 py-1.5 text-xs font-bold text-navy-deep transition-opacity hover:opacity-90"
+                      >
+                        {a.submitted ? 'شوف النتيجة' : 'ابدأ الحل'}
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}

@@ -14,8 +14,12 @@ public static class SchemaBootstrap
         await EnsureTableAsync(db, "AuditLogs", isSqlServer, AuditLogsSql);
         await EnsureTableAsync(db, "StudentTestimonials", isSqlServer, TestimonialsSql);
         await EnsureTableAsync(db, "Assignments", isSqlServer, AssignmentsSql);
+        await EnsureTableAsync(db, "AssignmentQuestions", isSqlServer, AssignmentQuestionsSql);
+        await EnsureTableAsync(db, "AssignmentSubmissions", isSqlServer, AssignmentSubmissionsSql);
         await EnsureTableAsync(db, "LessonResources", isSqlServer, LessonResourcesSql);
         await EnsureColumnAsync(db, "Assignments", "LessonId", isSqlServer);
+        await EnsureColumnAsync(db, "Assignments", "QuestionCount", isSqlServer);
+        await EnsureColumnAsync(db, "Assignments", "ChoicesPerQuestion", isSqlServer);
         await EnsureColumnAsync(db, "Courses", "ImageUrl", isSqlServer, "nvarchar(400)");
         await EnsureColumnAsync(db, "Courses", "Month", isSqlServer, "int");
         await EnsureColumnAsync(db, "Lessons", "ImageUrl", isSqlServer, "nvarchar(400)");
@@ -104,8 +108,18 @@ public static class SchemaBootstrap
 
     private static string AssignmentsSql(bool sqlServer) =>
         sqlServer
-            ? "CREATE TABLE [Assignments] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [CourseId] int NOT NULL, [LessonId] int NULL, [Title] nvarchar(160) NOT NULL, [Description] nvarchar(max) NOT NULL, [DueDate] datetime2 NULL, [CreatedAt] datetime2 NOT NULL)"
-            : "CREATE TABLE Assignments (Id INTEGER PRIMARY KEY AUTOINCREMENT, CourseId INTEGER NOT NULL, LessonId INTEGER NULL, Title TEXT NOT NULL, Description TEXT NOT NULL, DueDate TEXT NULL, CreatedAt TEXT NOT NULL)";
+            ? "CREATE TABLE [Assignments] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [CourseId] int NOT NULL, [LessonId] int NULL, [Title] nvarchar(160) NOT NULL, [Description] nvarchar(max) NOT NULL, [DueDate] datetime2 NULL, [QuestionCount] int NULL, [ChoicesPerQuestion] int NULL, [CreatedAt] datetime2 NOT NULL)"
+            : "CREATE TABLE Assignments (Id INTEGER PRIMARY KEY AUTOINCREMENT, CourseId INTEGER NOT NULL, LessonId INTEGER NULL, Title TEXT NOT NULL, Description TEXT NOT NULL, DueDate TEXT NULL, QuestionCount INTEGER NULL, ChoicesPerQuestion INTEGER NULL, CreatedAt TEXT NOT NULL)";
+
+    private static string AssignmentQuestionsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [AssignmentQuestions] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [AssignmentId] int NOT NULL, [Order] int NOT NULL, [CorrectIndex] int NOT NULL)"
+            : "CREATE TABLE AssignmentQuestions (Id INTEGER PRIMARY KEY AUTOINCREMENT, AssignmentId INTEGER NOT NULL, [Order] INTEGER NOT NULL, CorrectIndex INTEGER NOT NULL)";
+
+    private static string AssignmentSubmissionsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [AssignmentSubmissions] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [AssignmentId] int NOT NULL, [StudentId] int NOT NULL, [SubmittedAt] datetime2 NOT NULL, [Score] int NOT NULL, [TotalQuestions] int NOT NULL, [AnswersJson] nvarchar(max) NOT NULL)"
+            : "CREATE TABLE AssignmentSubmissions (Id INTEGER PRIMARY KEY AUTOINCREMENT, AssignmentId INTEGER NOT NULL, StudentId INTEGER NOT NULL, SubmittedAt TEXT NOT NULL, Score INTEGER NOT NULL, TotalQuestions INTEGER NOT NULL, AnswersJson TEXT NOT NULL)";
 
     private static string LessonResourcesSql(bool sqlServer) =>
         sqlServer
