@@ -117,7 +117,7 @@ internal static class AbsenceNotifier
             try
             {
                 var msg =
-                    $"مستر محمد سامي 🏫\n" +
+                    $"مستر محمد صيام 🏫\n" +
                     $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
                     $"عزيزي ولي أمر الطالب/ة {student.FullName} 👋\n\n" +
                     $"نخطركم أن {student.FullName} لم يحضر حصة اليوم بتاريخ {date:dd/MM/yyyy}.\n" +

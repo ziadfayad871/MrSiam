@@ -234,7 +234,7 @@ internal static class ReceiptSender
             }
 
             var msg =
-                $"مستر محمد سامي 🏫\n" +
+                $"مستر محمد صيام 🏫\n" +
                 $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
                 $"عزيزي ولي أمر الطالب/ة {student.FullName} 👋\n\n" +
                 $"تم سداد رسوم شهر «{month}» بنجاح ✅\n" +

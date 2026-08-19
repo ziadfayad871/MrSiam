@@ -28,7 +28,7 @@ public sealed class ReceiptPdfBuilder : IReceiptPdfBuilder
                     col.Item().AlignCenter().Column(header =>
                     {
                         header.Spacing(2);
-                        header.Item().AlignCenter().Text("مستر محمد سامي").FontFamily("TajawalBold").FontSize(20).FontColor("#C89B3C");
+                        header.Item().AlignCenter().Text("مستر محمد صيام").FontFamily("TajawalBold").FontSize(20).FontColor("#C89B3C");
                         header.Item().AlignCenter().Text("مع أبو كيان .. الدراسات في أمان").FontSize(11).FontColor("#6B6B76");
                     });
 
