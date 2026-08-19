@@ -42,6 +42,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<StudyGroup> StudyGroups => Set<StudyGroup>();
     public DbSet<StudyGroupMember> StudyGroupMembers => Set<StudyGroupMember>();
     public DbSet<ScheduleSlot> ScheduleSlots => Set<ScheduleSlot>();
+    public DbSet<CenterExam> CenterExams => Set<CenterExam>();
+    public DbSet<CenterExamResult> CenterExamResults => Set<CenterExamResult>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -166,6 +168,21 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(s => s.AnswersJson).HasMaxLength(8000);
             e.HasOne(s => s.Assignment).WithMany(a => a.Submissions).HasForeignKey(s => s.AssignmentId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(s => s.Student).WithMany().HasForeignKey(s => s.StudentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CenterExam>(e =>
+        {
+            e.Property(x => x.Title).HasMaxLength(160);
+            e.Property(x => x.Notes).HasMaxLength(1000);
+            e.HasOne(x => x.Course).WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<CenterExamResult>(e =>
+        {
+            e.HasIndex(r => new { r.CenterExamId, r.StudentId }).IsUnique();
+            e.Property(r => r.Notes).HasMaxLength(500);
+            e.HasOne(r => r.Exam).WithMany(x => x.Results).HasForeignKey(r => r.CenterExamId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(r => r.Student).WithMany().HasForeignKey(r => r.StudentId).OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<StudentNote>(e =>

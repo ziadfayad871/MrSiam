@@ -47,6 +47,8 @@ import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import ExamPage from './pages/ExamPage';
 import AssignmentTakePage from './pages/AssignmentTakePage';
+import CenterExamsPage from './pages/CenterExamsPage';
+import StudentCenterResultsPage from './pages/student/StudentCenterResultsPage';
 import ResultsPage from './pages/ResultsPage';
 import AchievementsPage from './pages/AchievementsPage';
 import HistoryTimelinePage from './pages/HistoryTimelinePage';
@@ -308,6 +310,18 @@ export default function App() {
         }
       />
       <Route
+        path="/teacher/center-exams"
+        element={
+          <RequireTeacher>
+            <DashboardLayout>
+              <PageTransition>
+                <CenterExamsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireTeacher>
+        }
+      />
+      <Route
         path="/teacher/attendance/monthly"
         element={
           <RequireTeacher>
@@ -477,6 +491,18 @@ export default function App() {
         }
       />
       <Route
+        path="/secretary/center-exams"
+        element={
+          <RequireSecretary>
+            <DashboardLayout>
+              <PageTransition>
+                <CenterExamsPage />
+              </PageTransition>
+            </DashboardLayout>
+          </RequireSecretary>
+        }
+      />
+      <Route
         path="/secretary/whatsapp"
         element={
           <RequireSecretary>
@@ -615,6 +641,18 @@ export default function App() {
             <DashboardLayout>
               <ParchmentTransition motif="exams">
                 <AssignmentTakePage />
+              </ParchmentTransition>
+            </DashboardLayout>
+          </RequireStudent>
+        }
+      />
+      <Route
+        path="/my-results"
+        element={
+          <RequireStudent>
+            <DashboardLayout>
+              <ParchmentTransition motif="exams">
+                <StudentCenterResultsPage />
               </ParchmentTransition>
             </DashboardLayout>
           </RequireStudent>

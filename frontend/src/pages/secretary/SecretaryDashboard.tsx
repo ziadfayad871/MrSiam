@@ -871,6 +871,7 @@ export default function SecretaryDashboard() {
     { to: '/secretary/payments', label: 'التحصيل', icon: '💰' },
     { to: '/secretary/groups', label: 'المجموعات', icon: '👥' },
     { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: '📅' },
+    { to: '/secretary/center-exams', label: 'امتحانات السنتر', icon: '📝' },
     { to: '/secretary/students', label: 'تسجيل طالب', icon: '🎓' },
     { to: '/secretary/whatsapp', label: 'ربط واتساب', icon: '🟢' },
   ];

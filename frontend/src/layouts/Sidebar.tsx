@@ -3,6 +3,8 @@
 import {
   Award,
   CalendarDays,
+  ClipboardCheck,
+  ClipboardList,
   FileText,
   GraduationCap,
   Home,
@@ -71,6 +73,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
         { to: '/passport', label: 'جواز السفر', icon: FileText },
         { to: '/mistakes', label: 'كراسة الأخطاء', icon: GraduationCap },
         { to: '/certificates', label: 'الشهادات', icon: Award },
+        { to: '/my-results', label: 'نتائجي', icon: ClipboardList },
       ]
     : isParent
       ? [{ to: '/parent', label: 'أبنائي', icon: Home }]
@@ -81,6 +84,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/teacher/class', label: 'الفصول والتنبيهات', icon: Users },
             { to: '/teacher/attendance', label: 'تحضير اليوم', icon: GraduationCap },
             { to: '/teacher/attendance/monthly', label: 'تقرير الحضور الشهري', icon: CalendarDays },
+            { to: '/teacher/center-exams', label: 'امتحانات السنتر', icon: ClipboardCheck },
             { to: '/teacher/analytics', label: 'التحليلات', icon: Award },
             { to: '/teacher/live', label: 'البث المباشر', icon: Users },
             { to: '/teacher/testimonials', label: 'آراء الطلاب', icon: Award },
@@ -90,6 +94,7 @@ export function Sidebar({ isOpen, onToggle, collapsed, onCollapseChange }: Sideb
             { to: '/secretary/students', label: 'إدارة الطلبة', icon: Users },
             { to: '/secretary/attendance', label: 'التحضير اليومي', icon: GraduationCap },
             { to: '/secretary/attendance/monthly', label: 'تقرير الحضور الشهري', icon: CalendarDays },
+            { to: '/secretary/center-exams', label: 'امتحانات السنتر', icon: ClipboardCheck },
             { to: '/secretary/payments', label: 'التحصيل والمدفوعات', icon: FileText },
             { to: '/secretary/groups', label: 'المجموعات والشعب', icon: Users },
             { to: '/secretary/schedule', label: 'الجدول الدراسي', icon: Map },

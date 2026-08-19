@@ -41,6 +41,8 @@ public interface IApplicationDbContext
     DbSet<StudyGroup> StudyGroups { get; }
     DbSet<StudyGroupMember> StudyGroupMembers { get; }
     DbSet<ScheduleSlot> ScheduleSlots { get; }
+    DbSet<CenterExam> CenterExams { get; }
+    DbSet<CenterExamResult> CenterExamResults { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

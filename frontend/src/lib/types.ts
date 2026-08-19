@@ -132,6 +132,51 @@ export interface AssignmentSubmissionListItemDto {
   passed: boolean;
 }
 
+export interface CenterExamDto {
+  id: number;
+  courseId: number;
+  courseTitle: string;
+  title: string;
+  examDate: string;
+  totalMarks: number;
+  passMark: number;
+  notes?: string;
+  resultsCount: number;
+  averagePercentage: number;
+  createdAt: string;
+}
+
+export interface CenterExamResultRowDto {
+  studentId: number;
+  studentName: string;
+  studentCode: string;
+  groupId?: number;
+  groupName?: string;
+  score?: number;
+  isAbsent: boolean;
+  notes?: string;
+}
+
+export interface CenterExamResultInputDto {
+  studentId: number;
+  score: number;
+  isAbsent: boolean;
+  notes?: string;
+}
+
+export interface MyCenterExamResultDto {
+  examId: number;
+  courseId: number;
+  courseTitle: string;
+  examTitle: string;
+  examDate: string;
+  score: number;
+  totalMarks: number;
+  percentage: number;
+  passed: boolean;
+  notes?: string;
+}
+
 export interface LessonResourceDto {
   id: number;
   lessonId: number;

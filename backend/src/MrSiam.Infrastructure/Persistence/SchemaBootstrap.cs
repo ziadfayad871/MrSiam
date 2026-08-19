@@ -16,6 +16,8 @@ public static class SchemaBootstrap
         await EnsureTableAsync(db, "Assignments", isSqlServer, AssignmentsSql);
         await EnsureTableAsync(db, "AssignmentQuestions", isSqlServer, AssignmentQuestionsSql);
         await EnsureTableAsync(db, "AssignmentSubmissions", isSqlServer, AssignmentSubmissionsSql);
+        await EnsureTableAsync(db, "CenterExams", isSqlServer, CenterExamsSql);
+        await EnsureTableAsync(db, "CenterExamResults", isSqlServer, CenterExamResultsSql);
         await EnsureTableAsync(db, "LessonResources", isSqlServer, LessonResourcesSql);
         await EnsureColumnAsync(db, "Assignments", "LessonId", isSqlServer);
         await EnsureColumnAsync(db, "Assignments", "QuestionCount", isSqlServer);
@@ -120,6 +122,16 @@ public static class SchemaBootstrap
         sqlServer
             ? "CREATE TABLE [AssignmentSubmissions] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [AssignmentId] int NOT NULL, [StudentId] int NOT NULL, [SubmittedAt] datetime2 NOT NULL, [Score] int NOT NULL, [TotalQuestions] int NOT NULL, [AnswersJson] nvarchar(max) NOT NULL)"
             : "CREATE TABLE AssignmentSubmissions (Id INTEGER PRIMARY KEY AUTOINCREMENT, AssignmentId INTEGER NOT NULL, StudentId INTEGER NOT NULL, SubmittedAt TEXT NOT NULL, Score INTEGER NOT NULL, TotalQuestions INTEGER NOT NULL, AnswersJson TEXT NOT NULL)";
+
+    private static string CenterExamsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [CenterExams] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [CourseId] int NOT NULL, [Title] nvarchar(160) NOT NULL, [ExamDate] date NOT NULL, [TotalMarks] decimal(18,2) NOT NULL, [PassMark] decimal(18,2) NOT NULL, [Notes] nvarchar(1000) NULL, [CreatedAt] datetime2 NOT NULL)"
+            : "CREATE TABLE CenterExams (Id INTEGER PRIMARY KEY AUTOINCREMENT, CourseId INTEGER NOT NULL, Title TEXT NOT NULL, ExamDate TEXT NOT NULL, TotalMarks REAL NOT NULL, PassMark REAL NOT NULL, Notes TEXT NULL, CreatedAt TEXT NOT NULL)";
+
+    private static string CenterExamResultsSql(bool sqlServer) =>
+        sqlServer
+            ? "CREATE TABLE [CenterExamResults] ([Id] int NOT NULL IDENTITY(1,1) PRIMARY KEY, [CenterExamId] int NOT NULL, [StudentId] int NOT NULL, [Score] decimal(18,2) NOT NULL, [IsAbsent] bit NOT NULL, [Notes] nvarchar(500) NULL, [RecordedAt] datetime2 NOT NULL)"
+            : "CREATE TABLE CenterExamResults (Id INTEGER PRIMARY KEY AUTOINCREMENT, CenterExamId INTEGER NOT NULL, StudentId INTEGER NOT NULL, Score REAL NOT NULL, IsAbsent INTEGER NOT NULL, Notes TEXT NULL, RecordedAt TEXT NOT NULL)";
 
     private static string LessonResourcesSql(bool sqlServer) =>
         sqlServer
