@@ -22,6 +22,9 @@ public static class SchemaBootstrap
         await EnsureColumnAsync(db, "Assignments", "LessonId", isSqlServer);
         await EnsureColumnAsync(db, "Assignments", "QuestionCount", isSqlServer);
         await EnsureColumnAsync(db, "Assignments", "ChoicesPerQuestion", isSqlServer);
+        await EnsureColumnAsync(db, "Assignments", "DeadlineNotifiedAt", isSqlServer, "datetime2");
+        await EnsureColumnAsync(db, "Exams", "AvailableUntil", isSqlServer, "datetime2");
+        await EnsureColumnAsync(db, "Exams", "DeadlineNotifiedAt", isSqlServer, "datetime2");
         await EnsureColumnAsync(db, "Courses", "ImageUrl", isSqlServer, "nvarchar(400)");
         await EnsureColumnAsync(db, "Courses", "Month", isSqlServer, "int");
         await EnsureColumnAsync(db, "Lessons", "ImageUrl", isSqlServer, "nvarchar(400)");

@@ -164,7 +164,11 @@ public class UpdateAssignmentCommandHandler(IApplicationDbContext db)
         if (request.Description is not null)
             assignment.Description = request.Description.Trim();
         if (request.DueDate is not null)
+        {
+            if (assignment.DueDate != request.DueDate)
+                assignment.DeadlineNotifiedAt = null;
             assignment.DueDate = request.DueDate;
+        }
 
         var hwConfigProvided = request.QuestionCount is not null || request.ChoicesPerQuestion is not null || request.CorrectAnswers is not null;
         if (hwConfigProvided)

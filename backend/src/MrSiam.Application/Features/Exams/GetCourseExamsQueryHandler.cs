@@ -29,6 +29,7 @@ public class GetCourseExamsQueryHandler(IApplicationDbContext db)
                 DurationMinutes = e.DurationMinutes,
                 TotalMarks = e.TotalMarks,
                 IsPublished = e.IsPublished,
+                AvailableUntil = e.AvailableUntil,
                 QuestionCount = e.Questions.Count
             })
             .ToListAsync(ct);

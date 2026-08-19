@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MrSiam.Application.Abstractions;
+using MrSiam.Infrastructure.Background;
 using MrSiam.Infrastructure.Messaging;
 using MrSiam.Infrastructure.Pdf;
 using MrSiam.Infrastructure.Persistence;
@@ -43,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IWhatsAppService, WhatsAppService>();
         services.AddSingleton<WhatsAppTunnelHub>();
         services.AddHostedService<WhatsAppKeepAliveService>();
+        services.AddHostedService<DeadlineNotifierService>();
         services.AddScoped<IAppEnvironment, AppEnvironmentService>();
         services.AddScoped<IReceiptPdfBuilder, ReceiptPdfBuilder>();
 

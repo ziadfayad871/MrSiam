@@ -16,6 +16,8 @@ public class Exam : Entity
     public int AttemptsAllowed { get; set; } = 3;
     public bool AllowReview { get; set; } = true;
     public bool ShowCorrectAnswers { get; set; } = true;
+    public DateTime? AvailableUntil { get; set; }
+    public DateTime? DeadlineNotifiedAt { get; set; }
 
     public Course? Course { get; set; }
     public Lesson? Lesson { get; set; }

@@ -44,13 +44,14 @@ export function ExamForm({
   defaultLessonId?: number;
 }) {
   const { toast } = useToast();
-  const [form, setForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean; lessonId: string }>({
+  const [form, setForm] = useState<{ title: string; type: ExamType; durationMinutes: number; attemptsAllowed: number; isPublished: boolean; lessonId: string; availableUntil: string }>({
     title: editing?.title ?? '',
     type: editing?.type ?? 'Lesson',
     durationMinutes: editing?.durationMinutes ?? 10,
     attemptsAllowed: 3,
     isPublished: editing ? editing.isPublished : true,
     lessonId: editing?.lessonId ? String(editing.lessonId) : defaultLessonId ? String(defaultLessonId) : '',
+    availableUntil: editing?.availableUntil ? editing.availableUntil.slice(0, 16) : '',
   });
   const [lessons, setLessons] = useState<LessonDto[]>([]);
   const [questions, setQuestions] = useState<QuestionForm[]>([emptyQuestion()]);
@@ -96,6 +97,7 @@ export function ExamForm({
     form.attemptsAllowed !== initialFormRef.current.attemptsAllowed ||
     form.isPublished !== initialFormRef.current.isPublished ||
     form.lessonId !== initialFormRef.current.lessonId ||
+    form.availableUntil !== initialFormRef.current.availableUntil ||
     JSON.stringify(questions) !== JSON.stringify(initialQuestionsRef.current);
 
   useEffect(() => {
@@ -134,6 +136,7 @@ export function ExamForm({
         attemptsAllowed: Number(form.attemptsAllowed) || 3,
         isPublished: form.isPublished,
         lessonId: form.lessonId ? Number(form.lessonId) : null,
+        availableUntil: form.availableUntil ? new Date(form.availableUntil).toISOString() : null,
         questions: clean,
       };
       if (editing) {
@@ -184,6 +187,10 @@ export function ExamForm({
           <input type="checkbox" checked={form.isPublished} onChange={(e) => setForm({ ...form, isPublished: e.target.checked })} className="h-4 w-4 accent-gold" />
           منشور (يظهر للطلبة)
         </label>
+      </div>
+      <div className="sm:col-span-2">
+        <Input label="آخر موعد للدخول (اختياري)" type="datetime-local" dir="ltr" value={form.availableUntil} onChange={(e) => setForm({ ...form, availableUntil: e.target.value })} placeholder="فاضيه = مفيش رسالة تأخير" />
+        <p className="mt-1 text-center text-[10px] text-text-muted">لو فاضي، مش هيتبعت إشعار تأخير — ولو عدّى الموعد والطالب ميدخلش، يتوصل لولي أمره رسالة.</p>
       </div>
 
       <div className="flex flex-col gap-4 sm:col-span-2">

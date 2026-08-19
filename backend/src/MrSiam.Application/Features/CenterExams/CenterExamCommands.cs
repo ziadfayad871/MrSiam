@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
 using MrSiam.Application.Features.StudentEngagement;
@@ -256,7 +257,7 @@ public class GetCenterExamResultsQueryHandler(IApplicationDbContext db)
 
 public class SaveCenterExamResultsCommandHandler(
     IApplicationDbContext db,
-    IWhatsAppService whatsApp)
+    IServiceScopeFactory scopeFactory)
     : IRequestHandler<SaveCenterExamResultsCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(SaveCenterExamResultsCommand request, CancellationToken ct)
@@ -292,7 +293,7 @@ public class SaveCenterExamResultsCommandHandler(
                 result.IsAbsent = item.IsAbsent;
                 result.Notes = item.Notes?.Trim();
                 result.RecordedAt = DateTime.UtcNow;
-                if (changed && !item.IsAbsent)
+                if (changed)
                     notifiedIds.Add(item.StudentId);
             }
             else
@@ -306,15 +307,18 @@ public class SaveCenterExamResultsCommandHandler(
                     Notes = item.Notes?.Trim(),
                     RecordedAt = DateTime.UtcNow
                 });
-                if (!item.IsAbsent)
-                    notifiedIds.Add(item.StudentId);
+                notifiedIds.Add(item.StudentId);
             }
         }
 
         await db.SaveChangesAsync(ct);
 
         if (notifiedIds.Count > 0)
-            _ = CenterExamNotifier.SendAsync(db, whatsApp, notifiedIds, exam.Title, exam.TotalMarks, exam.PassMark, ct);
+        {
+            var ids = notifiedIds.ToList();
+            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, backgroundCt) =>
+                CenterExamNotifier.SendAsync(scopedDb, scopedWhatsApp, ids, exam.Title, exam.TotalMarks, exam.PassMark, backgroundCt));
+        }
 
         return ApiResponse<bool>.Ok(true, "تم حفظ درجات الامتحان");
     }
@@ -386,17 +390,18 @@ internal static class CenterExamNotifier
 
         foreach (var student in students)
         {
-            if (!results.TryGetValue(student.Id, out var result) || result.Latest.IsAbsent)
+            if (!results.TryGetValue(student.Id, out var result))
                 continue;
 
-            var percentage = totalMarks > 0 ? Math.Round(result.Latest.Score / totalMarks * 100m, 1) : 0;
-            var passed = result.Latest.Score >= passMark;
+            var isAbsent = result.Latest.IsAbsent;
 
             if (student.UserId > 0)
             {
                 await NotificationService.PushAsync(db, student.UserId,
-                    "نتيجة امتحان السنتر 🏛️",
-                    $"درجتك في «{examTitle}» = {ArabicText.ToArabicDigits(result.Latest.Score.ToString("N1"))}/{ArabicText.ToArabicDigits(totalMarks.ToString("N1"))}",
+                    isAbsent ? "غياب عن امتحان السنتر ⚠️" : "نتيجة امتحان السنتر 🏛️",
+                    isAbsent
+                        ? $"سجلت غيابك عن «{examTitle}» — كلم السنتر لمعرفة موعد التعويض"
+                        : $"درجتك في «{examTitle}» = {ArabicText.ToArabicDigits(result.Latest.Score.ToString("N1"))}/{ArabicText.ToArabicDigits(totalMarks.ToString("N1"))}",
                     "grade", "/my-results", ct);
             }
 
@@ -404,7 +409,9 @@ internal static class CenterExamNotifier
             {
                 try
                 {
-                    var message = BuildResultMessage(student.FullName, examTitle, result.Latest.Score, totalMarks, percentage, passed);
+                    var message = isAbsent
+                        ? BuildAbsenceMessage(student.FullName, examTitle)
+                        : BuildResultMessage(student.FullName, examTitle, result.Latest.Score, totalMarks, result.Latest.Score / totalMarks * 100m, result.Latest.Score >= passMark);
                     _ = whatsApp.SendAsync(NormalizeEgyptianPhone(student.GuardianPhone), message, CancellationToken.None);
                 }
                 catch
@@ -413,6 +420,15 @@ internal static class CenterExamNotifier
                 }
             }
         }
+    }
+
+    private static string BuildAbsenceMessage(string studentName, string examTitle)
+    {
+        return $"مستر محمد صيام 🏫\n" +
+               $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
+               $"عزيزي ولي أمر الطالب/ة {studentName} 👋\n\n" +
+               $"نخطركم أن {studentName} غاب عن امتحان السنتر «{examTitle}».\n" +
+               $"نرجو الاطمئنان عليه ومتابعته، وتواصلكم معنا لمعرفة موعد التعويض 💬";
     }
 
     private static string BuildResultMessage(string studentName, string examTitle, decimal score, decimal totalMarks, decimal percentage, bool passed)

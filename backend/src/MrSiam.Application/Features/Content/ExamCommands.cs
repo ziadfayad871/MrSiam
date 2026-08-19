@@ -23,6 +23,7 @@ public record CreateExamCommand(
     int DurationMinutes,
     int AttemptsAllowed,
     bool IsPublished,
+    DateTime? AvailableUntil,
     List<ExamQuestionInput> Questions) : IRequest<ApiResponse<int>>;
 
 public record UpdateExamCommand(
@@ -33,6 +34,7 @@ public record UpdateExamCommand(
     int? DurationMinutes,
     int? AttemptsAllowed,
     bool? IsPublished,
+    DateTime? AvailableUntil,
     List<ExamQuestionInput>? Questions) : IRequest<ApiResponse<bool>>;
 
 public record DeleteExamCommand(int Id) : IRequest<ApiResponse<bool>>;
@@ -94,7 +96,8 @@ public class CreateExamCommandHandler(IApplicationDbContext db, ICurrentUserServ
             TotalMarks = totalMarks,
             PassMark = passMark,
             IsPublished = request.IsPublished,
-            AttemptsAllowed = request.AttemptsAllowed > 0 ? request.AttemptsAllowed : 3
+            AttemptsAllowed = request.AttemptsAllowed > 0 ? request.AttemptsAllowed : 3,
+            AvailableUntil = request.AvailableUntil
         };
 
         var order = 1;
@@ -161,6 +164,9 @@ public class UpdateExamCommandHandler(IApplicationDbContext db, ICurrentUserServ
             exam.AttemptsAllowed = request.AttemptsAllowed.Value;
         if (request.IsPublished is not null)
             exam.IsPublished = request.IsPublished.Value;
+        if (request.AvailableUntil != exam.AvailableUntil)
+            exam.DeadlineNotifiedAt = null;
+        exam.AvailableUntil = request.AvailableUntil;
 
         if (request.Questions is not null)
         {

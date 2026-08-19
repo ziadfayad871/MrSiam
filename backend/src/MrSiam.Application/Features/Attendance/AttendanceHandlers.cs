@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
 using MrSiam.Domain.Entities;
@@ -53,7 +54,7 @@ public class GetAttendanceQueryHandler(IApplicationDbContext db)
 public class MarkAttendanceCommandHandler(
     IApplicationDbContext db,
     ICurrentUserService currentUser,
-    IWhatsAppService whatsApp)
+    IServiceScopeFactory scopeFactory)
     : IRequestHandler<MarkAttendanceCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(MarkAttendanceCommand request, CancellationToken ct)
@@ -89,7 +90,12 @@ public class MarkAttendanceCommandHandler(
         await db.SaveChangesAsync(ct);
 
         if (request.Status == AttendanceStatus.Absent && !wasAbsent)
-            _ = AbsenceNotifier.SendIfAbsentAsync(db, whatsApp, [request.StudentId], request.Date, ct);
+        {
+            var studentId = request.StudentId;
+            var date = request.Date;
+            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, backgroundCt) =>
+                AbsenceNotifier.SendIfAbsentAsync(scopedDb, scopedWhatsApp, [studentId], date, backgroundCt));
+        }
 
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
     }

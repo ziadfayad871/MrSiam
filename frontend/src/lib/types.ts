@@ -274,6 +274,7 @@ export interface ExamListItemDto {
   totalMarks: number;
   questionCount: number;
   isPublished: boolean;
+  availableUntil?: string | null;
   hasAttempt: boolean;
   bestPercentage?: number;
   attemptsUsed: number;
