@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
 using MrSiam.Domain.Entities;
@@ -93,8 +94,8 @@ public class MarkAttendanceCommandHandler(
         {
             var studentId = request.StudentId;
             var date = request.Date;
-            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, backgroundCt) =>
-                AbsenceNotifier.SendIfAbsentAsync(scopedDb, scopedWhatsApp, [studentId], date, backgroundCt));
+            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, logger, backgroundCt) =>
+                AbsenceNotifier.SendIfAbsentAsync(logger, scopedDb, scopedWhatsApp, [studentId], date, backgroundCt));
         }
 
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
@@ -107,6 +108,7 @@ public class MarkAttendanceCommandHandler(
 internal static class AbsenceNotifier
 {
     public static async Task SendIfAbsentAsync(
+        ILogger logger,
         IApplicationDbContext db,
         IWhatsAppService whatsApp,
         IEnumerable<int> studentIds,
@@ -117,6 +119,8 @@ internal static class AbsenceNotifier
             .Where(s => studentIds.Contains(s.Id) && s.IsActive && !string.IsNullOrWhiteSpace(s.GuardianPhone))
             .Select(s => new { s.Id, s.FullName, s.GuardianPhone })
             .ToListAsync(ct);
+
+        logger.LogInformation("إشعار غياب حصة: بتجهز إرسال لـ {Count} ولي أمر في تاريخ {Date}", students.Count, date);
 
         foreach (var student in students)
         {
@@ -129,11 +133,12 @@ internal static class AbsenceNotifier
                     $"نخطركم أن {student.FullName} لم يحضر حصة اليوم بتاريخ {date:dd/MM/yyyy}.\n" +
                     $"نرجو الاطمئنان عليه ومتابعته، وتواصلكم معنا لأي استفسار 💬";
 
-                await whatsApp.SendAsync(student.GuardianPhone!, msg, ct);
+                var sent = await whatsApp.SendAsync(student.GuardianPhone!, msg, ct);
+                logger.LogInformation("إشعار غياب حصة: إرسال لولي أمر {Name} = {Result}", student.FullName, sent ? "تم" : "فشل");
             }
-            catch
+            catch (Exception ex)
             {
-                // فشل إشعار الغياب متأثرش على تسجيل الحضور
+                logger.LogError(ex, "إشعار غياب حصة: استثناء أثناء إرسال لولي أمر {Name}", student.FullName);
             }
         }
     }

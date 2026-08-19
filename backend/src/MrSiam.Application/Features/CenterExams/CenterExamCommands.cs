@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MrSiam.Application.Abstractions;
 using MrSiam.Application.Common;
 using MrSiam.Application.Features.StudentEngagement;
@@ -364,8 +365,8 @@ public class SaveCenterExamResultsCommandHandler(
         if (notifiedIds.Count > 0)
         {
             var ids = notifiedIds.ToList();
-            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, backgroundCt) =>
-                CenterExamNotifier.SendAsync(scopedDb, scopedWhatsApp, ids, exam.Title, exam.TotalMarks, exam.PassMark, backgroundCt));
+            BackgroundJob.Run(scopeFactory, (scopedDb, scopedWhatsApp, logger, backgroundCt) =>
+                CenterExamNotifier.SendAsync(logger, scopedDb, scopedWhatsApp, ids, exam.Title, exam.TotalMarks, exam.PassMark, backgroundCt));
         }
 
         return ApiResponse<bool>.Ok(true, "تم حفظ درجات الامتحان");
@@ -416,6 +417,7 @@ public class GetMyCenterExamResultsQueryHandler(IApplicationDbContext db, ICurre
 internal static class CenterExamNotifier
 {
     public static async Task SendAsync(
+        ILogger logger,
         IApplicationDbContext db,
         IWhatsAppService whatsApp,
         IEnumerable<int> studentIds,
@@ -425,10 +427,17 @@ internal static class CenterExamNotifier
         CancellationToken ct)
     {
         var ids = studentIds.ToList();
+        logger.LogInformation("إشعار امتحان سنتر: بدء الإرسال لـ {Count} طالب في «{Exam}»", ids.Count, examTitle);
+
         var students = await db.Students.AsNoTracking()
             .Where(s => ids.Contains(s.Id) && s.IsActive)
             .Select(s => new { s.Id, s.FullName, s.GuardianPhone, s.UserId })
             .ToListAsync(ct);
+
+        logger.LogInformation(
+            "إشعار امتحان سنتر: وجدت {Found} طالب نشط، منهم {WithPhone} عندهم رقم ولي أمر",
+            students.Count,
+            students.Count(s => !string.IsNullOrWhiteSpace(s.GuardianPhone)));
 
         var results = await db.CenterExamResults.AsNoTracking()
             .Where(r => ids.Contains(r.StudentId))
@@ -460,12 +469,17 @@ internal static class CenterExamNotifier
                     var message = isAbsent
                         ? BuildAbsenceMessage(student.FullName, examTitle)
                         : BuildResultMessage(student.FullName, examTitle, result.Latest.Score, totalMarks, result.Latest.Score / totalMarks * 100m, result.Latest.Score >= passMark);
-                    _ = whatsApp.SendAsync(NormalizeEgyptianPhone(student.GuardianPhone), message, CancellationToken.None);
+                    var sent = await whatsApp.SendAsync(NormalizeEgyptianPhone(student.GuardianPhone), message, CancellationToken.None);
+                    logger.LogInformation("إشعار امتحان سنتر: إرسال لولي أمر {Name} = {Result}", student.FullName, sent ? "تم" : "فشل");
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // فشل الإرسال مش بيوقف تسجيل الدرجات
+                    logger.LogError(ex, "إشعار امتحان سنتر: استثناء أثناء إرسال لولي أمر {Name}", student.FullName);
                 }
+            }
+            else
+            {
+                logger.LogWarning("إشعار امتحان سنتر: طالب {Name} من غير رقم ولي أمر — اتسجلتله نتيجة بس", student.FullName);
             }
         }
     }

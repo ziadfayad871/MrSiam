@@ -10,26 +10,26 @@ namespace MrSiam.Application.Common;
 /// </summary>
 internal static class BackgroundJob
 {
-    public static void Run(
-        IServiceScopeFactory scopeFactory,
-        Func<IApplicationDbContext, IWhatsAppService, CancellationToken, Task> work)
+public static void Run(
+    IServiceScopeFactory scopeFactory,
+    Func<IApplicationDbContext, IWhatsAppService, ILogger, CancellationToken, Task> work)
+{
+    _ = Task.Run(async () =>
     {
-        _ = Task.Run(async () =>
+        ILogger? logger = null;
+        try
         {
-            ILogger? logger = null;
-            try
-            {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                var sp = scope.ServiceProvider;
-                logger = sp.GetService<ILoggerFactory>()?.CreateLogger("MrSiam.Background");
-                var db = sp.GetRequiredService<IApplicationDbContext>();
-                var whatsApp = sp.GetRequiredService<IWhatsAppService>();
-                await work(db, whatsApp, CancellationToken.None);
-            }
-            catch (Exception ex)
-            {
-                logger?.LogError(ex, "فشلت مهمة إشعارات خلفية");
-            }
-        });
-    }
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var sp = scope.ServiceProvider;
+            logger = sp.GetService<ILoggerFactory>()?.CreateLogger("MrSiam.Background");
+            var db = sp.GetRequiredService<IApplicationDbContext>();
+            var whatsApp = sp.GetRequiredService<IWhatsAppService>();
+            await work(db, whatsApp, logger, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "فشلت مهمة إشعارات خلفية");
+        }
+    });
+}
 }
