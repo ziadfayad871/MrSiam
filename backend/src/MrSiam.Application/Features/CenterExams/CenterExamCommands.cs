@@ -54,7 +54,7 @@ public record MyCenterExamResultDto
 public record CreateCenterExamCommand(
     int CourseId,
     string Title,
-    DateOnly ExamDate,
+    DateTime ExamDate,
     decimal TotalMarks = 100,
     decimal PassMark = 50,
     string? Notes = null) : IRequest<ApiResponse<int>>;
@@ -62,7 +62,7 @@ public record CreateCenterExamCommand(
 public record UpdateCenterExamCommand(
     int Id,
     string? Title,
-    DateOnly? ExamDate,
+    DateTime? ExamDate,
     decimal? TotalMarks,
     decimal? PassMark,
     string? Notes) : IRequest<ApiResponse<bool>>;
@@ -97,7 +97,7 @@ public class CreateCenterExamCommandHandler(IApplicationDbContext db)
         {
             CourseId = request.CourseId,
             Title = request.Title.Trim(),
-            ExamDate = request.ExamDate,
+            ExamDate = DateOnly.FromDateTime(request.ExamDate),
             TotalMarks = request.TotalMarks,
             PassMark = request.PassMark,
             Notes = request.Notes?.Trim(),
@@ -122,7 +122,7 @@ public class UpdateCenterExamCommandHandler(IApplicationDbContext db)
         if (!string.IsNullOrWhiteSpace(request.Title))
             exam.Title = request.Title.Trim();
         if (request.ExamDate is not null)
-            exam.ExamDate = request.ExamDate.Value;
+            exam.ExamDate = DateOnly.FromDateTime(request.ExamDate.Value);
         if (request.TotalMarks is not null)
         {
             if (request.TotalMarks <= 0)

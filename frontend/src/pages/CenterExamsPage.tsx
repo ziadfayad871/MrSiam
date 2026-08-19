@@ -73,7 +73,7 @@ function CenterExamFormModal({
     try {
       const payload = {
         title: form.title,
-        examDate: new Date(form.examDate).toISOString(),
+        examDate: form.examDate,
         totalMarks: Number(form.totalMarks) || 0,
         passMark: Number(form.passMark) || 0,
         notes: form.notes || null,

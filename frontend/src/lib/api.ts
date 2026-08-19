@@ -25,6 +25,22 @@ export class ApiError extends Error {
   }
 }
 
+function extractMessage(body: unknown, fallback: string): string {
+  if (!body || typeof body !== 'object') return fallback;
+  const b = body as Record<string, unknown>;
+  if (typeof b.message === 'string' && b.message) return b.message;
+  if (typeof b.title === 'string' && b.title) {
+    const errors = b.errors as Record<string, unknown> | undefined;
+    if (errors) {
+      const first = Object.values(errors)[0];
+      const val = Array.isArray(first) ? first[0] : first;
+      if (typeof val === 'string' && val) return val;
+    }
+    return b.title;
+  }
+  return fallback;
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -39,8 +55,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const body = (await res.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!res.ok) {
-    const message = body?.message ?? 'حصل خطأ غير متوقع';
-    throw new ApiError(message, res.status);
+    throw new ApiError(extractMessage(body, 'حصل خطأ غير متوقع'), res.status);
   }
 
   if (body && !body.success) {
