@@ -129,6 +129,36 @@ public sealed class WhatsAppTunnelHub
 
     public async Task<bool> SendAsync(string phone, string message, CancellationToken ct = default)
     {
+        var id = Interlocked.Increment(ref _nextId).ToString();
+        var payload = JsonSerializer.Serialize(new { type = "send", id, phone, message });
+        return await SendPayloadAsync(id, payload, ct);
+    }
+
+    public async Task<bool> SendDocumentAsync(string phone, string caption, byte[] content, string fileName, string contentType, CancellationToken ct = default)
+    {
+        var id = Interlocked.Increment(ref _nextId).ToString();
+        var payload = JsonSerializer.Serialize(new
+        {
+            type = "send_doc",
+            id,
+            phone,
+            caption,
+            fileName,
+            contentType,
+            base64 = Convert.ToBase64String(content)
+        });
+        return await SendPayloadAsync(id, payload, ct);
+    }
+
+    public async Task<bool> LogoutAsync(CancellationToken ct = default)
+    {
+        var id = Interlocked.Increment(ref _nextId).ToString();
+        var payload = JsonSerializer.Serialize(new { type = "logout", id });
+        return await SendPayloadAsync(id, payload, ct);
+    }
+
+    private async Task<bool> SendPayloadAsync(string id, string payload, CancellationToken ct)
+    {
         WebSocket? socket;
         lock (_lock) socket = _socket;
 
@@ -138,11 +168,9 @@ public sealed class WhatsAppTunnelHub
             return false;
         }
 
-        var id = Interlocked.Increment(ref _nextId).ToString();
         var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending[id] = tcs;
 
-        var payload = JsonSerializer.Serialize(new { type = "send", id, phone, message });
         try
         {
             await socket.SendAsync(Encoding.UTF8.GetBytes(payload), WebSocketMessageType.Text, true, ct);
@@ -190,13 +218,22 @@ public sealed class WhatsAppTunnelHub
                 break;
 
             case "sent":
-                if (root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
-                {
-                    var ok = root.TryGetProperty("ok", out var o) && o.GetBoolean();
-                    if (_pending.TryRemove(id.GetString(), out var tcs))
-                        tcs.TrySetResult(ok);
-                }
+                ResolveAck(root, "ok");
                 break;
+
+            case "logged_out":
+                ResolveAck(root, "ok");
+                break;
+        }
+    }
+
+    private void ResolveAck(JsonElement root, string okProperty)
+    {
+        if (root.TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
+        {
+            var ok = root.TryGetProperty(okProperty, out var o) && o.GetBoolean();
+            if (_pending.TryRemove(id.GetString(), out var tcs))
+                tcs.TrySetResult(ok);
         }
     }
 

@@ -74,7 +74,12 @@ public class ListPaymentsQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class MarkPaymentPaidCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+public class MarkPaymentPaidCommandHandler(
+    IApplicationDbContext db,
+    ICurrentUserService currentUser,
+    IWhatsAppService whatsApp,
+    IReceiptPdfBuilder receiptPdfBuilder,
+    IAppEnvironment env)
     : IRequestHandler<MarkPaymentPaidCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(MarkPaymentPaidCommand request, CancellationToken ct)
@@ -91,6 +96,13 @@ public class MarkPaymentPaidCommandHandler(IApplicationDbContext db, ICurrentUse
 
         AuditLogWriter.Add(db, currentUser, "update", "Payment", payment.Id.ToString(), $"تأكيد دفعة {payment.Month} بمبلغ {payment.Amount:N0}");
         await db.SaveChangesAsync(ct);
+
+        var student = await db.Students.AsNoTracking()
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.Id == payment.StudentId, ct);
+
+        if (student is not null && !string.IsNullOrWhiteSpace(student.GuardianPhone))
+            _ = ReceiptSender.SendToGuardianAsync(whatsApp, receiptPdfBuilder, env, student, payment, CancellationToken.None);
 
         return ApiResponse<bool>.Ok(true, "تم تأكيد الدفعة");
     }
@@ -126,7 +138,9 @@ public class CreatePaymentCommandHandler(IApplicationDbContext db, ICurrentUserS
 public class CreatePaidPaymentCommandHandler(
     IApplicationDbContext db,
     ICurrentUserService currentUser,
-    IWhatsAppService whatsApp)
+    IWhatsAppService whatsApp,
+    IReceiptPdfBuilder receiptPdfBuilder,
+    IAppEnvironment env)
     : IRequestHandler<CreatePaidPaymentCommand, ApiResponse<PaymentReceiptDto>>
 {
     public async Task<ApiResponse<PaymentReceiptDto>> Handle(CreatePaidPaymentCommand request, CancellationToken ct)
@@ -155,20 +169,7 @@ public class CreatePaidPaymentCommandHandler(
         await db.SaveChangesAsync(ct);
 
         if (!string.IsNullOrWhiteSpace(student.GuardianPhone))
-        {
-            var msg =
-                $"مستر محمد سامي\n\n" +
-                $"إيصال سداد\n" +
-                $"--------------------\n" +
-                $"الطالب: {student.FullName} ({student.StudentCode})\n" +
-                $"الشهر: {payment.Month}\n" +
-                $"المبلغ: {payment.Amount:N0} ج.م\n" +
-                $"طريقة الدفع: {payment.Method}\n" +
-                $"التاريخ: {payment.PaidAt!.Value.ToLocalTime():dd/MM/yyyy hh:mm tt}\n" +
-                $"--------------------\n" +
-                $"تم تسجيل السداد بنجاح، شكرًا لثقتكم في مستر محمد سامي.";
-            _ = whatsApp.SendAsync(student.GuardianPhone, msg, ct);
-        }
+            _ = ReceiptSender.SendToGuardianAsync(whatsApp, receiptPdfBuilder, env, student, payment, CancellationToken.None);
 
         var receipt = new PaymentReceiptDto
         {
@@ -185,5 +186,74 @@ public class CreatePaidPaymentCommandHandler(
         };
 
         return ApiResponse<PaymentReceiptDto>.Ok(receipt, "تم السداد وتسجيل الإيصال");
+    }
+}
+
+/// <summary>
+/// يجهّز إيصال السداد PDF ويبعته لولي الأمر مع رسالة إشعار — من غير ما يعطّل عملية السداد.
+/// </summary>
+internal static class ReceiptSender
+{
+    public static async Task SendToGuardianAsync(
+        IWhatsAppService whatsApp,
+        IReceiptPdfBuilder receiptPdfBuilder,
+        IAppEnvironment env,
+        Student student,
+        Payment payment,
+        CancellationToken ct)
+    {
+        try
+        {
+            var paidAtLocal = payment.PaidAt!.Value.ToLocalTime();
+            var month = payment.Month;
+            var amountDigits = ArabicText.ToArabicDigits(payment.Amount.ToString("N2"));
+
+            var pdfBytes = receiptPdfBuilder.BuildReceiptPdf(new ReceiptPdfData
+            {
+                ReceiptNumber = $"R-{payment.Id:00000}",
+                StudentName = student.FullName,
+                StageAr = student.Stage.ToArabic(),
+                StudentCode = student.StudentCode,
+                Username = student.User?.Username ?? string.Empty,
+                Month = month,
+                Method = payment.Method,
+                AmountDigits = amountDigits + " ج.م",
+                AmountWords = ArabicText.AmountToArabicWords(payment.Amount),
+                PaidAtText = paidAtLocal.ToString("dd/MM/yyyy hh:mm tt")
+            });
+
+            var receiptsDir = env.ReceiptsDirectory;
+            try
+            {
+                Directory.CreateDirectory(receiptsDir);
+                await File.WriteAllBytesAsync(Path.Combine(receiptsDir, $"{payment.Id}.pdf"), pdfBytes, ct);
+            }
+            catch
+            {
+                // تخزين الإيصال مش شرط لإرسال الـ PDF — نكمل بس في حالة الفشل
+            }
+
+            var msg =
+                $"مستر محمد سامي 🏫\n" +
+                $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
+                $"عزيزي ولي أمر الطالب/ة {student.FullName} 👋\n\n" +
+                $"تم سداد رسوم شهر «{month}» بنجاح ✅\n" +
+                $"المبلغ: {amountDigits} ج.م\n" +
+                $"طريقة الدفع: {payment.Method}\n" +
+                $"التاريخ: {paidAtLocal:dd/MM/yyyy hh:mm tt}\n\n" +
+                $"الإيصال المرفق هو المستند الرسمي للسداد 📄";
+
+            await whatsApp.SendDocumentAsync(
+                student.GuardianPhone,
+                msg,
+                pdfBytes,
+                $"إيصال سداد {student.FullName} - {month}.pdf",
+                "application/pdf",
+                ct);
+        }
+        catch
+        {
+            // فشل إرسال الإيصال متأثرش على عملية السداد
+        }
     }
 }

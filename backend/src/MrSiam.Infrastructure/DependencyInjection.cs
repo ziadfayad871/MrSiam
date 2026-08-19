@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MrSiam.Application.Abstractions;
 using MrSiam.Infrastructure.Messaging;
+using MrSiam.Infrastructure.Pdf;
 using MrSiam.Infrastructure.Persistence;
 using MrSiam.Infrastructure.Security;
 
@@ -43,6 +44,7 @@ public static class DependencyInjection
         services.AddSingleton<WhatsAppTunnelHub>();
         services.AddHostedService<WhatsAppKeepAliveService>();
         services.AddScoped<IAppEnvironment, AppEnvironmentService>();
+        services.AddScoped<IReceiptPdfBuilder, ReceiptPdfBuilder>();
 
         return services;
     }

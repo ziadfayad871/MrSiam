@@ -328,15 +328,15 @@ public class SubmitAttemptCommandHandler(
     private static string BuildGradeMessage(string studentName, string examTitle, decimal score, decimal totalMarks, decimal percentage, bool passed, string link)
     {
         var status = passed
-            ? "🎉 نجحت! درجتك في الشريحة جاهزة"
+            ? "🎉 النتيجة ممتازة ومبروك!"
             : "💪 محاولة محسوبة — الشريحة جاهزة";
 
-        return $"🎓 مستر محمد صيام\n" +
-               $"مع أبو كيان .. الدراسات في أمان\n\n" +
-               $"أهلاً {studentName} 👋\n" +
-               $"محاولتك في «{examTitle}» اتحسبت:\n" +
-               $"📈 درجتك: {score:N0}/{totalMarks:N0} — {percentage}%\n\n" +
+        return $"مستر محمد سامي 🏫\n" +
+               $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
+               $"عزيزي ولي أمر الطالب/ة {studentName} 👋\n\n" +
+               $"تم احتساب نتيجة نجلكم في «{examTitle}»:\n" +
+               $"📈 الدرجة: {ArabicText.ToArabicDigits(score.ToString("N1"))}/{ArabicText.ToArabicDigits(totalMarks.ToString("N1"))} — {ArabicText.ToArabicDigits(percentage.ToString("N1"))}%\n\n" +
                $"{status}\n" +
-               $"افتح الشريحة من هنا:\n{link}";
+               $"للمراجعة عبر الرابط:\n{link}";
     }
 }

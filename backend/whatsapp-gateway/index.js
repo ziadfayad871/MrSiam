@@ -52,6 +52,51 @@ function tunnelSend(obj) {
   }
 }
 
+async function handleSendDoc(msg) {
+  let ok = false;
+  if (connected && socket && msg?.base64) {
+    try {
+      const buf = Buffer.from(String(msg.base64), 'base64');
+      const fileName = String(msg.fileName || 'document.pdf');
+      const caption = String(msg.caption ?? '');
+      const contentType = String(msg.contentType || 'application/pdf');
+      await socket.sendMessage(normalizePhone(msg.phone) + '@s.whatsapp.net', {
+        document: buf,
+        fileName,
+        mimetype: contentType,
+        caption,
+      });
+      ok = true;
+      console.log('[📄] اتسجلت ملف لـ', msg.phone, '←', fileName);
+    } catch (e) {
+      console.error('[❌] فشل إرسال الملف:', e.message);
+    }
+  }
+  tunnelSend({ type: 'sent', id: msg.id, ok });
+}
+
+async function performLogout() {
+  try {
+    if (socket) await socket.logout();
+  } catch {}
+  connected = false;
+  currentQr = null;
+  myNumber = null;
+  try {
+    const files = await fs.readdir(AUTH_DIR);
+    await Promise.all(files.map((f) => fs.unlink(path.join(AUTH_DIR, f)).catch(() => {})));
+  } catch {}
+  tunnelSend({ type: 'update', connected: false, phone: null });
+  if (socket) {
+    try {
+      socket.end(undefined);
+    } catch {}
+    socket = null;
+  }
+  console.log('[🔁] اتسجلت الخروج — QR جديد مطلوب لربط رقم تاني');
+  start();
+}
+
 async function handleTunnelMessage(text) {
   let msg;
   try {
@@ -59,19 +104,28 @@ async function handleTunnelMessage(text) {
   } catch {
     return;
   }
-  if (msg?.type !== 'send') return;
-
-  let ok = false;
-  if (connected && socket) {
-    try {
-      await socket.sendMessage(normalizePhone(msg.phone) + '@s.whatsapp.net', { text: String(msg.message ?? '') });
-      ok = true;
-      console.log('[📤] اتسجلت (عبر المستضاف) لـ', msg.phone);
-    } catch (e) {
-      console.error('[❌] فشل الإرسال (عبر المستضاف):', e.message);
+  if (msg?.type === 'send') {
+    let ok = false;
+    if (connected && socket) {
+      try {
+        await socket.sendMessage(normalizePhone(msg.phone) + '@s.whatsapp.net', { text: String(msg.message ?? '') });
+        ok = true;
+        console.log('[📤] اتسجلت (عبر المستضاف) لـ', msg.phone);
+      } catch (e) {
+        console.error('[❌] فشل الإرسال (عبر المستضاف):', e.message);
+      }
     }
+    tunnelSend({ type: 'sent', id: msg.id, ok });
+    return;
   }
-  tunnelSend({ type: 'sent', id: msg.id, ok });
+  if (msg?.type === 'send_doc') {
+    await handleSendDoc(msg);
+    return;
+  }
+  if (msg?.type === 'logout') {
+    await performLogout();
+    tunnelSend({ type: 'logged_out', id: msg.id, ok: true });
+  }
 }
 
 function startTunnel() {
@@ -282,6 +336,36 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       return json(res, { ok: false, error: e.message }, 500);
     }
+  }
+
+  if (url.pathname === '/send-document' && req.method === 'POST') {
+    if (!keyMatches(req)) return json(res, { ok: false, error: 'unauthorized' }, 401);
+    const body = await readBody(req);
+    const phone = normalizePhone(body.phone);
+    const base64 = String(body.base64 ?? '');
+
+    if (!phone || !base64) return json(res, { ok: false, error: 'phone and base64 مطلوبين' }, 400);
+    if (!connected || !socket) return json(res, { ok: false, error: 'not connected' }, 409);
+
+    try {
+      const buf = Buffer.from(base64, 'base64');
+      await socket.sendMessage(phone + '@s.whatsapp.net', {
+        document: buf,
+        fileName: String(body.fileName || 'document.pdf'),
+        mimetype: String(body.contentType || 'application/pdf'),
+        caption: String(body.caption ?? ''),
+      });
+      console.log('[📄] اتسجلت ملف لـ', phone);
+      return json(res, { ok: true });
+    } catch (e) {
+      return json(res, { ok: false, error: e.message }, 500);
+    }
+  }
+
+  if (url.pathname === '/logout' && req.method === 'POST') {
+    if (!keyMatches(req)) return json(res, { ok: false, error: 'unauthorized' }, 401);
+    await performLogout();
+    return json(res, { ok: true });
   }
 
   if (url.pathname === '/') {

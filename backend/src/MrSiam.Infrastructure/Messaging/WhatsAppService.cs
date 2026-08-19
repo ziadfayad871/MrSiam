@@ -119,6 +119,68 @@ public class WhatsAppService(
         return doc.RootElement.TryGetProperty("ok", out var ok) && ok.GetBoolean();
     }
 
+    public async Task<bool> SendDocumentAsync(string phone, string message, byte[] content, string fileName, string contentType, CancellationToken ct = default)
+    {
+        try
+        {
+            var enabled = configuration.GetValue("WhatsApp:Enabled", false);
+            var provider = (configuration["WhatsApp:Provider"] ?? "callmebot").ToLowerInvariant();
+            var isLocalGateway = provider is "local" or "gateway";
+            var apiKey = configuration["WhatsApp:ApiKey"];
+            if (!enabled || (!isLocalGateway && string.IsNullOrWhiteSpace(apiKey)))
+            {
+                logger.LogWarning("WhatsApp غير مفعّل أو من غير مفتاح — المستند متبعتش. phone={Phone}", Mask(phone));
+                return false;
+            }
+
+            var client = httpClientFactory.CreateClient("whatsapp");
+
+            bool ok = provider switch
+            {
+                "local" => await tunnel.SendDocumentAsync(phone, message, content, fileName, contentType, ct),
+                "gateway" => await SendLocalGatewayDocumentAsync(client, phone, message, content, fileName, contentType, ct),
+                _ => await SendAsync(phone, message, ct)
+            };
+
+            logger.LogInformation("واتساب مستند: {Result} → {Phone}", ok ? "تم الإرسال" : "فشل", Mask(phone));
+            return ok;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "فشل إرسال مستند واتساب لـ {Phone}", Mask(phone));
+            return false;
+        }
+    }
+
+    private async Task<bool> SendLocalGatewayDocumentAsync(HttpClient client, string phone, string caption, byte[] content, string fileName, string contentType, CancellationToken ct)
+    {
+        var endpoint = configuration["WhatsApp:GatewayUrl"] ?? "http://localhost:3002/send-document";
+        var json = JsonSerializer.Serialize(new
+        {
+            phone,
+            caption,
+            fileName,
+            contentType,
+            base64 = Convert.ToBase64String(content)
+        }, JsonOptions);
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
+        };
+        var apiKey = configuration["WhatsApp:GatewayApiKey"];
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            request.Headers.TryAddWithoutValidation("x-api-key", apiKey);
+        using var res = await client.SendAsync(request, ct);
+        if (!res.IsSuccessStatusCode)
+        {
+            logger.LogWarning("البوابة المحلية للواتساب فشلت (مستند): {Status}", res.StatusCode);
+            return false;
+        }
+        var body = await res.Content.ReadAsStringAsync(ct);
+        using var doc = JsonDocument.Parse(body);
+        return doc.RootElement.TryGetProperty("ok", out var ok) && ok.GetBoolean();
+    }
+
     private static string WithoutPlus(string phone) => phone.TrimStart('+');
 
     private static string Mask(string phone)

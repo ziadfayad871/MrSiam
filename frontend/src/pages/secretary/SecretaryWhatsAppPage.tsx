@@ -1,4 +1,4 @@
-import { CheckCircle2, Loader2, MessageCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, Loader2, LogOut, MessageCircle, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '../../design-system/ui/Button';
 import { Card } from '../../design-system/ui/Card';
@@ -19,6 +19,7 @@ export default function SecretaryWhatsAppPage() {
   const [status, setStatus] = useState<WaStatus | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -48,12 +49,25 @@ export default function SecretaryWhatsAppPage() {
 
   const unreachable = status && !status.reachable;
 
+  async function handleLogout() {
+    if (!window.confirm('هيتم تسجيل خروج الواتساب الحالي وهتظهر QR جديدة لربط رقم آخر. نكمل؟')) return;
+    setBusy(true);
+    try {
+      await api.post('/whatsapp/logout');
+      setAttempt((a) => a + 1);
+    } catch {
+      window.alert('حصلت مشكلة في تسجيل الخروج — تأكد إن البوابة شغالة على جهاز السنتر وجرب تاني');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 p-4 sm:p-6">
       <div>
         <h1 className="display-serif text-2xl font-bold text-text-primary">ربط واتساب السنتر</h1>
         <p className="mt-1 text-sm text-text-muted">
-          بيربط المنصة برقم واتساب واحد — ومنه تتوجه إيصالات السداد تلقائيًا لأولياء الأمور.
+          بيربط المنصة برقم واتساب واحد — ومنه تتوجه إيصالات السداد والنتايج وإشعارات الغياب تلقائيًا لأولياء الأمور.
         </p>
       </div>
 
@@ -70,10 +84,9 @@ export default function SecretaryWhatsAppPage() {
             <Loader2 size={28} className="animate-spin text-gold" />
             <p className="font-bold text-text-primary">البوابة مش شغالة حاليًا</p>
             <p className="max-w-md text-sm text-text-muted">
-              شغّل الملف <code className="rounded bg-gold/10 px-1.5 py-0.5 font-plex text-gold">run-all.bat</code> على
-              جهاز السنتر (بيفتح البوابة + نفق عام إن النفق محطوط فيه)، وبعدها اربط الرقم. ولو لسه مش ظاهرة تأكد إن
-              إعدادات <code className="font-plex" dir="ltr">WhatsApp:GatewayBaseUrl</code> على السيرفر فيها رابط النفق
-              العام بتاعك.
+              شغّل خدمة البوابة على جهاز السنتر (خدمة <code className="rounded bg-gold/10 px-1.5 py-0.5 font-plex text-gold">MrSiamWhatsAppGateway</code> —
+              افحصها بـ <code className="font-plex" dir="ltr">whatsapp-service-status.bat</code> أو أعد تشغيلها من{' '}
+              <code className="font-plex" dir="ltr">install-whatsapp-service.bat</code> كأدمن)، وبعدها اربط الرقم.
             </p>
             <Button variant="outline" icon={<RefreshCw size={14} />} onClick={() => setAttempt((a) => a + 1)}>
               أعد المحاولة
@@ -91,8 +104,21 @@ export default function SecretaryWhatsAppPage() {
               {status.phone ?? 'Phone connected'}
             </p>
             <p className="max-w-md text-sm text-text-muted">
-              إيصالات السداد والنتايج هتتوجه لأولياء الأمور تلقائيًا من الرقم ده.
+              إيصالات السداد والنتايج وإشعارات الغياب هتتوجه لأولياء الأمور تلقائيًا من الرقم ده.
             </p>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <Button variant="outline" icon={<RefreshCw size={14} />} onClick={() => setAttempt((a) => a + 1)}>
+                تحديث
+              </Button>
+              <Button
+                variant="outline"
+                icon={busy ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+                disabled={busy}
+                onClick={handleLogout}
+              >
+                تغيير رقم الواتساب
+              </Button>
+            </div>
           </div>
         </Card>
       ) : (

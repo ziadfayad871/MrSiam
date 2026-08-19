@@ -50,7 +50,10 @@ public class GetAttendanceQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class MarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+public class MarkAttendanceCommandHandler(
+    IApplicationDbContext db,
+    ICurrentUserService currentUser,
+    IWhatsAppService whatsApp)
     : IRequestHandler<MarkAttendanceCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(MarkAttendanceCommand request, CancellationToken ct)
@@ -61,6 +64,8 @@ public class MarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUser
 
         var existing = await db.AttendanceRecords
             .FirstOrDefaultAsync(a => a.StudentId == request.StudentId && a.Date == request.Date, ct);
+
+        var wasAbsent = existing?.Status == AttendanceStatus.Absent;
 
         if (existing is not null)
         {
@@ -83,6 +88,47 @@ public class MarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUser
         AuditLogWriter.Add(db, currentUser, existing is not null ? "update" : "create", "Attendance", request.StudentId.ToString(), $"تسجيل حضور {request.Date} — {request.Status}");
         await db.SaveChangesAsync(ct);
 
+        if (request.Status == AttendanceStatus.Absent && !wasAbsent)
+            _ = AbsenceNotifier.SendIfAbsentAsync(db, whatsApp, [request.StudentId], request.Date, ct);
+
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
+    }
+}
+
+/// <summary>
+/// يبعت لأولياء أمور الطلاب اللي اتحط حالتهم "غائب" رسالة إشعار واحدة موحدة.
+/// </summary>
+internal static class AbsenceNotifier
+{
+    public static async Task SendIfAbsentAsync(
+        IApplicationDbContext db,
+        IWhatsAppService whatsApp,
+        IEnumerable<int> studentIds,
+        DateOnly date,
+        CancellationToken ct)
+    {
+        var students = await db.Students.AsNoTracking()
+            .Where(s => studentIds.Contains(s.Id) && s.IsActive && !string.IsNullOrWhiteSpace(s.GuardianPhone))
+            .Select(s => new { s.Id, s.FullName, s.GuardianPhone })
+            .ToListAsync(ct);
+
+        foreach (var student in students)
+        {
+            try
+            {
+                var msg =
+                    $"مستر محمد سامي 🏫\n" +
+                    $"مع أبو كيان .. الدراسات في أمان 🙏\n\n" +
+                    $"عزيزي ولي أمر الطالب/ة {student.FullName} 👋\n\n" +
+                    $"نخطركم أن {student.FullName} لم يحضر حصة اليوم بتاريخ {date:dd/MM/yyyy}.\n" +
+                    $"نرجو الاطمئنان عليه ومتابعته، وتواصلكم معنا لأي استفسار 💬";
+
+                await whatsApp.SendAsync(student.GuardianPhone!, msg, ct);
+            }
+            catch
+            {
+                // فشل إشعار الغياب متأثرش على تسجيل الحضور
+            }
+        }
     }
 }

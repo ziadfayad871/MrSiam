@@ -17,6 +17,8 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
 
+    MrSiam.Infrastructure.Pdf.QuestPDFSetup.Configure(AppContext.BaseDirectory);
+
     builder.Host.UseSerilog();
 
     builder.Services
@@ -126,6 +128,8 @@ try
     var lessonUploadsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "lessons");
     Directory.CreateDirectory(lessonUploadsDir);
     app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(lessonUploadsDir), RequestPath = "/uploads/lessons" });
+    var receiptsDir = Path.Combine(builder.Environment.ContentRootPath, "app_data", "receipts");
+    Directory.CreateDirectory(receiptsDir);
 
     app.UseHttpsRedirection();
     app.UseAuthentication();

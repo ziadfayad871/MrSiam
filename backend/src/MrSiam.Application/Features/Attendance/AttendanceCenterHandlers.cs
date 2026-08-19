@@ -73,7 +73,10 @@ public class GetDailyAttendanceQueryHandler(IApplicationDbContext db)
     }
 }
 
-public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrentUserService currentUser)
+public class BulkMarkAttendanceCommandHandler(
+    IApplicationDbContext db,
+    ICurrentUserService currentUser,
+    IWhatsAppService whatsApp)
     : IRequestHandler<BulkMarkAttendanceCommand, ApiResponse<bool>>
 {
     public async Task<ApiResponse<bool>> Handle(BulkMarkAttendanceCommand request, CancellationToken ct)
@@ -86,12 +89,17 @@ public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrent
             .Where(a => a.Date == request.Date && studentIds.Contains(a.StudentId))
             .ToDictionaryAsync(a => a.StudentId, ct);
 
+        var newlyAbsentIds = new List<int>();
+
         foreach (var item in request.Items)
         {
             if (existing.TryGetValue(item.StudentId, out var record))
             {
+                var wasAbsent = record.Status == AttendanceStatus.Absent;
                 record.Status = item.Status;
                 record.Notes = item.Notes;
+                if (item.Status == AttendanceStatus.Absent && !wasAbsent)
+                    newlyAbsentIds.Add(item.StudentId);
             }
             else
             {
@@ -102,6 +110,8 @@ public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrent
                     Status = item.Status,
                     Notes = item.Notes
                 });
+                if (item.Status == AttendanceStatus.Absent)
+                    newlyAbsentIds.Add(item.StudentId);
             }
         }
 
@@ -109,6 +119,9 @@ public class BulkMarkAttendanceCommandHandler(IApplicationDbContext db, ICurrent
 
         AuditLogWriter.Add(db, currentUser, "bulk", "Attendance", request.Date.ToString("yyyy-MM-dd"), $"تسجيل حضور جماعي — {request.Items.Count} طالب ({request.Date})");
         await db.SaveChangesAsync(ct);
+
+        if (newlyAbsentIds.Count > 0)
+            _ = AbsenceNotifier.SendIfAbsentAsync(db, whatsApp, newlyAbsentIds, request.Date, ct);
 
         return ApiResponse<bool>.Ok(true, "تم تسجيل الحضور");
     }
